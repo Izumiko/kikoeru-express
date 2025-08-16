@@ -134,3 +134,6 @@ Release-Template.md
 
 # Dependecy graph
 graph.svg
+
+.DS_Store
+Thumbs.db
