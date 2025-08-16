@@ -197,14 +197,14 @@ async function* getFolderList(rootFolder, current = '', depth = 0, callback = fu
       // eslint-disable-next-line no-await-in-loop
       if ((await fs.promises.stat(absolutePath)).isDirectory()) {
         // 检查是否为文件夹
-        if (folder.match(/RJ\d{6}/)) {
+        if (folder.match(/RJ\d+/)) {
           // 检查文件夹名称中是否含有RJ号
           // Found a work folder, don't go any deeper.
           yield {
             absolutePath,
             relativePath,
             rootFolderName: rootFolder.name,
-            id: parseInt(folder.match(/RJ(\d{6})/)[1]),
+            id: parseInt(folder.match(/RJ(\d+)/)[1]),
           };
         } else if (depth + 1 < config.scannerMaxRecursionDepth) {
           // 若文件夹名称中不含有RJ号，就进入该文件夹内部
@@ -266,10 +266,35 @@ const saveCoverImageToDisk = (stream, rjcode, type) =>
     }
   });
 
+/**
+ * 获取 RJ 号
+ * - 初始位数少于等于 6 的, 补到 6 位
+ * - 初始位数少于等于 8 的, 补到 8 位
+ * - 对于更高的位数, 如果为奇数位, 则补一个 0
+ * - 如果为偶数位, 则补不补
+ * @param {number} id Work id.
+ * @returns {string} RJ code.
+ */
+const getRjCode = id => {
+  if (id < 1000000) {
+    return `000000${id}`.slice(-6);
+  } else if (id < 100000000) {
+    return `00000000${id}`.slice(-8);
+  } else {
+    const str = `${id}`;
+    if (str.length % 2 === 0) {
+      return str;
+    } else {
+      return `0${str}`;
+    }
+  }
+};
+
 module.exports = {
   getTrackList,
   toTree,
   getFolderList,
   deleteCoverImageFromDisk,
   saveCoverImageToDisk,
+  getRjCode,
 };
