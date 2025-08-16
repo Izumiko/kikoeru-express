@@ -1,3 +1,5 @@
+const cheerio = require('cheerio'); // 解析器
+
 const fs = require('fs');
 const path = require('path');
 const LimitPromise = require('limit-promise'); // 限制并发数量
@@ -236,17 +238,85 @@ const getCoverImage = (id, types) => {
             return 'added';
           });
         })
-        .catch(err => {
-          console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
-          addLogForTask(rjcode, {
-            level: 'error',
-            message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
-          });
+        .catch(async err => {
+          try {
+            const imageRequestUrlTemplate = await getImageRequestUrlTemplate(rjcode);
 
-          return 'failed';
+            return axios
+              .retryGet(imageRequestUrlTemplate(type), { responseType: 'stream', retry: {} })
+              .then(imageRes => {
+                return saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
+                  console.log(` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载成功.`);
+                  addLogForTask(rjcode, {
+                    level: 'info',
+                    message: `封面 RJ${rjcode}_img_${type}.jpg 下载成功.`,
+                  });
+
+                  return 'added';
+                });
+              })
+              .catch(err => {
+                console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
+                addLogForTask(rjcode, {
+                  level: 'error',
+                  message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
+                });
+
+                return 'failed';
+              });
+          } catch {
+            console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
+            addLogForTask(rjcode, {
+              level: 'error',
+              message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
+            });
+
+            return 'failed';
+          }
         })
     );
   });
+
+  /**
+   * 针对请求抓发的 dlsite url, 在图片请求错误时先请求
+   * `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`
+   * 成功后解析出头图地址，再基于此地址返回正确的图片请求地址模版
+   * @param {string} rjcode 音声 RJ 号
+   * @returns {Promise<(type: string) => string>} 图片请求地址模版
+   */
+  const getImageRequestUrlTemplate = rjcode => {
+    return new Promise((resolve, reject) => {
+      const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
+      const COOKIE_LOCALE = 'locale=zh-cn';
+
+      axios
+        .retryGet(url, {
+          retry: {},
+          headers: { cookie: COOKIE_LOCALE }, // 自定义请求头
+        })
+        .then(response => response.data)
+        .then(data => {
+          // 解析
+          // 转换成 jQuery 对象
+          const $ = cheerio.load(data);
+
+          // 展示图的第一个
+          // 之后仅需修改type部分即可
+          // //img.dlsite.jp/modpub/images2/work/doujin/Rj01068000/R]01067979_img_${type}.jpg
+          const img = $('div.slider_body ul li:first-child picture img').attr('srcset');
+          if (img) {
+            // _img_ 前的部分
+            const prefix = img.split('_img_')[0];
+            resolve(type => {
+              return `https:${prefix}_img_${type}.jpg`;
+            });
+          }
+        })
+        .catch(() => {
+          reject();
+        });
+    });
+  };
 
   console.log(` -> [RJ${rjcode}] 从 DLsite 下载封面...`);
   addLogForTask(rjcode, {
