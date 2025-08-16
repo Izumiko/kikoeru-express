@@ -74,6 +74,7 @@ const retryGet = async (url, config) => {
     defaultTimeout = Config.dlsiteTimeout || defaultLimit;
   } else if (url.indexOf('hvdb') !== -1) {
     defaultTimeout = Config.hvdbTimeout || defaultLimit;
+    config.proxy = false;
   }
 
   config.retry = {
@@ -101,8 +102,14 @@ const retryGet = async (url, config) => {
       await backoff;
       console.log(`${url} 第 ${config.retry.retryCount} 次重试请求`);
       // error.request._currentRequest.path 目的是请求转发的地址
-      return retryGet(error.request?._currentRequest?.path || url, config);
+      return retryGet(
+        error.request && error.request._currentRequest && error.request._currentRequest.path
+          ? error.request._currentRequest.path
+          : url,
+        config
+      );
     } else {
+      console.log('fuck', error);
       throw error;
     }
   }

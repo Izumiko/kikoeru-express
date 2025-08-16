@@ -295,6 +295,7 @@ const getCoverImage = (id, types) => {
                     .then(imageRes => {
                       // INFO: 此处有概率保存错误的图片 data，此时图片无法打开
                       // 为了重下载这个图片, 需要同时删除 type === 'main' 图片, 再扫描本地声库
+                      // TODO: saveCoverImageToDisk 存在未捕获的错误
                       return saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
                         console.log(
                           ` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载失败, 使用 RJ${rjcode}_img_main.jpg 替代.`
