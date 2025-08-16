@@ -100,12 +100,17 @@ const retryGet = async (url, config) => {
       config.retry.retryCount += 1;
       await backoff;
       console.log(`${url} 第 ${config.retry.retryCount} 次重试请求`);
-      return retryGet(url, config);
+      // error.request._currentRequest.path 目的是请求转发的地址
+      return retryGet(error.request?._currentRequest?.path || url, config);
     } else {
       throw error;
     }
   }
 };
 axios.retryGet = retryGet;
+
+/**
+ * 针对 dlsite 的网址转发
+ */
 
 module.exports = axios;
