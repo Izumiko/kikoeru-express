@@ -208,14 +208,14 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage) =>
           if (language === 'zh-cn') {
             const metadata = await scrapeStaticWorkMetadataFromDLsite(id, 'zh-tw', _successLanguage);
             if (_successLanguage.initLanguage === language) {
-              console.log(` -> [RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
+              console.log(`[RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
             }
             resolve(metadata);
             return;
           } else if (language === 'zh-tw') {
             const metadata = await scrapeStaticWorkMetadataFromDLsite(id, 'ja-jp', _successLanguage);
             if (_successLanguage.initLanguage === language) {
-              console.log(` -> [RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
+              console.log(`[RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
             }
             resolve(metadata);
             return;
