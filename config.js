@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto')
+const crypto = require('crypto');
 
 const configFolderDir = process.pkg ? path.join(process.execPath, '..', 'config') : path.join(__dirname, 'config');
 const configPath = path.join(configFolderDir, 'config.json');
@@ -22,7 +22,7 @@ const voiceWorkDefaultPath = () => {
   } else {
     return path.join(__dirname, 'VoiceWork');
   }
-}
+};
 
 const defaultConfig = {
   version: pjson.version,
@@ -67,16 +67,16 @@ const defaultConfig = {
   rewindSeekTime: 5,
   forwardSeekTime: 30,
   offloadMedia: false,
-  offloadStreamPath: '/media/stream/',          // /media/stream/RJ123456/subdirs/track.mp3
-  offloadDownloadPath: '/media/download/'      // /media/download/RJ123456/subdirs/track.mp3
+  offloadStreamPath: '/media/stream/', // /media/stream/RJ123456/subdirs/track.mp3
+  offloadDownloadPath: '/media/download/', // /media/download/RJ123456/subdirs/track.mp3
 };
 
 const initConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
   config = Object.assign(config, defaultConfig);
   if (writeConfigToFile) {
-    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, "\t"));
+    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, '\t'));
   }
-}
+};
 
 const setConfig = (newConfig, writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
   // Prevent changing some values, overwrite with old ones
@@ -90,9 +90,9 @@ const setConfig = (newConfig, writeConfigToFile = !process.env.FREEZE_CONFIG_FIL
   // Merge config
   config = Object.assign(config, newConfig);
   if (writeConfigToFile) {
-    fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
+    fs.writeFileSync(configPath, JSON.stringify(config, null, '\t'));
   }
-}
+};
 
 // Get or use default value
 const readConfig = () => {
@@ -108,12 +108,16 @@ const readConfig = () => {
   }
 
   // Support reading relative path
-  // When config is saved in admin panel, it will still be stored as absolute path 
-  if(!path.isAbsolute(config.coverFolderDir)) {
-    config.coverFolderDir = process.pkg ? path.join(process.execPath, '..', config.coverFolderDir) : path.join(__dirname, config.coverFolderDir);
+  // When config is saved in admin panel, it will still be stored as absolute path
+  if (!path.isAbsolute(config.coverFolderDir)) {
+    config.coverFolderDir = process.pkg
+      ? path.join(process.execPath, '..', config.coverFolderDir)
+      : path.join(__dirname, config.coverFolderDir);
   }
-  if(!path.isAbsolute(config.databaseFolderDir)) {
-    config.databaseFolderDir = process.pkg ? path.join(process.execPath, '..', config.databaseFolderDir) : path.join(__dirname, config.databaseFolderDir);
+  if (!path.isAbsolute(config.databaseFolderDir)) {
+    config.databaseFolderDir = process.pkg
+      ? path.join(process.execPath, '..', config.databaseFolderDir)
+      : path.join(__dirname, config.databaseFolderDir);
   }
 
   // Use ./covers and ./sqlite to override settings, ignoring corresponding fields in config
@@ -121,7 +125,9 @@ const readConfig = () => {
     config.coverFolderDir = process.pkg ? path.join(process.execPath, '..', 'covers') : path.join(__dirname, 'covers');
   }
   if (config.dbUseDefaultPath) {
-    config.databaseFolderDir = process.pkg ? path.join(process.execPath, '..', 'sqlite') : path.join(__dirname, 'sqlite');
+    config.databaseFolderDir = process.pkg
+      ? path.join(process.execPath, '..', 'sqlite')
+      : path.join(__dirname, 'sqlite');
   }
 
   if (process.env.NODE_ENV === 'production' || config.production) {
@@ -147,12 +153,11 @@ const updateConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
     console.log('如需指定其它位置，请阅读0.6.0-rc.0更新说明');
   }
 
-
   if (countChanged || cfg.version !== pjson.version) {
     cfg.version = pjson.version;
-    setConfig(cfg, writeConfigToFile)
+    setConfig(cfg, writeConfigToFile);
   }
-}
+};
 
 class publicConfig {
   get rewindSeekTime() {
@@ -164,8 +169,8 @@ class publicConfig {
   export() {
     return {
       rewindSeekTime: this.rewindSeekTime,
-      forwardSeekTime: this.forwardSeekTime
-    }
+      forwardSeekTime: this.forwardSeekTime,
+    };
   }
 }
 
@@ -177,7 +182,7 @@ if (!fs.existsSync(configPath)) {
   if (!fs.existsSync(configFolderDir)) {
     try {
       fs.mkdirSync(configFolderDir, { recursive: true });
-    } catch(err) {
+    } catch (err) {
       console.error(` ! 在创建存放配置文件的文件夹时出错: ${err.message}`);
     }
   }
@@ -188,5 +193,9 @@ if (!fs.existsSync(configPath)) {
 }
 
 module.exports = {
-  setConfig, updateConfig, config, sharedConfigHandle, configFolderDir
+  setConfig,
+  updateConfig,
+  config,
+  sharedConfigHandle,
+  configFolderDir,
 };

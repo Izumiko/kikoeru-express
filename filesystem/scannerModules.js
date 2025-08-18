@@ -220,19 +220,6 @@ const getCoverImage = (id, types) => {
   const rjcode2 = formatRjCode(id2);
   const promises = [];
 
-  // 缓存 type === 'main' 的 data
-  const [mainPromise, mainResolve, mainReject] = (() => {
-    let resolve, reject;
-    const mainPromise = new Promise((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-    return [mainPromise, resolve, reject];
-  })();
-  if (!types.includes('main')) {
-    mainReject();
-  }
-
   types.forEach(type => {
     let url = `https://img.dlsite.jp/modpub/images2/work/doujin/RJ${rjcode2}/RJ${rjcode}_img_${type}.jpg`;
     if (type === '240x240' || type === '360x360') {
@@ -242,10 +229,6 @@ const getCoverImage = (id, types) => {
       axios
         .retryGet(url, { responseType: 'stream', retry: {} })
         .then(imageRes => {
-          if (type === 'main') {
-            mainResolve(imageRes);
-          }
-
           return saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
             console.log(` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载成功.`);
             addLogForTask(rjcode, {
@@ -266,10 +249,6 @@ const getCoverImage = (id, types) => {
                 retry: {},
               })
               .then(imageRes => {
-                if (type === 'main') {
-                  mainResolve(imageRes);
-                }
-
                 return saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
                   console.log(` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载成功.`);
                   addLogForTask(rjcode, {
@@ -282,7 +261,6 @@ const getCoverImage = (id, types) => {
               })
               .catch(err => {
                 if (type === 'main') {
-                  mainReject();
                   console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
                   addLogForTask(rjcode, {
                     level: 'error',
@@ -291,26 +269,25 @@ const getCoverImage = (id, types) => {
 
                   return 'failed';
                 } else {
-                  return mainPromise
-                    .then(imageRes => {
-                      // INFO: 此处有概率保存错误的图片 data，此时图片无法打开
-                      // 为了重下载这个图片, 需要同时删除 type === 'main' 图片, 再扫描本地声库
-                      // TODO: saveCoverImageToDisk 存在未捕获的错误
-                      return saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
-                        console.log(
-                          ` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载失败, 使用 RJ${rjcode}_img_main.jpg 替代.`
-                        );
-                        addLogForTask(rjcode, {
-                          level: 'info',
-                          message: `封面 RJ${rjcode}_img_${type}.jpg 下载成功.`,
-                        });
+                  // 尝试读取 RJ${rjcode}_img_main.jpg
+                  const imgMainPath = path.join(config.coverFolderDir, `RJ${rjcode}_img_main.jpg`);
 
-                        return 'added';
-                      });
-                    })
-                    .catch(() => {
-                      return 'failed';
+                  try {
+                    const imgTypePath = path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`);
+                    fs.copyFileSync(imgMainPath, imgTypePath);
+
+                    return 'added';
+                  } catch {
+                    console.error(
+                      `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`
+                    );
+                    addLogForTask(rjcode, {
+                      level: 'error',
+                      message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
                     });
+
+                    return 'failed';
+                  }
                 }
               });
           } catch {
