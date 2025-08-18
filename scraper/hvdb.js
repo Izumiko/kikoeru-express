@@ -2,7 +2,7 @@ const htmlparser = require('htmlparser2'); // 解析器
 
 const axios = require('./axios'); // 数据请求
 const { nameToUUID } = require('./utils');
-const { getRjCode } = require('../filesystem/utils');
+const { formatRjCode } = require('../filesystem/utils');
 
 /**
  * Scrapes work metadata from public HVDB page HTML.
@@ -10,7 +10,7 @@ const { getRjCode } = require('../filesystem/utils');
  */
 const scrapeWorkMetadataFromHVDB = id =>
   new Promise((resolve, reject) => {
-    const rjcode = getRjCode(id);
+    const rjcode = formatRjCode(id);
     const url = `https://hvdb.me/Dashboard/WorkDetails/${id}`;
 
     console.log(`[RJ${rjcode}] 从 HVDB 抓取元数据...`);

@@ -275,7 +275,7 @@ const saveCoverImageToDisk = (stream, rjcode, type) =>
  * @param {number} id Work id.
  * @returns {string} RJ code.
  */
-const getRjCode = id => {
+const formatRjCode = id => {
   if (id < 1000000) {
     return `000000${id}`.slice(-6);
   } else if (id < 100000000) {
@@ -296,5 +296,5 @@ module.exports = {
   getFolderList,
   deleteCoverImageFromDisk,
   saveCoverImageToDisk,
-  getRjCode,
+  formatRjCode,
 };

@@ -8,7 +8,7 @@ const axios = require('../scraper/axios.js'); // 数据请求
 const { scrapeWorkMetadataFromDLsite, scrapeDynamicWorkMetadataFromDLsite } = require('../scraper/dlsite');
 const db = require('../database/db');
 const { createSchema } = require('../database/schema');
-const { getFolderList, deleteCoverImageFromDisk, saveCoverImageToDisk, getRjCode } = require('./utils');
+const { getFolderList, deleteCoverImageFromDisk, saveCoverImageToDisk, formatRjCode } = require('./utils');
 const { md5 } = require('../auth/utils');
 const { nameToUUID } = require('../scraper/utils');
 
@@ -158,7 +158,7 @@ const uniqueArr = arr => {
  * @param {string} tagLanguage 标签语言，'ja-jp', 'zh-tw' or 'zh-cn'，默认'zh-cn'
  */
 const getMetadata = (id, rootFolderName, dir, tagLanguage) => {
-  const rjcode = getRjCode(id); // zero-pad to 6 digits
+  const rjcode = formatRjCode(id); // zero-pad to 6 digits
   console.log(` -> [RJ${rjcode}] 从 DLSite 抓取元数据...`);
   addLogForTask(rjcode, {
     level: 'info',
@@ -215,9 +215,9 @@ const getMetadata = (id, rootFolderName, dir, tagLanguage) => {
  * @param {Array} types img types: ['main', 'sam', 'sam@2x', 'sam@3x', '240x240', '360x360']
  */
 const getCoverImage = (id, types) => {
-  const rjcode = getRjCode(id); // zero-pad to 6 digits
+  const rjcode = formatRjCode(id); // zero-pad to 6 digits
   const id2 = id % 1000 === 0 ? id : parseInt(id / 1000) * 1000 + 1000;
-  const rjcode2 = getRjCode(id2);
+  const rjcode2 = formatRjCode(id2);
   const promises = [];
 
   // 缓存 type === 'main' 的 data
@@ -397,7 +397,7 @@ const processFolder = folder =>
     .count()
     .first()
     .then(res => {
-      const rjcode = getRjCode(folder.id);
+      const rjcode = formatRjCode(folder.id);
       const coverTypes = ['main', 'sam', '240x240'];
       const count = res['count(*)'];
       if (count) {
@@ -471,7 +471,7 @@ const performCleanup = async () => {
           db.removeWork(work.id, trxProvider) // 将其数据项从数据库中移除
             .then(result => {
               // 然后删除其封面图片
-              const rjcode = getRjCode(work.id);
+              const rjcode = formatRjCode(work.id);
               deleteCoverImageFromDisk(rjcode)
                 .catch(err => {
                   if (err && err.code !== 'ENOENT') {
@@ -626,7 +626,7 @@ const performScan = () => {
             const addedFolder = uniqueFolderList.find(folder => folder.id === parseInt(key));
             duplicate[key].push(addedFolder); // 最后一项为将要添加到数据库中的音声文件夹
 
-            const rjcode = getRjCode(key);
+            const rjcode = formatRjCode(key);
             console.log(` -> [RJ${rjcode}] 存在多个文件夹:`);
             addMainLog({
               level: 'info',
@@ -651,7 +651,7 @@ const performScan = () => {
         const promises = uniqueFolderList.map(folder =>
           processFolderLimited(folder).then(result => {
             // 统计处理结果
-            const rjcode = getRjCode(folder.id);
+            const rjcode = formatRjCode(folder.id);
             counts[result] += 1;
 
             if (result === 'added') {
@@ -729,7 +729,7 @@ const updateMetadata = (id, options = {}) => {
     scrapeProcessor = () => scrapeWorkMetadataFromDLsite(id, config.tagLanguage);
   }
 
-  const rjcode = getRjCode(id);
+  const rjcode = formatRjCode(id);
   addTask(rjcode); // addTask only accepts a string
   return scrapeProcessor() // 抓取该音声的元数据
     .then(metadata => {
@@ -791,7 +791,7 @@ const refreshWorks = async (query, idColumnName, processor) => {
 
     const promises = works.map(work => {
       const workid = work[idColumnName];
-      const rjcode = getRjCode(workid);
+      const rjcode = formatRjCode(workid);
       return processor(workid).then(result => {
         // 统计处理结果
         result === 'failed' ? (counts['failed'] += 1) : (counts['updated'] += 1);

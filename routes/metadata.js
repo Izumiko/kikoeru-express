@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { param, query } = require('express-validator');
 const db = require('../database/db');
-const { getTrackList, toTree, getRjCode } = require('../filesystem/utils');
+const { getTrackList, toTree, formatRjCode } = require('../filesystem/utils');
 const { config } = require('../config');
 const normalize = require('./utils/normalize');
 const { isValidRequest } = require('./utils/validate');
@@ -14,7 +14,7 @@ const PAGE_SIZE = config.pageSize || 12;
 router.get('/cover/:id', param('id').isInt(), (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
-  const rjcode = getRjCode(req.params.id);
+  const rjcode = formatRjCode(req.params.id);
   const type = req.query.type || 'main'; // 'main', 'sam', '240x240', '360x360'
   res.sendFile(path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`), err => {
     if (err) {

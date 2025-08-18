@@ -3,7 +3,7 @@ const cheerio = require('cheerio'); // 解析器
 const axios = require('./axios'); // 数据请求
 const { nameToUUID, hasLetter } = require('./utils');
 const scrapeWorkMetadataFromHVDB = require('./hvdb');
-const { getRjCode } = require('../filesystem/utils');
+const { formatRjCode } = require('../filesystem/utils');
 
 /**
  * Scrapes static work metadata from public DLsite page HTML.
@@ -12,7 +12,7 @@ const { getRjCode } = require('../filesystem/utils');
  */
 const scrapeStaticWorkMetadataFromDLsite = (id, language) =>
   new Promise((resolve, reject) => {
-    const rjcode = getRjCode(id);
+    const rjcode = formatRjCode(id);
     const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
 
     const work = { id, tags: [], vas: [] };
@@ -210,7 +210,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language) =>
  */
 const scrapeDynamicWorkMetadataFromDLsite = id =>
   new Promise((resolve, reject) => {
-    const rjcode = getRjCode(id);
+    const rjcode = formatRjCode(id);
     const url = `https://www.dlsite.com/maniax-touch/product/info/ajax?product_id=RJ${rjcode}`;
 
     axios
