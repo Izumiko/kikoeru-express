@@ -9,8 +9,9 @@ const { formatRjCode } = require('../filesystem/utils');
  * Scrapes static work metadata from public DLsite page HTML.
  * @param {number} id Work id.
  * @param {String} language 标签语言，'ja-jp', 'zh-tw' or 'zh-cn'，默认'zh-cn'
+ * @param {Object} successLanguage 记录最终成功获取的元数据的语言
  */
-const scrapeStaticWorkMetadataFromDLsite = (id, language) =>
+const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage) =>
   new Promise((resolve, reject) => {
     const rjcode = formatRjCode(id);
     const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
@@ -185,16 +186,46 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language) =>
                 });
               }
 
+              successLanguage.language = language;
               resolve(work);
             })
             .catch(error => {
               reject(new Error(error.message));
             });
         } else {
+          successLanguage.language = language;
           resolve(work);
         }
       })
-      .catch(error => {
+      .catch(async error => {
+        try {
+          // 记录最终成功获取的元数据的语言
+          const _successLanguage = successLanguage || {
+            language: null,
+            initLanguage: language,
+          };
+          // 尝试从其他语言版本获取元数据
+          if (language === 'zh-cn') {
+            const metadata = await scrapeStaticWorkMetadataFromDLsite(id, 'zh-tw', _successLanguage);
+            if (_successLanguage.initLanguage === language) {
+              console.log(` -> [RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
+            }
+            resolve(metadata);
+            return;
+          } else if (language === 'zh-tw') {
+            const metadata = await scrapeStaticWorkMetadataFromDLsite(id, 'ja-jp', _successLanguage);
+            if (_successLanguage.initLanguage === language) {
+              console.log(` -> [RJ${rjcode}] 成功从 DLsite (${_successLanguage.language}) 下载原数据`);
+            }
+            resolve(metadata);
+            return;
+          }
+        } catch {
+          // 此处不需要处理错误
+          // 因为是尝试从其他语言版本获取元数据, 如果错误, 可以认为是和第一个尝试的语言相同的错误
+          // 当第一层没有成功从其他语言获取到元数据时, 继续执行, 抛出下方的错误
+        }
+
         if (error.response) {
           // 请求已发出，但服务器响应的状态码不在 2xx 范围内
           reject(new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`));

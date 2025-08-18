@@ -1,5 +1,3 @@
-// TODO: 当某个 dlsite 在 zh_ch 失败时，从 zh_tw 重试下载
-
 const cheerio = require('cheerio'); // 解析器
 
 const fs = require('fs');
@@ -223,6 +221,7 @@ const getCoverImage = (id, types) => {
   const promises = [];
 
   types.forEach(type => {
+    // 对于不是合集的音声，封面图片的请求地址为
     let url = `https://img.dlsite.jp/modpub/images2/work/doujin/RJ${rjcode2}/RJ${rjcode}_img_${type}.jpg`;
     if (type === '240x240' || type === '360x360') {
       url = `https://img.dlsite.jp/resize/images2/work/doujin/RJ${rjcode2}/RJ${rjcode}_img_main_${type}.jpg`;
@@ -243,6 +242,8 @@ const getCoverImage = (id, types) => {
         })
         .catch(async err => {
           try {
+            // 可能是由于网站转发导致图片 RJ code 和 音声 RJ code 不同导致失败
+            // 此处尝试根据音声首页的头图解析正确图片地址
             const imageRequestUrlTemplate = await getImageRequestUrlTemplate(rjcode);
 
             return axios
