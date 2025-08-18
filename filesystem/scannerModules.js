@@ -1,3 +1,5 @@
+// TODO: 当某个 dlsite 在 zh_ch 失败时，从 zh_tw 重试下载
+
 const cheerio = require('cheerio'); // 解析器
 
 const fs = require('fs');
@@ -244,7 +246,7 @@ const getCoverImage = (id, types) => {
             const imageRequestUrlTemplate = await getImageRequestUrlTemplate(rjcode);
 
             return axios
-              .retryGet(imageRequestUrlTemplate(type === '240x240' || type === '360x360' ? `main_${type}` : type), {
+              .retryGet(imageRequestUrlTemplate(type), {
                 responseType: 'stream',
                 retry: {},
               })
@@ -351,6 +353,9 @@ const getImageRequestUrlTemplate = rjcode => {
           // _img_ 前的部分
           const prefix = img.split('_img_')[0];
           resolve(type => {
+            if (type === '240x240' || type === '360x360') {
+              return `https:${prefix.replace('modpub', 'resize')}_img_main_${type}.jpg`;
+            }
             return `https:${prefix}_img_${type}.jpg`;
           });
         }
