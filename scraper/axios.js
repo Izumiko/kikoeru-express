@@ -109,7 +109,6 @@ const retryGet = async (url, config) => {
         config
       );
     } else {
-      console.log('fuck', error);
       throw error;
     }
   }
