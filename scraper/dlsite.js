@@ -11,7 +11,7 @@ const { formatRjCode } = require('../filesystem/utils');
  * @param {String} language 标签语言，'ja-jp', 'zh-tw' or 'zh-cn'，默认'zh-cn'
  * @param {Object} successLanguage 记录最终成功获取的元数据的语言
  */
-const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage) =>
+const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) =>
   new Promise((resolve, reject) => {
     const rjcode = formatRjCode(id);
     const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
@@ -205,6 +205,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage) =>
             initLanguage: language,
           };
           // 尝试从其他语言版本获取元数据
+          // TODO: 验证是语言设置生效还是节点位置生效
           if (language === 'zh-cn') {
             const metadata = await scrapeStaticWorkMetadataFromDLsite(id, 'zh-tw', _successLanguage);
             if (_successLanguage.initLanguage === language) {
