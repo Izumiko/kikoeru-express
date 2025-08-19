@@ -263,35 +263,13 @@ const getCoverImage = (id, types) => {
                 });
               })
               .catch(err => {
-                if (type === 'main') {
-                  console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
-                  addLogForTask(rjcode, {
-                    level: 'error',
-                    message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
-                  });
+                console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
+                addLogForTask(rjcode, {
+                  level: 'error',
+                  message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
+                });
 
-                  return 'failed';
-                } else {
-                  // 尝试读取 RJ${rjcode}_img_main.jpg
-                  const imgMainPath = path.join(config.coverFolderDir, `RJ${rjcode}_img_main.jpg`);
-
-                  try {
-                    const imgTypePath = path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`);
-                    fs.copyFileSync(imgMainPath, imgTypePath);
-
-                    return 'added';
-                  } catch {
-                    console.error(
-                      `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`
-                    );
-                    addLogForTask(rjcode, {
-                      level: 'error',
-                      message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
-                    });
-
-                    return 'failed';
-                  }
-                }
+                return 'failed';
               });
           } catch {
             console.error(`  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`);
