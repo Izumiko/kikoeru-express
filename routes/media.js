@@ -27,7 +27,7 @@ router.get('/stream/:id/:index', param('id').isInt(), param('index').isInt(), (r
 
             const fileName = path.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
             const extName = path.extname(fileName);
-            if (extName === '.txt' || extName === '.lrc') {
+            if (extName === '.txt' || extName === '.lrc' || extName === '.vtt') {
               const fileBuffer = fs.readFileSync(fileName);
               const charsetMatch = jschardet.detect(fileBuffer).encoding;
               if (charsetMatch) {
@@ -106,6 +106,15 @@ router.get('/download/:id/:index', param('id').isInt(), param('index').isInt(), 
     });
 });
 
+/**
+ * 去除路径后缀
+ * @param {string} filePath - 文件路径
+ * @returns {string} - 去除后缀的文件路径
+ */
+function removeFileExtension(filePath) {
+  return filePath.slice(0, filePath.lastIndexOf('.'));
+}
+
 router.get('/check-lrc/:id/:index', param('id').isInt(), param('index').isInt(), (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
@@ -120,18 +129,57 @@ router.get('/check-lrc/:id/:index', param('id').isInt(), param('index').isInt(),
           .then(tracks => {
             const track = tracks[req.params.index];
             const fileLoc = path.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
-            const lrcFileLoc = fileLoc.substr(0, fileLoc.lastIndexOf('.')) + '.lrc';
+            let lrcFileLoc = removeFileExtension(fileLoc) + '.lrc';
+
+            let lrcFileName = removeFileExtension(track.title) + '.lrc';
+            let subtitleToFind = track.subtitle;
+
+            if (!fs.existsSync(lrcFileLoc)) {
+              // 查找当前根目录中所有目录中是否有对应的歌词文件
+              const trackTitle = track.title;
+              const trackTitleWithoutExt = removeFileExtension(trackTitle);
+
+              for (const trackItem of tracks) {
+                if (
+                  trackItem.title.endsWith('.lrc') ||
+                  trackItem.title.endsWith('.txt') ||
+                  trackItem.title.endsWith('.vtt')
+                ) {
+                  const trackItemTitleWithoutExt = removeFileExtension(trackItem.title);
+                  if (trackItemTitleWithoutExt === trackTitle || trackItemTitleWithoutExt === trackTitleWithoutExt) {
+                    lrcFileLoc = path.join(rootFolder.path, work.dir, trackItem.subtitle || '', trackItem.title);
+
+                    if (trackItem.title.endsWith('.txt')) {
+                      try {
+                        const fileContent = fs.readFileSync(
+                          path.join(rootFolder.path, work.dir, trackItem.subtitle || '', trackItem.title),
+                          { encoding: 'utf8' }
+                        );
+                        if (!/^\s*WEBVTT/i.test(fileContent) && !/\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(fileContent)) {
+                          // 不是vtt文件，跳过
+                          continue;
+                        }
+                      } catch (e) {
+                        // 读取失败，跳过
+                        continue;
+                      }
+                    }
+
+                    lrcFileName = trackItem.title;
+                    subtitleToFind = trackItem.subtitle;
+                  }
+                }
+              }
+            }
 
             if (!fs.existsSync(lrcFileLoc)) {
               res.send({ result: false, message: '不存在歌词文件', hash: '' });
             } else {
               console.log('找到歌词文件');
-              const lrcFileName = track.title.substr(0, track.title.lastIndexOf('.')) + '.lrc';
-              const subtitleToFind = track.subtitle;
               console.log('歌词文件名： ', lrcFileName);
               // 文件名、子目录名相同
               tracks.forEach(trackItem => {
-                if (trackItem.title === lrcFileName && subtitleToFind === trackItem.subtitle) {
+                if (trackItem.title === lrcFileName && trackItem.subtitle === subtitleToFind) {
                   res.send({ result: true, message: '找到歌词文件', hash: trackItem.hash });
                 }
               });
