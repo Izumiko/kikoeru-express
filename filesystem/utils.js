@@ -85,14 +85,7 @@ const getTrackList = (id, dir) =>
 const toTree = (tracks, workTitle, workDir, rootFolder) => {
   const tree = [];
 
-  tracks = tracks.map(item => ({
-    title: item.title,
-    subtitle: item.subtitle.replace(/\\/g, '/'),
-    hash: item.hash,
-    ext: item.ext,
-  }));
-
-  workTitle = workTitle.replace(/\\/g, '/');
+  console.log('fuck to tree');
 
   // 插入文件夹
   tracks.forEach(track => {
