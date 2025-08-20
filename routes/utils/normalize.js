@@ -1,4 +1,4 @@
-const strftime  = require('./strftime')
+const strftime = require('./strftime');
 
 // Normalize API endpoints
 const normalize = (works, options = {}) => {
@@ -15,8 +15,8 @@ const normalize = (works, options = {}) => {
     if (options.dateOnly && record.updated_at) {
       record.updated_at = strftime('%F', record.updated_at);
     }
-  })
-  return works
-}
+  });
+  return works;
+};
 
 module.exports = normalize;

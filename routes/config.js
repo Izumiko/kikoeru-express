@@ -1,4 +1,4 @@
-const _ = require('lodash'); 
+const _ = require('lodash');
 const express = require('express');
 const router = express.Router();
 const { config, setConfig, sharedConfigHandle } = require('../config');
@@ -15,7 +15,7 @@ const filterConfig = (_config, option = 'read') => {
     }
   }
   return configClone;
-}
+};
 
 // 修改配置文件
 router.put('/admin', (req, res, next) => {
@@ -23,8 +23,8 @@ router.put('/admin', (req, res, next) => {
     try {
       // Note: setConfig uses Object.assign to merge new configs
       setConfig(filterConfig(req.body.config, 'write'));
-      res.send({ message: '保存成功.' })
-    } catch(err) {
+      res.send({ message: '保存成功.' });
+    } catch (err) {
       next(err);
     }
   } else {
@@ -37,7 +37,7 @@ router.get('/admin', (req, res, next) => {
   if (!config.auth || req.user.name === 'admin') {
     try {
       res.send({ config: filterConfig(config, 'read') });
-    } catch(err) {
+    } catch (err) {
       next(err);
     }
   } else {
@@ -48,7 +48,7 @@ router.get('/admin', (req, res, next) => {
 router.get('/shared', (req, res, next) => {
   try {
     res.send({ sharedConfig: sharedConfigHandle.export() });
-  } catch(err) {
+  } catch (err) {
     next(err);
   }
 });

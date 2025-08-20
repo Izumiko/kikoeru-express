@@ -12,29 +12,31 @@ const initApp = async () => {
   let configVersion = config.version;
   let currentVersion = pjson.version;
 
-  
-  async function runMigrations () {
+  async function runMigrations() {
     const log = ({ action, migration }) => console.log('Doing ' + action + ' on ' + migration);
     await knexMigrate('up', {}, log);
   }
 
-  async function skipMigrations () {
+  async function skipMigrations() {
     await knexMigrate('skipAll', {});
   }
 
   // Fix a nasty bug introduced in v0.5.1
-  async function fixMigrations () {
-    if (compareVersions.compare(configVersion, 'v0.5.1', '>=') && compareVersions.compare(configVersion, 'v0.5.3', '<')) {
-      await knexMigrate('skipAll', {to: '20210108093032'});
+  async function fixMigrations() {
+    if (
+      compareVersions.compare(configVersion, 'v0.5.1', '>=') &&
+      compareVersions.compare(configVersion, 'v0.5.3', '<')
+    ) {
+      await knexMigrate('skipAll', { to: '20210108093032' });
     }
   }
 
-  function initDatabaseDir () {
+  function initDatabaseDir() {
     const databaseFolderDir = config.databaseFolderDir;
     if (!fs.existsSync(databaseFolderDir)) {
       try {
         fs.mkdirSync(databaseFolderDir, { recursive: true });
-      } catch(err) {
+      } catch (err) {
         console.error(` ! 在创建存放数据库文件的文件夹时出错: ${err.message}`);
       }
     }
@@ -50,25 +52,27 @@ const initApp = async () => {
       await runMigrations();
       updateConfig();
     } catch (error) {
-      console.log('升级迁移过程中出错，请在GitHub issues中报告作者')
+      console.log('升级迁移过程中出错，请在GitHub issues中报告作者');
       console.error(error);
     }
   } else if (!databaseExist) {
     initDatabaseDir();
     await createSchema();
-    try { // 创建内置的管理员账号
+    try {
+      // 创建内置的管理员账号
       await createUser({
         name: 'admin',
         password: md5('admin'),
-        group: 'administrator'
+        group: 'administrator',
       });
-    } catch(err) {{
+    } catch (err) {
+      {
         console.error(err.message);
         process.exit(1);
       }
     }
     try {
-      await skipMigrations()
+      await skipMigrations();
     } catch (err) {
       console.error(` ! 在构建数据库结构过程中出错: ${err.message}`);
       process.exit(1);
@@ -78,6 +82,6 @@ const initApp = async () => {
       updateConfig();
     }
   }
-}
+};
 
 module.exports = { initApp };

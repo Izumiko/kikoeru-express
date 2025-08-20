@@ -4,23 +4,28 @@ const jwtAuth = require('socketio-jwt-auth'); // 用于 JWT 验证的 socket.io 
 const child_process = require('child_process'); // 子进程
 const { config } = require('./config');
 
-const initSocket = (server) => {
+const initSocket = server => {
   const io = socket(server);
   if (config.auth) {
-    io.use(jwtAuth.authenticate({
-      secret: config.jwtsecret
-    }, (payload, done) => {
-      const user = {
-        name: payload.name,
-        group: payload.group
-      };
+    io.use(
+      jwtAuth.authenticate(
+        {
+          secret: config.jwtsecret,
+        },
+        (payload, done) => {
+          const user = {
+            name: payload.name,
+            group: payload.group,
+          };
 
-      if (user.name === 'admin') {
-        done(null, user);
-      } else {
-        done(null, false, '只有 admin 账号能登录管理后台.');
-      }
-    }));
+          if (user.name === 'admin') {
+            done(null, user);
+          } else {
+            done(null, false, '只有 admin 账号能登录管理后台.');
+          }
+        }
+      )
+    );
   }
 
   let scanner = null;
@@ -31,18 +36,18 @@ const initSocket = (server) => {
     socket.emit('success', {
       message: '成功登录管理后台.',
       user: socket.request.user,
-      auth: config.auth
+      auth: config.auth,
     });
 
     // socket.on('disconnect', () => {
     //   console.log('disconnect');
     // });
-    
+
     socket.on('ON_SCANNER_PAGE', () => {
       if (scanner) {
         // 防止用户在扫描过程中刷新页面
         scanner.send({
-          emit: 'SCAN_INIT_STATE'
+          emit: 'SCAN_INIT_STATE',
         });
       }
     });
@@ -50,50 +55,52 @@ const initSocket = (server) => {
     socket.on('PERFORM_SCAN', () => {
       if (!scanner) {
         scanner = child_process.fork(path.join(__dirname, './filesystem/scanner.js'), { silent: false }); // 子进程
-        scanner.on('exit', (code) => {
+        scanner.on('exit', code => {
           scanner = null;
           if (code) {
             io.emit('SCAN_ERROR');
           }
         });
-        
-        scanner.on('message', (m) => {
+
+        scanner.on('message', m => {
           if (m.event) {
             io.emit(m.event, m.payload);
           }
         });
-      }   
+      }
     });
 
     socket.on('PERFORM_UPDATE', () => {
       if (!scanner) {
-        scanner = child_process.fork(path.join(__dirname, './filesystem/updater.js'), ['--refreshAll'], { silent: false }); // 子进程
-        scanner.on('exit', (code) => {
+        scanner = child_process.fork(path.join(__dirname, './filesystem/updater.js'), ['--refreshAll'], {
+          silent: false,
+        }); // 子进程
+        scanner.on('exit', code => {
           scanner = null;
           if (code) {
             io.emit('SCAN_ERROR');
           }
         });
-        
-        scanner.on('message', (m) => {
+
+        scanner.on('message', m => {
           if (m.event) {
             io.emit(m.event, m.payload);
           }
         });
-      }   
+      }
     });
 
     socket.on('KILL_SCAN_PROCESS', () => {
       scanner.send({
-        exit: 1
+        exit: 1,
       });
     });
 
     // 发生错误时触发
-    socket.on('error', (err) => {
+    socket.on('error', err => {
       console.error(err);
     });
   });
-}
+};
 
 module.exports = initSocket;

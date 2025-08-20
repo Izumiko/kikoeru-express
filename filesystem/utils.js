@@ -85,8 +85,6 @@ const getTrackList = (id, dir) =>
 const toTree = (tracks, workTitle, workDir, rootFolder) => {
   const tree = [];
 
-  console.log('fuck to tree');
-
   // 插入文件夹
   tracks.forEach(track => {
     let fatherFolder = tree;
