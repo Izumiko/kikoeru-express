@@ -71,16 +71,33 @@ const getTrackList = (id, dir) =>
 
 /**
  * 转换成树状结构
- * @param {Array} tracks
+ * @param {{
+ *  title: string;
+ *  subtitle: string | null;
+ *  hash: string;
+ *  ext: string;
+ *  }[]} tracks
  * @param {String} workTitle
+ * @param {String} workDir
+ * @param {Object} rootFolder
+ * @return {Array} Tree structure of tracks.
  */
 const toTree = (tracks, workTitle, workDir, rootFolder) => {
   const tree = [];
 
+  tracks = tracks.map(item => ({
+    title: item.title,
+    subtitle: item.subtitle.replace(/\\/g, '/'),
+    hash: item.hash,
+    ext: item.ext,
+  }));
+
+  workTitle = workTitle.replace(/\\/g, '/');
+
   // 插入文件夹
   tracks.forEach(track => {
     let fatherFolder = tree;
-    const path = track.subtitle ? track.subtitle.split('\\') : [];
+    const path = track.subtitle ? track.subtitle.split('/') : [];
     path.forEach(folderName => {
       const index = fatherFolder.findIndex(item => item.type === 'folder' && item.title === folderName);
       if (index === -1) {
@@ -97,7 +114,7 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
   // 插入文件
   tracks.forEach(track => {
     let fatherFolder = tree;
-    const paths = track.subtitle ? track.subtitle.split('\\') : [];
+    const paths = track.subtitle ? track.subtitle.split('/') : [];
     paths.forEach(folderName => {
       fatherFolder = fatherFolder.find(item => item.type === 'folder' && item.title === folderName).children;
     });
