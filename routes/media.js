@@ -115,6 +115,58 @@ function removeFileExtension(filePath) {
   return filePath.slice(0, filePath.lastIndexOf('.'));
 }
 
+/**
+ * 获取所有字幕文件
+ */
+router.get('/find-all-lrc/:id/:index', param('id').isInt(), param('index').isInt(), (req, res, next) => {
+  if (!isValidRequest(req, res)) return;
+  db.knex('t_work')
+    .select('root_folder', 'dir')
+    .where('id', '=', req.params.id)
+    .first()
+    .then(work => {
+      const rootFolder = config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
+      if (rootFolder) {
+        getTrackList(req.params.id, path.join(rootFolder.path, work.dir))
+          .then(tracks => {
+            const subtitlesItems = tracks.filter(trackItem => {
+              if (
+                trackItem.title.endsWith('.lrc') ||
+                trackItem.title.endsWith('.txt') ||
+                trackItem.title.endsWith('.vtt')
+              ) {
+                const lrcFileLoc = path.join(rootFolder.path, work.dir, trackItem.subtitle || '', trackItem.title);
+                if (trackItem.title.endsWith('.txt')) {
+                  try {
+                    const fileContent = fs.readFileSync(lrcFileLoc, { encoding: 'utf8' });
+                    if (!/^\s*WEBVTT/i.test(fileContent) && !/\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(fileContent)) {
+                      // 不是vtt文件，跳过
+                      return false;
+                    }
+                  } catch (e) {
+                    return false;
+                  }
+                }
+                if (fs.existsSync(lrcFileLoc)) {
+                  return true;
+                }
+              }
+            });
+
+            if (subtitlesItems.length > 0) {
+              res.send({ result: true, message: `找到${subtitlesItems.length}个可能的歌词文件`, subtitlesItems });
+            } else {
+              res.send({ result: false, message: '未找到歌词文件', subtitlesItems: [] });
+            }
+          })
+          .catch(err => next(err));
+      }
+    });
+});
+
+/**
+ * 查找字幕文件
+ */
 router.get('/check-lrc/:id/:index', param('id').isInt(), param('index').isInt(), (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
@@ -160,7 +212,6 @@ router.get('/check-lrc/:id/:index', param('id').isInt(), param('index').isInt(),
                           continue;
                         }
                       } catch (e) {
-                        // 读取失败，跳过
                         continue;
                       }
                     }
