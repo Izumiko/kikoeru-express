@@ -41,6 +41,7 @@ router.get('/', (req, res, next) => {
     }
   }
 
+  // TODO: 这个地址已经大概的确不会更新了
   const urlLatestStable = 'https://api.github.com/repos/umonaca/kikoeru-express/releases/latest';
   const urlLatestRelease = 'https://api.github.com/repos/umonaca/kikoeru-express/releases';
   const requestLatestStable = axios.get(urlLatestStable);

@@ -2,10 +2,10 @@
   "name": "kikoeru-express",
   "version": "0.6.2",
   "description": "A self-hosted media server for listening to your DLsite voice works.",
-  "homepage": "https://github.com/kikoeru-project/kikoeru-express",
+  "homepage": "https://github.com/XunJiJiang/kikoeru-express",
   "repository": {
     "type": "git",
-    "url": "git@github.com:kikoeru-project/kikoeru-express.git"
+    "url": "git@github.com:XunJiJiang/kikoeru-express.git"
   },
   "keywords": [
     "kikoeru"
