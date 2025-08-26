@@ -276,7 +276,7 @@ const removeWork = async (id, trxProvider) => {
 
 /**
  * Returns list of works by circle, tag or VA.
- * @param {Number} id Which id to filter by.
+ * @param {Number[]} id Which id to filter by.
  * @param {String} field Which field to filter by.
  */
 const getWorksBy = ({ id, field, username = '' } = {}) => {
@@ -292,17 +292,21 @@ const getWorksBy = ({ id, field, username = '' } = {}) => {
       return knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.rating AS userRating'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .where('circle_id', '=', id);
+        .where('circle_id', '=', id[0]);
 
     case 'tag':
-      workIdQuery = knex('r_tag_work').select('work_id').where('tag_id', '=', id);
+      workIdQuery = knex('r_tag_work')
+        .select('work_id')
+        .whereIn('tag_id', id)
+        .groupBy('work_id')
+        .havingRaw('COUNT(DISTINCT tag_id) = ?', [id.length]);
       return knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.rating AS userRating'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
         .where('id', 'in', workIdQuery);
 
     case 'va':
-      workIdQuery = knex('r_va_work').select('work_id').where('va_id', '=', id);
+      workIdQuery = knex('r_va_work').select('work_id').where('va_id', '=', id[0]);
       return knex('staticMetadata')
         .select(['staticMetadata.*', 'userrate.rating AS userRating'])
         .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
@@ -544,10 +548,18 @@ const getWorksWithReviews = async ({
   return { works, totalCount };
 };
 
-const getMetadata = ({ field = 'circle', id } = {}) => {
+/**
+ * 获取元数据
+ * @param {{
+ *  field: string,
+ *  id: number[]
+ * }} param0
+ * @returns
+ */
+const getMetadata = ({ field = 'circle', ids } = {}) => {
   const validFields = ['circle', 'tag', 'va'];
   if (!validFields.includes(field)) throw new Error('无效的查询域');
-  return knex(`t_${field}`).select('*').where('id', '=', id).first();
+  return Promise.all(ids.map(id => knex(`t_${field}`).select('*').where('id', '=', id).first()));
 };
 
 module.exports = {

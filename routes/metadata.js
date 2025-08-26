@@ -130,16 +130,27 @@ router.get('/:field(circle|tag|va)s/:id', param('field').isIn(['circle', 'tag', 
   // In case regex matching goes wrong
   if (!isValidRequest(req, res)) return;
 
+  const ids =
+    req.params.field === 'tag' || req.params.field === 'circle'
+      ? req.params.id
+          .split(',')
+          .map(id => parseInt(id.trim()))
+          .filter(id => !isNaN(id))
+      : req.params.id.split(',');
+
   return db
-    .getMetadata({ field: req.params.field, id: req.params.id })
-    .then(item => {
-      if (item) {
-        res.send(item);
+    .getMetadata({
+      field: req.params.field,
+      ids,
+    })
+    .then(items => {
+      if (items.every(item => item && ids.includes(item.id))) {
+        res.send(items);
       } else {
         const errorMessage = {
-          circle: `社团${req.params.id}不存在`,
-          tag: `标签${req.params.id}不存在`,
-          va: `声优${req.params.id}不存在`,
+          circle: `社团${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
+          tag: `标签${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
+          va: `声优${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
         };
         res.status(404).send({ error: errorMessage[req.params.field] });
       }
@@ -213,8 +224,16 @@ router.get(
     const username = config.auth ? req.user.name : 'admin';
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
 
+    const ids =
+      req.params.field === 'tag' || req.params.field === 'circle'
+        ? req.params.id
+            .split(',')
+            .map(id => parseInt(id.trim()))
+            .filter(id => !isNaN(id))
+        : req.params.id.split(',');
+
     try {
-      const query = () => db.getWorksBy({ id: req.params.id, field: req.params.field, username: username });
+      const query = () => db.getWorksBy({ id: ids, field: req.params.field, username: username });
       const totalCount = await query().count('id as count');
 
       let works = null;
