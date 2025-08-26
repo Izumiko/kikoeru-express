@@ -60,6 +60,9 @@ if (process.env.NODE_ENV === 'development') {
   );
 }
 
+// Serve WebApp routes
+app.use(express.static(path.join(__dirname, './dist')));
+
 // connect-history-api-fallback 中间件后所有的 GET 请求都会变成 index (default: './index.html').
 app.use(
   history({
@@ -74,9 +77,6 @@ app.use(
 );
 // Expose API routes
 api(app);
-
-// Serve WebApp routes
-app.use(express.static(path.join(__dirname, './dist')));
 
 // 返回错误响应
 // eslint-disable-next-line no-unused-vars
