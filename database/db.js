@@ -330,7 +330,7 @@ const getWorksByKeyWord = ({ keyword, username = 'admin' } = {}) => {
     .where('t_review.user_name', username)
     .as('userrate');
 
-  const workid = keyword.match(/((R|r)(J|j))?(\d{6})/) ? keyword.match(/((R|r)(J|j))?(\d{6})/)[4] : '';
+  const workid = keyword.match(/((R|r)(J|j))?(\d+)/) ? keyword.match(/((R|r)(J|j))?(\d+)/)[4] : '';
   if (workid) {
     return knex('staticMetadata')
       .select(['staticMetadata.*', 'userrate.rating AS userRating'])
