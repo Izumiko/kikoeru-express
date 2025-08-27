@@ -42,6 +42,12 @@
     "dev": "nodemon --trace-warnings app.js",
     "scan": "node --trace-warnings ./filesystem/scanner.js",
     "build": "pkg package.json --out-path package",
+    "build:tauri": "npm run build:quasar && npm run move-quasar && npm run build:mac && npm run build:win && npm run build:linux",
+    "build:mac": "pkg package.json --out-path ../kikoeru-tauri/resources/mac --targets node14-macos-x64",
+    "build:win": "pkg package.json --out-path ../kikoeru-tauri/resources/win --targets node14-win-x64",
+    "build:linux": "pkg package.json --out-path ../kikoeru-tauri/resources/linux --targets node14-linux-x64",
+    "build:quasar": "cd ../kikoeru-quasar && npx quasar build",
+    "move-quasar": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-quasar/dist ../kikoeru-express/dist",
     "test": "cross-env eslint . && cross-env NODE_ENV=test mocha test/"
   },
   "author": "Watanuki-Kimihiro",
