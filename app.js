@@ -10,6 +10,7 @@ const history = require('connect-history-api-fallback');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
+const os = require('os');
 
 // Crash the process on "unhandled promise rejection" when NODE_ENV=test or CRASH_ON_UNHANDLED exists
 if (process.env.NODE_ENV === 'test' || process.env.CRASH_ON_UNHANDLED) {
@@ -137,10 +138,52 @@ if (config.httpsEnabled && httpsSuccess) {
 
 server.on('listening', () => {
   console.log('Express server started on port %s at %s', server.address().port, server.address().address);
+  const nets = os.networkInterfaces();
+  console.log('Your machine IP address(es):');
+  [
+    ...Object.values(nets),
+    [
+      {
+        address: 'localhost',
+        family: 'IPv4',
+        internal: false,
+      },
+    ],
+  ].forEach(ifaces => {
+    ifaces.forEach(iface => {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        console.log(' - http://%s:%s', iface.address, server.address().port);
+      }
+    });
+  });
+
+  console.log('Local Web UI accessible at: http://localhost:%s', server.address().port);
 });
+
+console.log(server.address());
 
 if (config.httpsEnabled && httpsSuccess) {
   httpsServer.on('listening', () => {
     console.log('Express server started on port %s at %s', httpsServer.address().port, httpsServer.address().address);
+    const nets = os.networkInterfaces();
+    console.log('Your machine IP address(es):');
+    [
+      ...Object.values(nets),
+      [
+        {
+          address: 'localhost',
+          family: 'IPv4',
+          internal: false,
+        },
+      ],
+    ].forEach(ifaces => {
+      ifaces.forEach(iface => {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          console.log(' - https://%s:%s', iface.address, httpsServer.address().port);
+        }
+      });
+    });
   });
+
+  console.log('Local Web UI accessible at: https://localhost:%s', httpsServer.address().port);
 }
