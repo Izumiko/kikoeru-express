@@ -61,21 +61,21 @@ if (process.env.NODE_ENV === 'development') {
   );
 }
 
-// Serve WebApp routes
-app.use(express.static(path.join(__dirname, './dist')));
-
-// connect-history-api-fallback 中间件后所有的 GET 请求都会变成 index (default: './index.html').
+// connect-history-api-fallback 必须放在静态资源之前，保证静态资源优先，其他全部回到 index.html
 app.use(
   history({
-    // 将所有带 api 的 GET 请求都代理到 parsedUrl.path, 其实就是原来的路径
     rewrites: [
       {
         from: /^\/api\/.*$/,
         to: context => context.parsedUrl.path,
       },
     ],
+    index: '/index.html',
+    verbose: false,
   })
 );
+// Serve WebApp routes
+app.use(express.static(path.join(__dirname, './dist')));
 // Expose API routes
 api(app);
 
