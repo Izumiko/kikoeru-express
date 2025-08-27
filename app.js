@@ -160,8 +160,6 @@ server.on('listening', () => {
   console.log('Local Web UI accessible at: http://localhost:%s', server.address().port);
 });
 
-console.log(server.address());
-
 if (config.httpsEnabled && httpsSuccess) {
   httpsServer.on('listening', () => {
     console.log('Express server started on port %s at %s', httpsServer.address().port, httpsServer.address().address);
