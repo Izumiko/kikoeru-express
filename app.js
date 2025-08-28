@@ -139,7 +139,7 @@ if (config.httpsEnabled && httpsSuccess) {
 server.on('listening', () => {
   console.log('Express server started on port %s at %s', server.address().port, server.address().address);
   const nets = localOnly ? [] : os.networkInterfaces();
-  console.log('Your machine IP address(es):');
+  console.log('Your machine IP address:');
   [
     ...Object.values(nets),
     [
@@ -164,7 +164,7 @@ if (config.httpsEnabled && httpsSuccess) {
   httpsServer.on('listening', () => {
     console.log('Express server started on port %s at %s', httpsServer.address().port, httpsServer.address().address);
     const nets = localOnly ? [] : os.networkInterfaces();
-    console.log('Your machine IP address(es):');
+    console.log('Your machine IP address:');
     [
       ...Object.values(nets),
       [
