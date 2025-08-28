@@ -4,6 +4,11 @@
 
 [![unstable build status](https://github.com/umonaca/kikoeru-express/actions/workflows/build-artifacts.yml/badge.svg)](https://github.com/umonaca/kikoeru-express/actions)
 
+## 相关项目
+
+- 前端：[kikoeru-quasar](https://github.com/XunJiJiang/kikoeru-quasar)
+- 桌面应用：[kikoeru-tauri](https://github.com/XunJiJiang/kikoeru-tauri)
+
 ## 功能介绍
 
 - 从 DLSite 爬取音声元数据
@@ -15,6 +20,8 @@
 - 支持为音声库添加多个根文件夹
 
 ## 源码安装部署
+
+> 建议 Node 版本 12 至 14。
 
 将 kikoeru-quasar 项目生成的 SPA 或 PWA 文件夹全部文件置于`dist`文件夹下，确保`dist/index.html`存在，然后：
 
@@ -33,7 +40,7 @@ npm start
 PWA 的优点：基本页面零延迟，可以像手机 APP 一样通过浏览器“添加到桌面”的方式安装成 App。作者自己使用的前端版本。  
 缺点：更新新版本时需要至少多刷新一次。
 
-本项目还有打包好的 **Windows 系统下可用的 exe 可执行文件**与 **docker 镜像**版本，docker 镜像及 docker-compose 的使用说明详见[**用户文档**](https://github.com/umonaca/kikoeru-express/wiki/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)  
+本项目还有打包好的 [**windows、mac、linux系统下可用的可执行文件**](https://github.com/XunJiJiang/kikoeru-express/releases)与 **docker 镜像**版本，docker 镜像及 docker-compose 的使用说明详见[**用户文档**](https://github.com/umonaca/kikoeru-express/wiki/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)  
 使用 docker-compose 只需调整`docker-compose.yml`内的挂载位置以符合您的存储路径即可。
 
 ## 技术栈
