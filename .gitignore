@@ -104,7 +104,7 @@ dist
 .tern-port
 
 # Visual Studio Code
-.vscode/
+# .vscode/
 
 # Windows Batch
 /*.bat
