@@ -19,6 +19,7 @@ const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } =
 const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
+const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { ScanSession } = require('../src/modules/scanner/session');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
@@ -138,6 +139,14 @@ const { performCleanup } = createMissingWorkCleaner({
   removeWork: db.removeWork,
   deleteCoverImageFromDisk,
   addMainLog,
+});
+const { updateMetadata } = createMetadataUpdater({
+  tagLanguage: config.tagLanguage,
+  scrapeWorkMetadataFromDLsite,
+  scrapeDynamicWorkMetadataFromDLsite,
+  updateWorkMetadata: db.updateWorkMetadata,
+  addTask,
+  emitTaskLog,
 });
 
 const MAX = config.maxParallelism; // 并发请求上限
@@ -351,36 +360,6 @@ const performScan = () => {
       });
 
       process.exit(1);
-    });
-};
-
-/**
- * 更新音声的动态元数据
- * @param {number} id work id
- * @param {options = {}} options includeVA, includeTags
- */
-const updateMetadata = (id, options = {}) => {
-  let scrapeProcessor = () => scrapeDynamicWorkMetadataFromDLsite(id);
-  if (options.includeVA || options.includeTags || options.includeNSFW || options.refreshAll) {
-    // static + dynamic
-    scrapeProcessor = () => scrapeWorkMetadataFromDLsite(id, config.tagLanguage);
-  }
-
-  const rjcode = formatRjCode(id);
-  addTask(rjcode); // addTask only accepts a string
-  return scrapeProcessor() // 抓取该音声的元数据
-    .then(metadata => {
-      // 将抓取到的元数据插入到数据库
-      emitTaskLog(` -> [RJ${rjcode}] 元数据抓取成功，准备更新元数据...`, rjcode);
-      metadata.id = id;
-      return db.updateWorkMetadata(metadata, options).then(() => {
-        emitTaskLog(` -> [RJ${rjcode}] 元数据更新成功`, rjcode);
-        return 'updated';
-      });
-    })
-    .catch(err => {
-      emitTaskLog(`  ! [RJ${rjcode}] 在抓取元数据过程中出错: ${err}`, rjcode, 'error');
-      return 'failed';
     });
 };
 
