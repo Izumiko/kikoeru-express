@@ -1,4 +1,3 @@
-const fs = require('fs');
 const LimitPromise = require('limit-promise'); // 限制并发数量
 
 const axios = require('../scraper/axios.js'); // 数据请求
@@ -21,6 +20,7 @@ const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
+const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
 const { ScanSession } = require('../src/modules/scanner/session');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
 const { createWorkRefresher } = require('../src/modules/scanner/work-refresher');
@@ -167,6 +167,13 @@ const { processFolders } = createFolderProcessorRunner({
   removeTask,
   addResult,
 });
+const { initializeScan } = createScanInitializer({
+  coverFolderDir: config.coverFolderDir,
+  createSchema,
+  createUser: db.createUser,
+  hashPassword: md5,
+  addMainLog,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -183,40 +190,8 @@ const processFolderLimited = folder => {
  * createCoverFolder => createSchema => cleanup => getAllFolderList => processAllFolder
  */
 const performScan = () => {
-  if (!fs.existsSync(config.coverFolderDir)) {
-    try {
-      fs.mkdirSync(config.coverFolderDir, { recursive: true });
-    } catch (err) {
-      console.error(` ! 在创建存放音声封面图片的文件夹时出错: ${err.message}`);
-      addMainLog({
-        level: 'error',
-        message: `在创建存放音声封面图片的文件夹时出错: ${err.message}`,
-      });
-      process.exit(1);
-    }
-  }
-
-  return createSchema() // 构建数据库结构
+  return initializeScan()
     .then(async () => {
-      try {
-        // 创建内置的管理员账号
-        await db.createUser({
-          name: 'admin',
-          password: md5('admin'),
-          group: 'administrator',
-        });
-      } catch (err) {
-        if (err.message.indexOf('已存在') === -1) {
-          console.error(` ! 在创建 admin 账号时出错: ${err.message}`);
-          addMainLog({
-            level: 'error',
-            message: `在创建 admin 账号时出错: ${err.message}`,
-          });
-
-          process.exit(1);
-        }
-      }
-
       const counts = new ScanCounters();
 
       // Fix hash collision bug in t_va
