@@ -5,8 +5,8 @@ const jschardet = require('jschardet');
 const { param } = require('express-validator');
 const { config } = require('../../../config');
 const db = require('../../../database/db');
-const { joinFragments } = require('../../../routes/utils/url');
-const { isValidRequest } = require('../../../routes/utils/validate');
+const { joinFragments } = require('../../shared/http/url');
+const { isValidRequest } = require('../../shared/http/validate');
 const { getTrackList } = require('./service');
 
 const removeFileExtension = filePath => filePath.slice(0, filePath.lastIndexOf('.'));

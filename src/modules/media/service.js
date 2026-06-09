@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const recursiveReaddir = require('recursive-readdir');
 const { orderBy } = require('natural-orderby');
-const { joinFragments } = require('../../../routes/utils/url');
+const { joinFragments } = require('../../shared/http/url');
 const { config } = require('../../../config');
 
 const playableExtensions = new Set([

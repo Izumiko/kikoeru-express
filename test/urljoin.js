@@ -1,7 +1,7 @@
 //eslint-disable-next-line node/no-unpublished-require
 const chai = require('chai');
 const expect = chai.expect;
-const { joinFragments } = require('../routes/utils/url')
+const { joinFragments } = require('../src/shared/http/url')
 
 describe('joinfragments()', function(){
   it('should return correct offload path for base case', function() {

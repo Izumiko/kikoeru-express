@@ -3,8 +3,8 @@ const { query, body } = require('express-validator');
 
 const { config } = require('../../../config');
 const db = require('../../../database/db');
-const normalize = require('../../../routes/utils/normalize');
-const { isValidRequest } = require('../../../routes/utils/validate');
+const normalize = require('../../shared/metadata/normalize');
+const { isValidRequest } = require('../../shared/http/validate');
 
 const router = express.Router();
 const PAGE_SIZE = config.pageSize || 12;
