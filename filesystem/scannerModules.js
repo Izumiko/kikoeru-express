@@ -23,6 +23,7 @@ const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updat
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { ScanSession } = require('../src/modules/scanner/session');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
+const { createWorkRefresher } = require('../src/modules/scanner/work-refresher');
 
 // 只有在子进程中 process 对象才有 send() 方法
 process.send = process.send || function () {};
@@ -147,6 +148,13 @@ const { updateMetadata } = createMetadataUpdater({
   updateWorkMetadata: db.updateWorkMetadata,
   addTask,
   emitTaskLog,
+});
+const { refreshWorks } = createWorkRefresher({
+  tasks,
+  addMainLog,
+  emitMainLog,
+  removeTask,
+  addResult,
 });
 
 const MAX = config.maxParallelism; // 并发请求上限
@@ -382,38 +390,6 @@ const fixVoiceActorBug = () => {
   const filter = query => query.where('va_id', nameToUUID('かの仔')).orWhere('va_id', nameToUUID('こっこ'));
   const processor = id => updateVoiceActorLimited(id);
   return refreshWorks(filter(baseQuery), 'work_id', processor);
-};
-
-const refreshWorks = async (query, idColumnName, processor) => {
-  return query.then(async works => {
-    console.log(` * 共 ${works.length} 个音声.`);
-    addMainLog({
-      level: 'info',
-      message: `共 ${works.length} 个作品. 开始刷新`,
-    });
-
-    const counts = new ScanCounters();
-
-    const promises = works.map(work => {
-      const workid = work[idColumnName];
-      const rjcode = formatRjCode(workid);
-      return processor(workid).then(result => {
-        // 统计处理结果
-        counts.increment(result === 'failed' ? 'failed' : 'updated');
-        tasks.find(task => task.rjcode === rjcode).result = result;
-        removeTask(rjcode);
-        if (result === 'failed') {
-          addResult(rjcode, 'failed', counts.failed);
-        } else {
-          addResult(rjcode, 'updated', counts.updated);
-        }
-      });
-    });
-    await Promise.all(promises);
-    emitMainLog(` * 完成元数据更新 ${counts.updated} 个，失败 ${counts.failed} 个.`);
-
-    return counts;
-  });
 };
 
 module.exports = { performScan, performUpdate };
