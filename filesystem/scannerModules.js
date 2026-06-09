@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 const LimitPromise = require('limit-promise'); // 限制并发数量
 
 const axios = require('../scraper/axios.js'); // 数据请求
@@ -16,7 +15,7 @@ const { config } = require('../config');
 const { updateLock } = require('../upgrade');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
 const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
-const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
+const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
@@ -156,6 +155,11 @@ const { refreshWorks } = createWorkRefresher({
   removeTask,
   addResult,
 });
+const { collectUniqueFolders } = createFolderCollector({
+  rootFolders: config.rootFolders,
+  getFolderList,
+  addMainLog,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -253,19 +257,9 @@ const performScan = () => {
         }
       }
 
-      let folderList = [];
+      let folderResult;
       try {
-        for (const rootFolder of config.rootFolders) {
-          for await (const folder of getFolderList(rootFolder, '', 0, addMainLog)) {
-            folderList.push(folder);
-          }
-        }
-
-        console.log(` * 共找到 ${folderList.length} 个音声文件夹.`);
-        addMainLog({
-          level: 'info',
-          message: `共找到 ${folderList.length} 个音声文件夹.`,
-        });
+        folderResult = await collectUniqueFolders();
       } catch (err) {
         console.error(` ! 在扫描根文件夹的过程中出错: ${err.message}`);
         addMainLog({
@@ -277,44 +271,8 @@ const performScan = () => {
       }
 
       try {
-        // 去重，避免在之后的并行处理文件夹过程中，出现对数据库同时写入同一条记录的错误
-        const dedupedFolders = dedupeFoldersById(folderList);
-        const uniqueFolderList = dedupedFolders.uniqueArr;
-        const duplicate = dedupedFolders.duplicate;
-        const duplicateNum = folderList.length - uniqueFolderList.length;
-
-        if (duplicateNum) {
-          console.log(` ! 发现 ${duplicateNum} 个重复的音声文件夹.`);
-          addMainLog({
-            level: 'info',
-            message: `发现 ${duplicateNum} 个重复的音声文件夹.`,
-          });
-
-          for (const key in duplicate) {
-            const addedFolder = uniqueFolderList.find(folder => folder.id === parseInt(key));
-            duplicate[key].push(addedFolder); // 最后一项为将要添加到数据库中的音声文件夹
-
-            const rjcode = formatRjCode(key);
-            console.log(` -> [RJ${rjcode}] 存在多个文件夹:`);
-            addMainLog({
-              level: 'info',
-              message: `[RJ${rjcode}] 存在多个文件夹:`,
-            });
-
-            // 打印音声文件夹的绝对路径
-            duplicate[key].forEach(folder => {
-              const rootFolder = config.rootFolders.find(rootFolder => rootFolder.name === folder.rootFolderName);
-              const absolutePath = path.join(rootFolder.path, folder.relativePath);
-              console.log(`   "${absolutePath}"`);
-              addMainLog({
-                level: 'info',
-                message: `"${absolutePath}"`,
-              });
-            });
-          }
-        }
-
-        counts.increment('skipped', duplicateNum);
+        const uniqueFolderList = folderResult.uniqueFolderList;
+        counts.increment('skipped', folderResult.duplicateNum);
 
         const promises = uniqueFolderList.map(folder =>
           processFolderLimited(folder).then(result => {
