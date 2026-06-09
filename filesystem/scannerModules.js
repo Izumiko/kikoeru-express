@@ -16,6 +16,7 @@ const { nameToUUID } = require('../scraper/utils');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
+const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');
@@ -397,12 +398,7 @@ const performScan = () => {
         }
       }
 
-      const counts = {
-        added: 0,
-        failed: 0,
-        skipped: 0,
-        updated: 0,
-      };
+      const counts = new ScanCounters();
 
       // Fix hash collision bug in t_va
       // Scan to repopulate the Voice Actor data for those problematic works
@@ -412,7 +408,7 @@ const performScan = () => {
         emitMainLog(' * 开始进行声优元数据修复，需要联网');
         try {
           const updateResult = await fixVoiceActorBug();
-          counts.updated += updateResult;
+          counts.increment('updated', updateResult);
           updateLock.removeLockFile();
           emitMainLog(' * 完成元数据修复');
         } catch (err) {
@@ -510,13 +506,13 @@ const performScan = () => {
           }
         }
 
-        counts['skipped'] += duplicateNum;
+        counts.increment('skipped', duplicateNum);
 
         const promises = uniqueFolderList.map(folder =>
           processFolderLimited(folder).then(result => {
             // 统计处理结果
             const rjcode = formatRjCode(folder.id);
-            counts[result] += 1;
+            counts.increment(result);
 
             if (result === 'added') {
               console.log(` -> [RJ${rjcode}] 添加成功! Added: ${counts.added}`);
@@ -543,9 +539,7 @@ const performScan = () => {
         );
 
         return Promise.all(promises).then(() => {
-          const message = counts.updated
-            ? `扫描完成: 更新 ${counts.updated} 个，新增 ${counts.added} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`
-            : `扫描完成: 新增 ${counts.added} 个，跳过 ${counts.skipped} 个，失败 ${counts.failed} 个.`;
+          const message = createScanFinishedMessage(counts);
           console.log(` * ${message}`);
           process.send({
             event: 'SCAN_FINISHED',
@@ -621,7 +615,7 @@ const performUpdate = async (options = null) => {
 
   const counts = await refreshWorks(baseQuery, 'id', processor);
 
-  const message = `扫描完成: 更新 ${counts.updated} 个，失败 ${counts.failed} 个.`;
+  const message = createUpdateFinishedMessage(counts);
   console.log(` * ${message}`);
   process.send({
     event: 'SCAN_FINISHED',
@@ -648,17 +642,14 @@ const refreshWorks = async (query, idColumnName, processor) => {
       message: `共 ${works.length} 个作品. 开始刷新`,
     });
 
-    const counts = {
-      updated: 0,
-      failed: 0,
-    };
+    const counts = new ScanCounters();
 
     const promises = works.map(work => {
       const workid = work[idColumnName];
       const rjcode = formatRjCode(workid);
       return processor(workid).then(result => {
         // 统计处理结果
-        result === 'failed' ? (counts['failed'] += 1) : (counts['updated'] += 1);
+        counts.increment(result === 'failed' ? 'failed' : 'updated');
         tasks.find(task => task.rjcode === rjcode).result = result;
         removeTask(rjcode);
         if (result === 'failed') {
