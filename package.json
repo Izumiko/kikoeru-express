@@ -11,7 +11,7 @@
     "kikoeru"
   ],
   "engines": {
-    "node": ">=12.0.0 <=14.x"
+    "node": ">=22.0.0"
   },
   "bin": {
     "kikoeru-express": "app.js"
@@ -41,6 +41,7 @@
   "scripts": {
     "start": "node --trace-warnings app.js",
     "dev": "nodemon --trace-warnings app.js",
+    "dev:tsx": "tsx app.js",
     "scan": "node --trace-warnings ./filesystem/scanner.js",
     "build": "pkg package.json --out-path package",
     "build:tauri": "npm run build:quasar && npm run move-quasar && npm run build:mac && npm run build:win && npm run build:linux",
@@ -49,7 +50,10 @@
     "build:linux": "pkg package.json --output ../kikoeru-tauri/src-tauri/resources/linux/kikoeru-express --targets node14-linux-x64",
     "build:quasar": "cd ../kikoeru-quasar && npx quasar build",
     "move-quasar": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-quasar/dist/spa ../kikoeru-express/dist",
-    "test": "cross-env eslint . && cross-env NODE_ENV=test mocha test/"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "cross-env NODE_ENV=test mocha test/",
+    "test": "npm run lint && npm run typecheck && npm run test:unit"
   },
   "author": "Watanuki-Kimihiro",
   "license": "GPL-3.0-or-later",
@@ -89,6 +93,7 @@
     "yargs": "^16.2.0"
   },
   "devDependencies": {
+    "@types/node": "^24.13.1",
     "chai": "^4.3.4",
     "chai-string": "^1.5.0",
     "cross-env": "^7.0.3",
@@ -96,6 +101,8 @@
     "eslint-plugin-node": "^11.1.0",
     "mocha": "^8.3.2",
     "nodemon": "^3.1.10",
-    "serve-index": "^1.9.1"
+    "serve-index": "^1.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
   }
 }
