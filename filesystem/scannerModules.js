@@ -16,6 +16,7 @@ const { updateLock } = require('../upgrade');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
 const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
+const { createFolderProcessorRunner } = require('../src/modules/scanner/folder-processor-runner');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
@@ -160,6 +161,12 @@ const { collectUniqueFolders } = createFolderCollector({
   getFolderList,
   addMainLog,
 });
+const { processFolders } = createFolderProcessorRunner({
+  tasks,
+  addLogForTask,
+  removeTask,
+  addResult,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -274,37 +281,7 @@ const performScan = () => {
         const uniqueFolderList = folderResult.uniqueFolderList;
         counts.increment('skipped', folderResult.duplicateNum);
 
-        const promises = uniqueFolderList.map(folder =>
-          processFolderLimited(folder).then(result => {
-            // 统计处理结果
-            const rjcode = formatRjCode(folder.id);
-            counts.increment(result);
-
-            if (result === 'added') {
-              console.log(` -> [RJ${rjcode}] 添加成功! Added: ${counts.added}`);
-              addLogForTask(rjcode, {
-                level: 'info',
-                message: `添加成功! Added: ${counts.added}`,
-              });
-
-              tasks.find(task => task.rjcode === rjcode).result = 'added';
-              removeTask(rjcode);
-              addResult(rjcode, 'added', counts.added);
-            } else if (result === 'failed') {
-              console.error(` -> [RJ${rjcode}] 添加失败! Failed: ${counts.failed}`);
-              addLogForTask(rjcode, {
-                level: 'error',
-                message: `添加失败! Failed: ${counts.failed}`,
-              });
-
-              tasks.find(task => task.rjcode === rjcode).result = 'failed';
-              removeTask(rjcode);
-              addResult(rjcode, 'failed', counts.failed);
-            }
-          })
-        );
-
-        return Promise.all(promises).then(() => {
+        return processFolders(uniqueFolderList, processFolderLimited, counts).then(() => {
           const message = createScanFinishedMessage(counts);
           scannerLifecycle.finish(message, fixVAFailed ? 1 : 0);
         });
