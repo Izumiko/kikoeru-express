@@ -126,4 +126,17 @@ describe('API contract', function () {
       config.jwtsecret = previous.jwtsecret;
     }
   });
+
+  it('PUT /api/review returns validation errors for missing work id', async function () {
+    const res = await request(app, {
+      path: '/api/review',
+      method: 'PUT',
+      body: {
+        rating: 5,
+      },
+    });
+
+    expect(res.statusCode).to.equal(400);
+    expect(res.body.errors).to.be.an('array');
+  });
 });
