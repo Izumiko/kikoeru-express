@@ -43,6 +43,20 @@ describe('API contract', function () {
     }
   });
 
+  it('POST /api/auth/me returns validation errors for invalid login input', async function () {
+    const res = await request(app, {
+      path: '/api/auth/me',
+      method: 'POST',
+      body: {
+        name: 'adm',
+        password: 'bad',
+      },
+    });
+
+    expect(res.statusCode).to.equal(422);
+    expect(res.body.errors).to.be.an('array');
+  });
+
   it('GET /api/config/shared returns the public playback config contract', async function () {
     const res = await request(app, { path: '/api/config/shared' });
 
