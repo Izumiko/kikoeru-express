@@ -16,12 +16,14 @@ const { nameToUUID } = require('../scraper/utils');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
+const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');
 
 // 只有在子进程中 process 对象才有 send() 方法
 process.send = process.send || function () {};
 
 const scanSession = new ScanSession(event => process.send(event));
+const scannerLogger = new ScannerLogger(scanSession);
 const tasks = scanSession.tasks;
 
 const addTask = rjcode => scanSession.addTask(rjcode);
@@ -30,21 +32,9 @@ const addLogForTask = (rjcode, log) => scanSession.addLogForTask(rjcode, log);
 const addResult = (rjcode, result, count) => scanSession.addResult(rjcode, result, count);
 const addMainLog = log => scanSession.addMainLog(log);
 
-const emitMainLog = (message, level = 'info', truncate = 3) => {
-  console.log(message);
-  addMainLog({
-    level: level,
-    message: message.substring(truncate),
-  });
-};
-
-const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) => {
-  console.log(message);
-  addLogForTask(rjcode, {
-    level: level,
-    message: message.substring(truncate),
-  });
-};
+const emitMainLog = (message, level = 'info', truncate = 3) => scannerLogger.emitMainLog(message, level, truncate);
+const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) =>
+  scannerLogger.emitTaskLog(message, rjcode, level, truncate);
 
 process.on('message', m => {
   if (m.emit === 'SCAN_INIT_STATE') {
