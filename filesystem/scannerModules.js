@@ -16,77 +16,19 @@ const { nameToUUID } = require('../scraper/utils');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
+const { ScanSession } = require('../src/modules/scanner/session');
 
 // 只有在子进程中 process 对象才有 send() 方法
 process.send = process.send || function () {};
 
-const tasks = [];
-const failedTasks = [];
-const mainLogs = [];
-const results = [];
+const scanSession = new ScanSession(event => process.send(event));
+const tasks = scanSession.tasks;
 
-const addTask = rjcode =>
-  tasks.push({
-    rjcode,
-    result: null,
-    logs: [],
-  });
-
-const removeTask = rjcode => {
-  const index = tasks.findIndex(task => task.rjcode === rjcode);
-  const task = tasks[index];
-  tasks.splice(index, 1);
-  process.send({
-    event: 'SCAN_TASKS',
-    payload: {
-      tasks,
-    },
-  });
-
-  if (task.result === 'failed') {
-    failedTasks.push(task);
-    process.send({
-      event: 'SCAN_FAILED_TASKS',
-      payload: {
-        failedTasks,
-      },
-    });
-  }
-};
-
-const addLogForTask = (rjcode, log) => {
-  tasks.find(task => task.rjcode === rjcode).logs.push(log);
-  process.send({
-    event: 'SCAN_TASKS',
-    payload: {
-      tasks,
-    },
-  });
-};
-
-const addResult = (rjcode, result, count) => {
-  results.push({
-    rjcode,
-    result,
-    count,
-  });
-  process.send({
-    event: 'SCAN_RESULTS',
-    payload: {
-      results,
-    },
-  });
-};
-
-const addMainLog = log => {
-  mainLogs.push(log);
-  process.send({
-    event: 'SCAN_MAIN_LOGS',
-    payload: {
-      mainLogs,
-    },
-  });
-};
+const addTask = rjcode => scanSession.addTask(rjcode);
+const removeTask = rjcode => scanSession.removeTask(rjcode);
+const addLogForTask = (rjcode, log) => scanSession.addLogForTask(rjcode, log);
+const addResult = (rjcode, result, count) => scanSession.addResult(rjcode, result, count);
+const addMainLog = log => scanSession.addMainLog(log);
 
 const emitMainLog = (message, level = 'info', truncate = 3) => {
   console.log(message);
@@ -106,15 +48,7 @@ const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) => {
 
 process.on('message', m => {
   if (m.emit === 'SCAN_INIT_STATE') {
-    process.send({
-      event: 'SCAN_INIT_STATE',
-      payload: {
-        tasks,
-        failedTasks,
-        mainLogs,
-        results,
-      },
-    });
+    scanSession.emitInitState();
   } else if (m.exit) {
     console.error(' ! 终止扫描进程.');
     addMainLog({
