@@ -12,6 +12,7 @@ const { nameToUUID } = require('../scraper/utils');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
+const { createCleanupRunner } = require('../src/modules/scanner/cleanup-runner');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
 const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
@@ -174,6 +175,11 @@ const { initializeScan } = createScanInitializer({
   hashPassword: md5,
   addMainLog,
 });
+const { runCleanup } = createCleanupRunner({
+  skipCleanup: config.skipCleanup,
+  performCleanup,
+  addMainLog,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -211,33 +217,7 @@ const performScan = () => {
         }
       }
 
-      if (config.skipCleanup) {
-        console.log(' * 根据设置跳过清理.');
-      } else {
-        try {
-          console.log(' * 清理本地不再存在的音声的数据与封面图片...');
-          addMainLog({
-            level: 'info',
-            message: '清理本地不再存在的音声的数据与封面图片...',
-          });
-
-          await performCleanup();
-
-          console.log(' * 清理完成. 现在开始扫描...');
-          addMainLog({
-            level: 'info',
-            message: '清理完成. 现在开始扫描...',
-          });
-        } catch (err) {
-          console.error(` ! 在执行清理过程中出错: ${err.message}`);
-          addMainLog({
-            level: 'error',
-            message: `在执行清理过程中出错: ${err.message}`,
-          });
-
-          process.exit(1);
-        }
-      }
+      await runCleanup();
 
       let folderResult;
       try {
