@@ -19,6 +19,7 @@ const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } =
 const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
+const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { ScanSession } = require('../src/modules/scanner/session');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
 
@@ -131,6 +132,13 @@ const { processFolder } = createWorkProcessor({
   addTask,
   addLogForTask,
 });
+const { performCleanup } = createMissingWorkCleaner({
+  knex: db.knex,
+  rootFolders: config.rootFolders,
+  removeWork: db.removeWork,
+  deleteCoverImageFromDisk,
+  addMainLog,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -140,46 +148,6 @@ const limitP = new LimitPromise(MAX); // 核心控制器
  */
 const processFolderLimited = folder => {
   return limitP.call(processFolder, folder);
-};
-
-/**
- * 清理本地不再存在的音声: 将其元数据从数据库中移除，并删除其封面图片
- */
-const performCleanup = async () => {
-  const trxProvider = db.knex.transactionProvider();
-  const trx = await trxProvider();
-  const works = await trx('t_work').select('id', 'root_folder', 'dir');
-  const promises = works.map(
-    work =>
-      new Promise((resolve, reject) => {
-        // 检查每个音声的根文件夹或本地路径是否仍然存在
-        const rootFolder = config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
-        if (!rootFolder || !fs.existsSync(path.join(rootFolder.path, work.dir))) {
-          db.removeWork(work.id, trxProvider) // 将其数据项从数据库中移除
-            .then(result => {
-              // 然后删除其封面图片
-              const rjcode = formatRjCode(work.id);
-              deleteCoverImageFromDisk(rjcode)
-                .catch(err => {
-                  if (err && err.code !== 'ENOENT') {
-                    console.error(`  ! [RJ${rjcode}] 在删除封面过程中出错: ${err.message}`);
-                    addMainLog({
-                      level: 'error',
-                      message: `[RJ${rjcode}] 在删除封面过程中出错: ${err.message}`,
-                    });
-                  }
-                })
-                .then(() => resolve(result));
-            })
-            .catch(err => reject(err));
-        } else {
-          resolve();
-        }
-      })
-  );
-
-  await Promise.all(promises);
-  trx.commit();
 };
 
 /**
