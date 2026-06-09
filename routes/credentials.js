@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator'); // 后端校验
-const { md5 } = require('../auth/utils');
+const { hashPassword } = require('../src/modules/auth/service.js');
 const { config } = require('../config');
 const db = require('../database/db');
 
@@ -34,7 +34,7 @@ router.post(
     if (!config.auth || req.user.name === 'admin') {
       db.createUser({
         name: user.name,
-        password: md5(user.password),
+        password: hashPassword(user.password),
         group: user.group,
       })
         .then(() => res.send({ message: `用户 ${user.name} 创建成功.` }))
@@ -68,7 +68,7 @@ router.put(
     const user = {
       name: req.body.name,
     };
-    const newPassword = md5(req.body.newPassword);
+    const newPassword = hashPassword(req.body.newPassword);
 
     if (!config.auth || req.user.name === 'admin' || req.user.name === user.name) {
       db.updateUserPassword(user, newPassword)

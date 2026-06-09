@@ -2,8 +2,14 @@ const express = require('express');
 const { check, validationResult } = require('express-validator'); // 后端校验
 const expressJwt = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.user
 
-const { signToken, md5 } = require('../auth/utils');
 const db = require('../database/db');
+const {
+  getRouteJwtOptions,
+  hashPassword,
+  shouldUpgradePasswordHash,
+  signToken,
+  verifyPassword,
+} = require('../src/modules/auth/service.js');
 
 const { config } = require('../config');
 
@@ -29,14 +35,16 @@ router.post(
 
     db.knex('t_user')
       .where('name', '=', name)
-      .andWhere('password', '=', md5(password))
       .first()
       .then(user => {
-        if (!user) {
+        if (!user || !verifyPassword(password, user.password)) {
           res.set('WWW-Authenticate', 'Bearer realm="Authorization Required"');
           res.status(401).send({ error: '用户名或密码错误.' });
         } else {
           const token = signToken(user);
+          if (shouldUpgradePasswordHash(user.password)) {
+            db.updateUserPassword(user, hashPassword(password)).catch(err => console.error(err));
+          }
           res.send({ token });
         }
       })
@@ -49,7 +57,7 @@ router.post(
 );
 
 if (config.auth) {
-  router.get('/me', expressJwt({ secret: config.jwtsecret, algorithms: ['HS256'] }));
+  router.get('/me', expressJwt(getRouteJwtOptions()));
 }
 
 // 获取用户信息

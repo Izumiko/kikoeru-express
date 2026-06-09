@@ -3,20 +3,16 @@ const socket = require('socket.io');
 const jwtAuth = require('socketio-jwt-auth'); // 用于 JWT 验证的 socket.io 中间件
 const child_process = require('child_process'); // 子进程
 const { config } = require('./config');
+const { getSocketJwtOptions, toSocketAdminUser } = require('./src/modules/auth/service.js');
 
 const initSocket = server => {
   const io = socket(server);
   if (config.auth) {
     io.use(
       jwtAuth.authenticate(
-        {
-          secret: config.jwtsecret,
-        },
+        getSocketJwtOptions(),
         (payload, done) => {
-          const user = {
-            name: payload.name,
-            group: payload.group,
-          };
+          const user = toSocketAdminUser(payload);
 
           if (user.name === 'admin') {
             done(null, user);
