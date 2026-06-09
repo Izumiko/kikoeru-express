@@ -8,7 +8,9 @@ const axios = require('../scraper/axios.js'); // 数据请求
 const { scrapeWorkMetadataFromDLsite, scrapeDynamicWorkMetadataFromDLsite } = require('../scraper/dlsite');
 const db = require('../database/db');
 const { createSchema } = require('../database/schema');
-const { getFolderList, deleteCoverImageFromDisk, saveCoverImageToDisk, formatRjCode } = require('./utils');
+const { deleteCoverImageFromDisk, saveCoverImageToDisk } = require('../src/modules/media/cover-storage');
+const { getFolderList } = require('../src/modules/media/folder-scanner');
+const { formatRjCode } = require('../src/modules/media/rj-code');
 const { md5 } = require('../auth/utils');
 const { nameToUUID } = require('../scraper/utils');
 

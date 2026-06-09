@@ -3,7 +3,9 @@ const express = require('express');
 const { param, query } = require('express-validator');
 const db = require('../../../database/db');
 const { config } = require('../../../config');
-const { formatRjCode, getTrackList, toTree } = require('../media/service');
+const { formatRjCode } = require('../media/rj-code');
+const { getTrackList } = require('../media/tracks');
+const { toTree } = require('../media/tree');
 const normalize = require('../../shared/metadata/normalize');
 const { isValidRequest } = require('../../shared/http/validate');
 

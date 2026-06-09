@@ -2,7 +2,7 @@ const htmlparser = require('htmlparser2'); // 解析器
 
 const axios = require('./axios'); // 数据请求
 const { nameToUUID } = require('./utils');
-const { formatRjCode } = require('../filesystem/utils');
+const { formatRjCode } = require('../src/modules/media/rj-code');
 
 /**
  * Scrapes work metadata from public HVDB page HTML.

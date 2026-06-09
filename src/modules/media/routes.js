@@ -7,7 +7,7 @@ const { config } = require('../../../config');
 const db = require('../../../database/db');
 const { joinFragments } = require('../../shared/http/url');
 const { isValidRequest } = require('../../shared/http/validate');
-const { getTrackList } = require('./service');
+const { getTrackList } = require('./tracks');
 
 const removeFileExtension = filePath => filePath.slice(0, filePath.lastIndexOf('.'));
 
