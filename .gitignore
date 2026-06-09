@@ -49,6 +49,7 @@ typings/
 
 # Optional npm cache directory
 .npm
+.npm-cache
 
 # Optional eslint cache
 .eslintcache
@@ -114,20 +115,20 @@ package
 package-macos
 
 # Config
-config
+/config
 
 # Covers
-covers
+/covers
 
 # SQLite
-sqlite
+/sqlite
 
 # VoiceWork
-VoiceWork
+/VoiceWork
 
 # HTTPS
-kikoeru.crt
-kikoeru.key
+/kikoeru.crt
+/kikoeru.key
 
 # Release template
 Release-Template.md

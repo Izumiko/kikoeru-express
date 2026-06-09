@@ -18,6 +18,7 @@
   },
   "pkg": {
     "scripts": [
+      "src/**/*.js",
       "filesystem/scanner.js",
       "filesystem/updater.js",
       "dist/**/*.js",
