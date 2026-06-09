@@ -14,7 +14,7 @@ const { config } = require('../config');
 const { updateLock } = require('../upgrade');
 const { createCleanupRunner } = require('../src/modules/scanner/cleanup-runner');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
-const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
+const { createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
 const { createFolderProcessorRunner } = require('../src/modules/scanner/folder-processor-runner');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
@@ -22,6 +22,7 @@ const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
+const { createScanRunner } = require('../src/modules/scanner/scan-runner');
 const { ScanSession } = require('../src/modules/scanner/session');
 const { createVoiceActorRepairRunner } = require('../src/modules/scanner/voice-actor-repair-runner');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
@@ -196,60 +197,22 @@ const limitP = new LimitPromise(MAX); // 核心控制器
 const processFolderLimited = folder => {
   return limitP.call(processFolder, folder);
 };
+const { runScan } = createScanRunner({
+  initializeScan,
+  runVoiceActorRepair,
+  runCleanup,
+  collectUniqueFolders,
+  processFolders,
+  processFolder: processFolderLimited,
+  finishScan: (message, exitCode) => scannerLifecycle.finish(message, exitCode),
+  addMainLog,
+});
 
 /**
  * 执行扫描
  * createCoverFolder => createSchema => cleanup => getAllFolderList => processAllFolder
  */
-const performScan = () => {
-  return initializeScan()
-    .then(async () => {
-      const counts = new ScanCounters();
-      const fixVAFailed = await runVoiceActorRepair(counts);
-
-      await runCleanup();
-
-      let folderResult;
-      try {
-        folderResult = await collectUniqueFolders();
-      } catch (err) {
-        console.error(` ! 在扫描根文件夹的过程中出错: ${err.message}`);
-        addMainLog({
-          level: 'error',
-          message: `在扫描根文件夹的过程中出错: ${err.message}`,
-        });
-
-        process.exit(1);
-      }
-
-      try {
-        const uniqueFolderList = folderResult.uniqueFolderList;
-        counts.increment('skipped', folderResult.duplicateNum);
-
-        return processFolders(uniqueFolderList, processFolderLimited, counts).then(() => {
-          const message = createScanFinishedMessage(counts);
-          scannerLifecycle.finish(message, fixVAFailed ? 1 : 0);
-        });
-      } catch (err) {
-        console.error(` ! 在并行处理音声文件夹过程中出错: ${err.message}`);
-        addMainLog({
-          level: 'error',
-          message: `在并行处理音声文件夹过程中出错: ${err.message}`,
-        });
-
-        process.exit(1);
-      }
-    })
-    .catch(err => {
-      console.error(` ! 在构建数据库结构过程中出错: ${err.message}`);
-      addMainLog({
-        level: 'error',
-        message: `在构建数据库结构过程中出错: ${err.message}`,
-      });
-
-      process.exit(1);
-    });
-};
+const performScan = () => runScan();
 
 const updateMetadataLimited = (id, options = null) => limitP.call(updateMetadata, id, options);
 const updateVoiceActorLimited = id => limitP.call(updateMetadata, id, { includeVA: true });
