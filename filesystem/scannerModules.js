@@ -23,6 +23,7 @@ const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updat
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
 const { ScanSession } = require('../src/modules/scanner/session');
+const { createVoiceActorRepairRunner } = require('../src/modules/scanner/voice-actor-repair-runner');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
 const { createWorkRefresher } = require('../src/modules/scanner/work-refresher');
 
@@ -180,6 +181,11 @@ const { runCleanup } = createCleanupRunner({
   performCleanup,
   addMainLog,
 });
+const { runVoiceActorRepair } = createVoiceActorRepairRunner({
+  updateLock,
+  repairVoiceActors: () => fixVoiceActorBug(),
+  emitMainLog,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
@@ -199,23 +205,7 @@ const performScan = () => {
   return initializeScan()
     .then(async () => {
       const counts = new ScanCounters();
-
-      // Fix hash collision bug in t_va
-      // Scan to repopulate the Voice Actor data for those problematic works
-      // かの仔 and こっこ
-      let fixVAFailed = false;
-      if (updateLock.isLockFilePresent && updateLock.lockFileConfig.fixVA) {
-        emitMainLog(' * 开始进行声优元数据修复，需要联网');
-        try {
-          const updateResult = await fixVoiceActorBug();
-          counts.increment('updated', updateResult);
-          updateLock.removeLockFile();
-          emitMainLog(' * 完成元数据修复');
-        } catch (err) {
-          emitMainLog(err.toString(), 'error');
-          fixVAFailed = true;
-        }
-      }
+      const fixVAFailed = await runVoiceActorRepair(counts);
 
       await runCleanup();
 
