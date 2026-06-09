@@ -14,7 +14,6 @@ const { config } = require('../config');
 const { updateLock } = require('../upgrade');
 const { createCleanupRunner } = require('../src/modules/scanner/cleanup-runner');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
-const { createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
 const { createFolderProcessorRunner } = require('../src/modules/scanner/folder-processor-runner');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
@@ -24,6 +23,7 @@ const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-wor
 const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
 const { createScanRunner } = require('../src/modules/scanner/scan-runner');
 const { ScanSession } = require('../src/modules/scanner/session');
+const { createUpdateRunner } = require('../src/modules/scanner/update-runner');
 const { createVoiceActorRepairRunner } = require('../src/modules/scanner/voice-actor-repair-runner');
 const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
 const { createWorkRefresher } = require('../src/modules/scanner/work-refresher');
@@ -216,23 +216,13 @@ const performScan = () => runScan();
 
 const updateMetadataLimited = (id, options = null) => limitP.call(updateMetadata, id, options);
 const updateVoiceActorLimited = id => limitP.call(updateMetadata, id, { includeVA: true });
-
-// eslint-disable-next-line no-unused-vars
-const performUpdate = async (options = null) => {
-  const baseQuery = db.knex('t_work').select('id');
-  const processor = id => updateMetadataLimited(id, options);
-
-  const counts = await refreshWorks(baseQuery, 'id', processor);
-
-  const message = createUpdateFinishedMessage(counts);
-  scannerLifecycle.finish(message, counts.failed ? 1 : null);
-};
-
-const fixVoiceActorBug = () => {
-  const baseQuery = db.knex('r_va_work').select('va_id', 'work_id');
-  const filter = query => query.where('va_id', nameToUUID('かの仔')).orWhere('va_id', nameToUUID('こっこ'));
-  const processor = id => updateVoiceActorLimited(id);
-  return refreshWorks(filter(baseQuery), 'work_id', processor);
-};
+const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
+  knex: db.knex,
+  refreshWorks,
+  updateMetadata: updateMetadataLimited,
+  updateVoiceActor: updateVoiceActorLimited,
+  finishUpdate: (message, exitCode) => scannerLifecycle.finish(message, exitCode),
+  nameToUUID,
+});
 
 module.exports = { performScan, performUpdate };
