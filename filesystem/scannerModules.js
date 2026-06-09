@@ -18,6 +18,7 @@ const { config } = require('../config');
 const { updateLock } = require('../upgrade');
 const { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage } = require('../src/modules/scanner/counters');
 const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
+const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');
 
@@ -26,6 +27,11 @@ process.send = process.send || function () {};
 
 const scanSession = new ScanSession(event => process.send(event));
 const scannerLogger = new ScannerLogger(scanSession);
+const scannerLifecycle = new ScannerLifecycle({
+  send: event => process.send(event),
+  destroyDatabase: () => db.knex.destroy(),
+  exit: code => process.exit(code),
+});
 const tasks = scanSession.tasks;
 
 const addTask = rjcode => scanSession.addTask(rjcode);
@@ -540,19 +546,7 @@ const performScan = () => {
 
         return Promise.all(promises).then(() => {
           const message = createScanFinishedMessage(counts);
-          console.log(` * ${message}`);
-          process.send({
-            event: 'SCAN_FINISHED',
-            payload: {
-              message: message,
-            },
-          });
-
-          db.knex.destroy();
-          if (fixVAFailed) {
-            process.exit(1);
-          }
-          process.exit(0);
+          scannerLifecycle.finish(message, fixVAFailed ? 1 : 0);
         });
       } catch (err) {
         console.error(` ! 在并行处理音声文件夹过程中出错: ${err.message}`);
@@ -616,15 +610,7 @@ const performUpdate = async (options = null) => {
   const counts = await refreshWorks(baseQuery, 'id', processor);
 
   const message = createUpdateFinishedMessage(counts);
-  console.log(` * ${message}`);
-  process.send({
-    event: 'SCAN_FINISHED',
-    payload: {
-      message: message,
-    },
-  });
-  db.knex.destroy();
-  if (counts.failed) process.exit(1);
+  scannerLifecycle.finish(message, counts.failed ? 1 : null);
 };
 
 const fixVoiceActorBug = () => {
