@@ -1,0 +1,68 @@
+const fs = require('fs');
+const path = require('path');
+const { formatRjCode } = require('../media/rj-code');
+
+const createWorkProcessor = ({
+  knex,
+  coverFolderDir,
+  tagLanguage,
+  getMetadata,
+  getCoverImage,
+  addTask,
+  addLogForTask,
+  consoleLogger = console,
+}) => {
+  const coverTypes = ['main', 'sam', '240x240'];
+
+  const findMissingCoverTypes = rjcode =>
+    coverTypes.filter(type => !fs.existsSync(path.join(coverFolderDir, `RJ${rjcode}_img_${type}.jpg`)));
+
+  const processFolder = folder =>
+    knex('t_work')
+      .select('id')
+      .where('id', '=', folder.id)
+      .count()
+      .first()
+      .then(res => {
+        const rjcode = formatRjCode(folder.id);
+        const count = res['count(*)'];
+        if (count) {
+          const lostCoverTypes = findMissingCoverTypes(rjcode);
+
+          if (lostCoverTypes.length) {
+            consoleLogger.log(`  ! [RJ${rjcode}] 封面图片缺失，重新下载封面图片...`);
+            addTask(rjcode);
+            addLogForTask(rjcode, {
+              level: 'info',
+              message: '封面图片缺失，重新下载封面图片...',
+            });
+
+            return getCoverImage(folder.id, lostCoverTypes);
+          } else {
+            return 'skipped';
+          }
+        } else {
+          consoleLogger.log(` * 发现新文件夹: "${folder.absolutePath}"`);
+          addTask(rjcode);
+          addLogForTask(rjcode, {
+            level: 'info',
+            message: `发现新文件夹: "${folder.absolutePath}"`,
+          });
+
+          return getMetadata(folder.id, folder.rootFolderName, folder.relativePath, tagLanguage).then(result => {
+            if (result === 'failed') {
+              return 'failed';
+            } else {
+              return getCoverImage(folder.id, coverTypes);
+            }
+          });
+        }
+      });
+
+  return {
+    processFolder,
+    findMissingCoverTypes,
+  };
+};
+
+module.exports = { createWorkProcessor };

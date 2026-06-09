@@ -20,6 +20,7 @@ const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');
+const { createWorkProcessor } = require('../src/modules/scanner/work-processor');
 
 // 只有在子进程中 process 对象才有 send() 方法
 process.send = process.send || function () {};
@@ -121,66 +122,15 @@ const getMetadata = (id, rootFolderName, dir, tagLanguage) => {
     });
 };
 
-/**
- * 获取音声元数据，获取音声封面图片，
- * 返回一个 Promise 对象，处理结果: 'added', 'skipped' or 'failed'
- * @param {string} folder 音声文件夹对象 { relativePath: '相对路径', rootFolderName: '根文件夹别名', id: '音声ID' }
- */
-const processFolder = folder =>
-  db
-    .knex('t_work')
-    .select('id')
-    .where('id', '=', folder.id)
-    .count()
-    .first()
-    .then(res => {
-      const rjcode = formatRjCode(folder.id);
-      const coverTypes = ['main', 'sam', '240x240'];
-      const count = res['count(*)'];
-      if (count) {
-        // 查询数据库，检查是否已经写入该音声的元数据
-        // 已经成功写入元数据
-        // 检查音声封面图片是否缺失
-        const lostCoverTypes = [];
-        coverTypes.forEach(type => {
-          const coverPath = path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`);
-          if (!fs.existsSync(coverPath)) {
-            lostCoverTypes.push(type);
-          }
-        });
-
-        if (lostCoverTypes.length) {
-          console.log(`  ! [RJ${rjcode}] 封面图片缺失，重新下载封面图片...`);
-          addTask(rjcode);
-          addLogForTask(rjcode, {
-            level: 'info',
-            message: '封面图片缺失，重新下载封面图片...',
-          });
-
-          return getCoverImage(folder.id, lostCoverTypes);
-        } else {
-          return 'skipped';
-        }
-      } else {
-        console.log(` * 发现新文件夹: "${folder.absolutePath}"`);
-        addTask(rjcode);
-        addLogForTask(rjcode, {
-          level: 'info',
-          message: `发现新文件夹: "${folder.absolutePath}"`,
-        });
-
-        return getMetadata(folder.id, folder.rootFolderName, folder.relativePath, config.tagLanguage) // 获取元数据
-          .then(result => {
-            if (result === 'failed') {
-              // 如果获取元数据失败，跳过封面图片下载
-              return 'failed';
-            } else {
-              // 下载封面图片
-              return getCoverImage(folder.id, coverTypes);
-            }
-          });
-      }
-    });
+const { processFolder } = createWorkProcessor({
+  knex: db.knex,
+  coverFolderDir: config.coverFolderDir,
+  tagLanguage: config.tagLanguage,
+  getMetadata,
+  getCoverImage,
+  addTask,
+  addLogForTask,
+});
 
 const MAX = config.maxParallelism; // 并发请求上限
 const limitP = new LimitPromise(MAX); // 核心控制器
