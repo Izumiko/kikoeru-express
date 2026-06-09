@@ -139,4 +139,18 @@ describe('API contract', function () {
     expect(res.statusCode).to.equal(400);
     expect(res.body.errors).to.be.an('array');
   });
+
+  it('GET /api/tracks validates the work id route parameter', async function () {
+    const res = await request(app, { path: '/api/tracks/not-an-id' });
+
+    expect(res.statusCode).to.equal(400);
+    expect(res.body.errors).to.be.an('array');
+  });
+
+  it('GET /api/media/stream validates media route parameters', async function () {
+    const res = await request(app, { path: '/api/media/stream/not-an-id/0' });
+
+    expect(res.statusCode).to.equal(400);
+    expect(res.body.errors).to.be.an('array');
+  });
 });

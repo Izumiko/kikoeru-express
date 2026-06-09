@@ -7,9 +7,9 @@ router.use('/auth', require('./auth'));
 router.use('/credentials', require('./credentials'));
 router.use('/version', require('./version'));
 router.use('/config', require('./config'));
-router.use('/media', require('./media'));
+router.use('/', require('../src/modules/media/routes.js'));
 router.use('/review', require('./review'));
 // Other routes
-router.use('/', require('./metadata'));
+router.use('/', require('../src/modules/metadata/routes.js'));
 
 module.exports = router;
