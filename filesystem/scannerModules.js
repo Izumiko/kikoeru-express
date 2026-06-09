@@ -16,6 +16,7 @@ const { nameToUUID } = require('../scraper/utils');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
+const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');
 
@@ -49,31 +50,6 @@ process.on('message', m => {
     process.exit(1);
   }
 });
-
-/**
- * 通过数组 arr 中每个对象的 id 属性来对数组去重
- * @param {Array} arr
- */
-const uniqueArr = arr => {
-  const uniqueArr = [];
-  const duplicate = {};
-
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = i + 1; j < arr.length; j++) {
-      if (arr[i].id === arr[j].id) {
-        duplicate[arr[i].id] = duplicate[arr[i].id] || [];
-        duplicate[arr[i].id].push(arr[i]);
-        ++i;
-      }
-    }
-    uniqueArr.push(arr[i]);
-  }
-
-  return {
-    uniqueArr, // 去重后的数组
-    duplicate, // 对象，键为id，值为多余的重复项数组
-  };
-};
 
 /**
  * 从 DLsite 抓取该音声的元数据，并保存到数据库，
@@ -498,8 +474,9 @@ const performScan = () => {
 
       try {
         // 去重，避免在之后的并行处理文件夹过程中，出现对数据库同时写入同一条记录的错误
-        const uniqueFolderList = uniqueArr(folderList).uniqueArr;
-        const duplicate = uniqueArr(folderList).duplicate;
+        const dedupedFolders = dedupeFoldersById(folderList);
+        const uniqueFolderList = dedupedFolders.uniqueArr;
+        const duplicate = dedupedFolders.duplicate;
         const duplicateNum = folderList.length - uniqueFolderList.length;
 
         if (duplicateNum) {
