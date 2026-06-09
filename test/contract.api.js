@@ -54,4 +54,62 @@ describe('API contract', function () {
       },
     });
   });
+
+  it('GET /api/config/admin returns filtered admin config when auth is disabled', async function () {
+    const auth = config.auth;
+    config.auth = false;
+
+    try {
+      const res = await request(app, { path: '/api/config/admin' });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body.config).to.be.an('object');
+      expect(res.body.config).to.not.have.property('md5secret');
+      expect(res.body.config).to.not.have.property('jwtsecret');
+      expect(res.body.config).to.have.property('listenPort', config.listenPort);
+    } finally {
+      config.auth = auth;
+    }
+  });
+
+  it('PUT /api/config/admin preserves protected config values when auth is disabled', async function () {
+    const previous = {
+      auth: config.auth,
+      production: config.production,
+      rewindSeekTime: config.rewindSeekTime,
+      md5secret: config.md5secret,
+      jwtsecret: config.jwtsecret,
+    };
+    config.auth = false;
+
+    try {
+      const res = await request(app, {
+        path: '/api/config/admin',
+        method: 'PUT',
+        body: {
+          config: {
+            auth: true,
+            production: true,
+            rewindSeekTime: 11,
+            md5secret: 'changed-md5',
+            jwtsecret: 'changed-jwt',
+          },
+        },
+      });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body).to.deep.equal({ message: '保存成功.' });
+      expect(config.auth).to.equal(true);
+      expect(config.production).to.equal(previous.production);
+      expect(config.rewindSeekTime).to.equal(11);
+      expect(config.md5secret).to.equal(previous.md5secret);
+      expect(config.jwtsecret).to.equal(previous.jwtsecret);
+    } finally {
+      config.auth = previous.auth;
+      config.production = previous.production;
+      config.rewindSeekTime = previous.rewindSeekTime;
+      config.md5secret = previous.md5secret;
+      config.jwtsecret = previous.jwtsecret;
+    }
+  });
 });

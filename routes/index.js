@@ -1,16 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-  res.send('OK');
-});
-
-// Eliminate error message from old PWA
-// Will be deleted in the future
-router.get('/me', (req, res) => {
-  res.redirect('/api/auth/me');
-});
+router.use('/', require('../src/modules/system/routes.js'));
 
 router.use('/auth', require('./auth'));
 router.use('/credentials', require('./credentials'));
