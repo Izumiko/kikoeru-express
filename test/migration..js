@@ -10,13 +10,33 @@ process.env.NODE_ENV='test';
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-string'));
-const { unlink } = require('fs');
+const { copyFile, unlink } = require('fs/promises');
 const { join } = require('path');
+const { tmpdir } = require('os');
+const { createClient } = require('@libsql/client');
 
 const db = require('../database/db').knex;
 
 const knexMigrate = require('../database/knex-migrate');
 const { dbVersion } = require('../database/schema');
+const { createMetadataRepository } = require('../src/database/spikes/drizzle-libsql/metadata-repository');
+const { createReviewRepository } = require('../src/database/spikes/drizzle-libsql/review-repository');
+
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const unlinkWithRetry = async filePath => {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      await unlink(filePath);
+      return;
+    } catch (error) {
+      if (error.code !== 'EBUSY' || attempt === 19) {
+        throw error;
+      }
+      await wait(50);
+    }
+  }
+};
 
 describe('Database', function() {
   before('Spin up v0.3.0 database schema', async function() {
@@ -61,6 +81,67 @@ describe('Database', function() {
     expect(lastMigration[0].name).to.startsWith(dbVersion);
   })
 
+  it('migrated database can be used through the libSQL repository spike', async function() {
+    await db('t_circle').insert({ id: 10, name: 'Migrated Circle' });
+    await db('t_work').insert({
+      id: 100,
+      root_folder: 'VoiceWork',
+      dir: 'RJ000100',
+      title: 'Migrated Work',
+      circle_id: 10,
+      nsfw: false,
+      release: '2021-01-02',
+      dl_count: 100,
+      price: 1100,
+      review_count: 3,
+      rate_count: 4,
+      rate_average_2dp: 4.5,
+      rate_count_detail: '{"5":3,"4":1}',
+      rank: '{"daily":1}',
+    });
+    await db('t_tag').insert({ id: 20, name: 'Migrated Tag' });
+    await db('t_va').insert({ id: 'va-migrated', name: 'Migrated VA' });
+    await db('r_tag_work').insert({ tag_id: 20, work_id: 100 });
+    await db('r_va_work').insert({ va_id: 'va-migrated', work_id: 100 });
+    await db('t_user').insert({ name: 'listener', password: 'password', group: 'user' });
+    await db('t_review').insert({
+      user_name: 'listener',
+      work_id: '100',
+      rating: 5,
+      review_text: 'great',
+      progress: 'listened',
+    });
+
+    const libsqlDbPath = join(tmpdir(), `kikoeru-libsql-${process.pid}.sqlite3`);
+    await db.raw('PRAGMA wal_checkpoint(FULL)');
+    await copyFile(join(__dirname, 'db-test.sqlite3'), libsqlDbPath);
+
+    const client = createClient({ url: 'file:' + libsqlDbPath });
+    const metadataRepository = createMetadataRepository(client);
+    const reviewRepository = createReviewRepository(client);
+
+    try {
+      const work = await metadataRepository.getWorkMetadata(100, 'listener');
+      expect(work[0]).to.include({
+        id: 100,
+        title: 'Migrated Work',
+        userRating: 5,
+        review_text: 'great',
+        progress: 'listened',
+      });
+
+      await reviewRepository.updateUserReview('listener', 100, 4, '', 'replay', false, true);
+      const replay = await reviewRepository.getWorksWithReviews({
+        username: 'listener',
+        filter: 'replay',
+      });
+      expect(replay.works.map(record => record.id)).to.deep.equal([100]);
+    } finally {
+      await client.close();
+      await unlinkWithRetry(libsqlDbPath).catch(() => {});
+    }
+  })
+
   after('Tear down test database', async function() {
     const { dropDatabase } = require('./teardown/teardown-0.6.0');
     await dropDatabase();
@@ -95,12 +176,8 @@ describe('Database v0.6.0-rc4', function() {
     }
   })
 
-  after('Delete test database', function(done) {
-    db.destroy(() => {
-      unlink(join(__dirname, 'db-test.sqlite3'), (err) => {
-        if (err) throw err;
-      });
-      done();
-    });
+  after('Delete test database', async function() {
+    await new Promise(resolve => db.destroy(resolve));
+    await unlinkWithRetry(join(__dirname, 'db-test.sqlite3'));
   })
 })
