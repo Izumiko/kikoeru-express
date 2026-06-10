@@ -11,6 +11,18 @@ Knex + `sqlite3` until a replacement passes parity tests against existing user d
   target before it enters LTS.
 - As of the current Node.js 26.3.0 documentation, `node:sqlite` is still marked as release candidate.
 
+## Local Runtime Probe
+
+The current development environment is Node.js `v24.16.0`.
+
+Basic `node:sqlite` smoke test result:
+
+- `require('node:sqlite')` works.
+- `DatabaseSync(':memory:')` can create a table, insert a row, query it back, and close.
+
+This confirms availability on the current LTS runtime, but it does not prove production suitability. Repository
+parity, migration compatibility, and blocking behavior still need dedicated tests before replacing Knex + `sqlite3`.
+
 ## Current Database Baseline
 
 - Current database access: Knex query builder with the `sqlite3` driver.
@@ -106,3 +118,5 @@ A candidate implementation must match current behavior for:
 - If `node:sqlite` is selected later, synchronous database calls must be assessed under scan/update load.
 - If Drizzle is selected later, keep old Knex migrations available for existing databases unless a tested migration
   bridge replaces them.
+- Keep `database/migrations` at the repository root for now. It is a compatibility boundary for historical user
+  databases, migration tests, package configuration, and migration logs.
