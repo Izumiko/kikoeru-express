@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
 

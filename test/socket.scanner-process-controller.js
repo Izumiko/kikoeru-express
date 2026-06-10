@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createScannerProcessController } = require('../src/modules/socket/scanner-process-controller');
 

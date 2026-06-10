@@ -30,7 +30,7 @@ const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, orde
   const offset = (currentPage - 1) * pageSize;
   const totalCount = await queryFactory().count('id as count');
 
-  let works = null;
+  let works;
 
   if (order === 'random') {
     works = await queryFactory().offset(offset).limit(pageSize).orderBy(db.knex.raw('id % ?', shuffleSeed));

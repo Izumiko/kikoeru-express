@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 process.env.FREEZE_CONFIG_FILE = true;
 process.env.NODE_ENV = 'test';
 

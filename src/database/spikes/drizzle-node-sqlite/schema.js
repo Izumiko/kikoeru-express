@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { index, integer, primaryKey, real, sqliteTable, text } = require('drizzle-orm/sqlite-core');
 
 const circles = sqliteTable('t_circle', {

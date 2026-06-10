@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { buildHvdbWorkUrl, parseHvdbWorkMetadataHtml } = require('../src/modules/scraper/hvdb-metadata');
 

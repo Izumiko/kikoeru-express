@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { ScanCounters } = require('../src/modules/scanner/counters');
 const {

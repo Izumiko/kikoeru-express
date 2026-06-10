@@ -57,8 +57,8 @@ const getWorksWithReviews = async ({
   sortOption = 'desc',
   filter,
 } = {}) => {
-  let works = [];
-  let totalCount = 0;
+  let works;
+  let totalCount;
 
   const ratingSubQuery = knex('t_review')
     .select([

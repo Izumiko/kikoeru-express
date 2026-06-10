@@ -2,7 +2,6 @@ const path = require('path');
 const express = require('express');
 
 const compression = require('compression');
-const bodyParser = require('body-parser'); // 获取 req.body
 const history = require('connect-history-api-fallback');
 
 const { config } = require('../../config');
@@ -24,13 +23,12 @@ const createApp = () => {
   }
 
   // parse application/x-www-form-urlencoded
-  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.urlencoded({ extended: true }));
   // parse application/json
-  app.use(bodyParser.json());
+  app.use(express.json());
 
   // For dev purpose only
   if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line node/no-unpublished-require
     const serveIndex = require('serve-index');
     app.use('/media/stream/VoiceWork', express.static('VoiceWork'), serveIndex('VoiceWork', { icons: true }));
     app.use('/media/download/VoiceWork', express.static('VoiceWork'), serveIndex('VoiceWork', { icons: true }));

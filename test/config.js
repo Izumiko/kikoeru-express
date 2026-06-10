@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const chai = require('chai');
 const expect = chai.expect;
 const fs = require('fs');

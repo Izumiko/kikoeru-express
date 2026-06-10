@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createWorkRefresher } = require('../src/modules/scanner/work-refresher');
 

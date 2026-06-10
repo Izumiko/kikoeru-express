@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const pjson = require('./package.json');
 const { createConfigStore } = require('./src/config/loader.js');
 

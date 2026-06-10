@@ -10,7 +10,6 @@ async function* getFolderList(rootFolder, current = '', depth = 0, callback = fu
     const relativePath = path.join(current, folder);
 
     try {
-      // eslint-disable-next-line no-await-in-loop
       if ((await fs.promises.stat(absolutePath)).isDirectory()) {
         if (folder.match(/RJ\d+/)) {
           yield {

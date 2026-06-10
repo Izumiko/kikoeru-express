@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createConcurrencyLimiter } = require('../src/modules/scanner/concurrency-limiter');
 

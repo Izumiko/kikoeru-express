@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { createClient } = require('@libsql/client');
 const { drizzle } = require('drizzle-orm/libsql');
 

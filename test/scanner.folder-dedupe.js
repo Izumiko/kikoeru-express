@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { dedupeFoldersById } = require('../src/modules/scanner/folder-dedupe');
 

@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const express = require('express');
 const fs = require('fs');
 const os = require('os');

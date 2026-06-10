@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
 const { ScanSession } = require('../src/modules/scanner/session');

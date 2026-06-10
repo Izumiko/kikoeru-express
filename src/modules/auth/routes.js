@@ -1,6 +1,6 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator'); // 后端校验
-const expressJwt = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.user
+const { expressjwt: expressJwt } = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.auth
 
 const db = require('../../../database/db');
 const {
@@ -21,7 +21,6 @@ router.post(
   [
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('password').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
-    // eslint-disable-next-line no-unused-vars
   ],
   (req, res /*, next */) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -65,7 +64,7 @@ if (config.auth) {
 router.get('/me', (req, res, next) => {
   // 同时告诉客户端，服务器是否启用用户验证
   const auth = config.auth;
-  const user = config.auth ? { name: req.user.name, group: req.user.group } : { name: 'admin', group: 'administrator' };
+  const user = config.auth ? { name: req.auth.name, group: req.auth.group } : { name: 'admin', group: 'administrator' };
   res.send({ user, auth });
 });
 

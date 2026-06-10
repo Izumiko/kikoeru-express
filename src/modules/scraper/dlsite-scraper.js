@@ -93,7 +93,7 @@ const createDlsiteScraper = ({
 
       if (error.response) {
         // 请求已发出，但服务器响应的状态码不在 2xx 范围内。
-        throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`);
+        throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`, { cause: error });
       }
       throw error;
     }
@@ -111,7 +111,7 @@ const createDlsiteScraper = ({
     } catch (error) {
       if (error.response) {
         // 请求已发出，但服务器响应的状态码不在 2xx 范围内。
-        throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`);
+        throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`, { cause: error });
       }
       throw error;
     }

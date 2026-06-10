@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { parseUpdateOptions, runUpdateCli } = require('../src/modules/scanner/update-cli');
 

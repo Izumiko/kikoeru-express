@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createRetryGet, getRetryUrl } = require('../src/modules/scraper/retry-client');
 

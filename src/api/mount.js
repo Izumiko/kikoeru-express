@@ -1,4 +1,4 @@
-const expressJwt = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.user
+const { expressjwt: expressJwt } = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.user
 
 const routes = require('./routes');
 const { config } = require('../../config');

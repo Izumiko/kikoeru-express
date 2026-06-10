@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createMetadataIngestion } = require('../src/modules/scanner/metadata-ingestion');
 

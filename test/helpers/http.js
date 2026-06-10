@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const http = require('http');
 
 const request = (app, options = {}) =>
@@ -43,7 +42,7 @@ const request = (app, options = {}) =>
 
               try {
                 data = JSON.parse(text);
-              } catch (err) {
+              } catch {
                 // Keep non-JSON responses as text.
               }
 

@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createScannerSocketGateway } = require('../src/modules/socket/scanner-gateway');
 

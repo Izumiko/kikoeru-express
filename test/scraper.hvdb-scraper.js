@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createHvdbScraper } = require('../src/modules/scraper/hvdb-scraper');
 

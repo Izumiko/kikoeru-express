@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
 

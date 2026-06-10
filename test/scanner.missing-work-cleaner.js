@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const path = require('path');
 const { expect } = require('chai');
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');

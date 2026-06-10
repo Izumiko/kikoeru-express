@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { SOCKET_EVENTS } = require('../src/modules/socket/events');
 

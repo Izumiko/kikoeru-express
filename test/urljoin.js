@@ -1,4 +1,3 @@
-//eslint-disable-next-line node/no-unpublished-require
 const chai = require('chai');
 const expect = chai.expect;
 const { joinFragments } = require('../src/shared/http/url')

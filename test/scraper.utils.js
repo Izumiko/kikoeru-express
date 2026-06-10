@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { NAME_UUID_NAMESPACE, hasLetter, nameToUUID } = require('../src/modules/scraper/utils');
 const legacyUtils = require('../scraper/utils');

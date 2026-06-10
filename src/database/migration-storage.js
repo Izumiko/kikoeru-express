@@ -46,7 +46,7 @@ module.exports = class KnexStorage {
     return this.knex(this.tableName).insert({
       name: migrationName,
       batch: currentBatch + 1,
-      migration_time: new Date(), // eslint-disable-line camelcase
+      migration_time: new Date(),
     });
   }
 

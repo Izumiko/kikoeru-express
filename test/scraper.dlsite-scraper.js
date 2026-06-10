@@ -1,4 +1,3 @@
-/* eslint-disable node/no-unpublished-require */
 const { expect } = require('chai');
 const { createDlsiteScraper } = require('../src/modules/scraper/dlsite-scraper');
 

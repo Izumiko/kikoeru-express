@@ -18,7 +18,7 @@ const isWebVttTextFile = filePath => {
   try {
     const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' });
     return /^\s*WEBVTT/i.test(fileContent) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(fileContent);
-  } catch (err) {
+  } catch {
     return false;
   }
 };

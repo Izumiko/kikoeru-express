@@ -1,4 +1,3 @@
-/* eslint-disable node/no-missing-require */
 const { DatabaseSync } = require('node:sqlite');
 
 const schema = require('./schema');
