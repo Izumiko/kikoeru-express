@@ -4,6 +4,12 @@ const axios = require('./axios'); // 数据请求
 const { nameToUUID, hasLetter } = require('./utils');
 const scrapeWorkMetadataFromHVDB = require('./hvdb');
 const { formatRjCode } = require('../src/modules/media/rj-code');
+const {
+  buildDlsiteDynamicMetadataUrl,
+  buildDlsiteWorkUrl,
+  getDlsiteLanguageConfig,
+  parseDynamicWorkMetadata,
+} = require('../src/modules/scraper/dlsite-metadata');
 
 /**
  * Scrapes static work metadata from public DLsite page HTML.
@@ -14,40 +20,15 @@ const { formatRjCode } = require('../src/modules/media/rj-code');
 const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) =>
   new Promise((resolve, reject) => {
     const rjcode = formatRjCode(id);
-    const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
+    const url = buildDlsiteWorkUrl(id);
 
     const work = { id, tags: [], vas: [] };
-    let AGE_RATINGS, VA, GENRE, RELEASE, SERIES, COOKIE_LOCALE;
-    switch (language) {
-      case 'ja-jp':
-        COOKIE_LOCALE = 'locale=ja-jp';
-        AGE_RATINGS = '年齢指定';
-        GENRE = 'ジャンル';
-        VA = '声優';
-        RELEASE = '販売日';
-        SERIES = 'シリーズ名';
-        break;
-      case 'zh-tw':
-        COOKIE_LOCALE = 'locale=zh-tw';
-        AGE_RATINGS = '年齡指定';
-        GENRE = '分類';
-        VA = '聲優';
-        RELEASE = '販賣日';
-        SERIES = '系列名';
-        break;
-      default:
-        COOKIE_LOCALE = 'locale=zh-cn';
-        AGE_RATINGS = '年龄指定';
-        GENRE = '分类';
-        VA = '声优';
-        RELEASE = '贩卖日';
-        SERIES = '系列名';
-    }
+    const dlsiteLanguage = getDlsiteLanguageConfig(language);
 
     axios
       .retryGet(url, {
         retry: {},
-        headers: { cookie: COOKIE_LOCALE }, // 自定义请求头
+        headers: { cookie: dlsiteLanguage.cookieLocale }, // 自定义请求头
       })
       .then(response => response.data)
       .then(data => {
@@ -79,7 +60,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
           .children('tr')
           .children('th')
           .filter(function () {
-            return $(this).text() === AGE_RATINGS;
+            return $(this).text() === dlsiteLanguage.ageRatingsLabel;
           })
           .parent()
           .children('td')
@@ -93,7 +74,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
           .children('tr')
           .children('th')
           .filter(function () {
-            return $(this).text() === RELEASE;
+            return $(this).text() === dlsiteLanguage.releaseLabel;
           })
           .parent()
           .children('td')
@@ -108,7 +89,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
           .children('tr')
           .children('th')
           .filter(function () {
-            return $(this).text() === SERIES;
+            return $(this).text() === dlsiteLanguage.seriesLabel;
           })
           .parent()
           .children('td')
@@ -129,7 +110,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
           .children('tr')
           .children('th')
           .filter(function () {
-            return $(this).text() === GENRE;
+            return $(this).text() === dlsiteLanguage.genreLabel;
           })
           .parent()
           .children('td')
@@ -152,7 +133,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
           .children('tr')
           .children('th')
           .filter(function () {
-            return $(this).text() === VA;
+            return $(this).text() === dlsiteLanguage.voiceActorLabel;
           })
           .parent()
           .children('td')
@@ -243,22 +224,13 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
 const scrapeDynamicWorkMetadataFromDLsite = id =>
   new Promise((resolve, reject) => {
     const rjcode = formatRjCode(id);
-    const url = `https://www.dlsite.com/maniax-touch/product/info/ajax?product_id=RJ${rjcode}`;
+    const url = buildDlsiteDynamicMetadataUrl(id);
 
     axios
       .retryGet(url, { retry: {} })
       .then(response => response.data[`RJ${rjcode}`])
       .then(data => {
-        const work = {};
-        work.dl_count = data.dl_count ? data.dl_count : '0'; // 售出数
-        work.rate_average_2dp = data.rate_average_2dp ? data.rate_average_2dp : 0.0; // 平均评价
-        work.rate_count = data.rate_count ? data.rate_count : 0; // 评价数量
-        work.rate_count_detail = data.rate_count_detail; // 评价分布明细
-        work.review_count = data.review_count; // 评论数量
-        work.price = data.price; // 价格
-        if (data.rank.length) {
-          work.rank = data.rank; // 成绩
-        }
+        const work = parseDynamicWorkMetadata(data);
         console.log(`[RJ${rjcode}] 成功从 DLSite 抓取Dynamic元数据...`);
         resolve(work);
       })
