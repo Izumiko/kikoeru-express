@@ -1,4 +1,49 @@
-const { knex } = require('../client.js');
+const { eq, sql } = require('drizzle-orm');
+
+const { db } = require('../libsql-client.js');
+const {
+  circles,
+  tagWorks,
+  tags,
+  voiceActorWorks,
+  voiceActors,
+  works,
+} = require('../schema/tables.js');
+
+const tableByField = {
+  circle: circles,
+  tag: tags,
+  va: voiceActors,
+};
+
+const ratingSelectSql = username => sql`
+  SELECT
+    t_review.work_id,
+    t_review.rating AS userRating,
+    t_review.review_text,
+    t_review.progress,
+    strftime('%Y-%m-%d %H-%M-%S', t_review.updated_at, 'localtime') AS updated_at,
+    t_review.user_name
+  FROM t_review
+  JOIN t_work ON t_work.id = t_review.work_id
+  WHERE t_review.user_name = ${username}
+`;
+
+const userRatingSelectSql = username => sql`
+  SELECT t_review.work_id, t_review.rating
+  FROM t_review
+  JOIN t_work ON t_work.id = t_review.work_id
+  WHERE t_review.user_name = ${username}
+`;
+
+const sqlList = values => sql.join(values.map(value => sql`${value}`), sql`, `);
+
+const workRowsWithRatings = (username, whereSql = sql``) => db.all(sql`
+  SELECT staticMetadata.*, userrate.rating AS userRating
+  FROM staticMetadata
+  LEFT JOIN (${userRatingSelectSql(username)}) AS userrate ON userrate.work_id = staticMetadata.id
+  ${whereSql}
+`);
 
 /**
  * Fetches metadata for a specific work id.
@@ -6,37 +51,19 @@ const { knex } = require('../client.js');
  * @param {String} username 'admin' or other usernames for current user
  */
 const getWorkMetadata = async (id, username) => {
-  // TODO: do this all in a single transaction?
-  // <= Yes, WTF is this
-  // I think we are done.
+  const work = await db.all(sql`
+    SELECT
+      staticMetadata.*,
+      userrate.userRating,
+      userrate.review_text,
+      userrate.progress,
+      userrate.updated_at,
+      userrate.user_name
+    FROM staticMetadata
+    LEFT JOIN (${ratingSelectSql(username)}) AS userrate ON userrate.work_id = staticMetadata.id
+    WHERE id = ${id}
+  `);
 
-  const ratingSubQuery = knex('t_review')
-    .select([
-      't_review.work_id',
-      't_review.rating AS userRating',
-      't_review.review_text',
-      't_review.progress',
-      knex.raw("strftime('%Y-%m-%d %H-%M-%S', t_review.updated_at, 'localtime') AS updated_at"),
-      't_review.user_name',
-    ])
-    .join('t_work', 't_work.id', 't_review.work_id')
-    .where('t_review.user_name', username)
-    .as('userrate');
-
-  let query = () =>
-    knex('staticMetadata')
-      .select([
-        'staticMetadata.*',
-        'userrate.userRating',
-        'userrate.review_text',
-        'userrate.progress',
-        'userrate.updated_at',
-        'userrate.user_name',
-      ])
-      .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-      .where('id', '=', id);
-
-  const work = await query();
   if (work.length === 0) throw new Error(`There is no work with id ${id} in the database.`);
   return work;
 };
@@ -47,42 +74,32 @@ const getWorkMetadata = async (id, username) => {
  * @param {String} field Which field to filter by.
  */
 const getWorksBy = ({ id, field, username = '' } = {}) => {
-  let workIdQuery;
-  const ratingSubQuery = knex('t_review')
-    .select(['t_review.work_id', 't_review.rating'])
-    .join('t_work', 't_work.id', 't_review.work_id')
-    .where('t_review.user_name', username)
-    .as('userrate');
-
   switch (field) {
     case 'circle':
-      return knex('staticMetadata')
-        .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .where('circle_id', '=', id[0]);
+      return workRowsWithRatings(username, sql`WHERE circle_id = ${id[0]}`);
 
     case 'tag':
-      workIdQuery = knex('r_tag_work')
-        .select('work_id')
-        .whereIn('tag_id', id)
-        .groupBy('work_id')
-        .havingRaw('COUNT(DISTINCT tag_id) = ?', [id.length]);
-      return knex('staticMetadata')
-        .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .where('id', 'in', workIdQuery);
+      return workRowsWithRatings(
+        username,
+        sql`
+          WHERE id IN (
+            SELECT work_id
+            FROM r_tag_work
+            WHERE tag_id IN (${sqlList(id)})
+            GROUP BY work_id
+            HAVING COUNT(DISTINCT tag_id) = ${id.length}
+          )
+        `
+      );
 
     case 'va':
-      workIdQuery = knex('r_va_work').select('work_id').where('va_id', '=', id[0]);
-      return knex('staticMetadata')
-        .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-        .where('id', 'in', workIdQuery);
+      return workRowsWithRatings(
+        username,
+        sql`WHERE id IN (SELECT work_id FROM r_va_work WHERE va_id = ${id[0]})`
+      );
 
     default:
-      return knex('staticMetadata')
-        .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-        .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id');
+      return workRowsWithRatings(username);
   }
 };
 
@@ -91,36 +108,23 @@ const getWorksBy = ({ id, field, username = '' } = {}) => {
  * @param {String} keyword
  */
 const getWorksByKeyWord = ({ keyword, username = 'admin' } = {}) => {
-  const ratingSubQuery = knex('t_review')
-    .select(['t_review.work_id', 't_review.rating'])
-    .join('t_work', 't_work.id', 't_review.work_id')
-    .where('t_review.user_name', username)
-    .as('userrate');
-
   const workid = keyword.match(/((R|r)(J|j))?(\d+)/) ? keyword.match(/((R|r)(J|j))?(\d+)/)[4] : '';
   if (workid) {
-    return knex('staticMetadata')
-      .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-      .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-      .where('id', '=', workid);
+    return workRowsWithRatings(username, sql`WHERE id = ${workid}`);
   }
 
-  const circleIdQuery = knex('t_circle').select('id').where('name', 'like', `%${keyword}%`);
-
-  const tagIdQuery = knex('t_tag').select('id').where('name', 'like', `%${keyword}%`);
-  const vaIdQuery = knex('t_va').select('id').where('name', 'like', `%${keyword}%`);
-
-  const workIdQuery = knex('r_tag_work')
-    .select('work_id')
-    .where('tag_id', 'in', tagIdQuery)
-    .union([knex('r_va_work').select('work_id').where('va_id', 'in', vaIdQuery)]);
-
-  return knex('staticMetadata')
-    .select(['staticMetadata.*', 'userrate.rating AS userRating'])
-    .leftJoin(ratingSubQuery, 'userrate.work_id', 'staticMetadata.id')
-    .where('title', 'like', `%${keyword}%`)
-    .orWhere('circle_id', 'in', circleIdQuery)
-    .orWhere('id', 'in', workIdQuery);
+  return workRowsWithRatings(
+    username,
+    sql`
+      WHERE title LIKE ${`%${keyword}%`}
+        OR circle_id IN (SELECT id FROM t_circle WHERE name LIKE ${`%${keyword}%`})
+        OR id IN (
+          SELECT work_id FROM r_tag_work WHERE tag_id IN (SELECT id FROM t_tag WHERE name LIKE ${`%${keyword}%`})
+          UNION
+          SELECT work_id FROM r_va_work WHERE va_id IN (SELECT id FROM t_va WHERE name LIKE ${`%${keyword}%`})
+        )
+    `
+  );
 };
 
 /**
@@ -129,18 +133,37 @@ const getWorksByKeyWord = ({ keyword, username = 'admin' } = {}) => {
  */
 const getLabels = field => {
   if (field === 'circle') {
-    return knex('t_work')
-      .join(`t_${field}`, `${field}_id`, '=', `t_${field}.id`)
-      .select(`t_${field}.id`, 'name')
-      .groupBy(`${field}_id`)
-      .count(`${field}_id as count`);
-  } else if (field === 'tag' || field === 'va') {
-    return knex(`r_${field}_work`)
-      .join(`t_${field}`, `${field}_id`, '=', 'id')
-      .select('id', 'name')
-      .groupBy(`${field}_id`)
-      .count(`${field}_id as count`);
+    return db
+      .select({
+        id: circles.id,
+        name: circles.name,
+        count: sql`COUNT(${works.circleId})`,
+      })
+      .from(works)
+      .innerJoin(circles, eq(works.circleId, circles.id))
+      .groupBy(works.circleId);
+  } else if (field === 'tag') {
+    return db
+      .select({
+        id: tags.id,
+        name: tags.name,
+        count: sql`COUNT(${tagWorks.tagId})`,
+      })
+      .from(tagWorks)
+      .innerJoin(tags, eq(tagWorks.tagId, tags.id))
+      .groupBy(tagWorks.tagId);
+  } else if (field === 'va') {
+    return db
+      .select({
+        id: voiceActors.id,
+        name: voiceActors.name,
+        count: sql`COUNT(${voiceActorWorks.vaId})`,
+      })
+      .from(voiceActorWorks)
+      .innerJoin(voiceActors, eq(voiceActorWorks.vaId, voiceActors.id))
+      .groupBy(voiceActorWorks.vaId);
   }
+  return undefined;
 };
 
 /**
@@ -154,7 +177,14 @@ const getLabels = field => {
 const getMetadata = ({ field = 'circle', ids } = {}) => {
   const validFields = ['circle', 'tag', 'va'];
   if (!validFields.includes(field)) throw new Error('无效的查询域');
-  return Promise.all(ids.map(id => knex(`t_${field}`).select('*').where('id', '=', id).first()));
+
+  const table = tableByField[field];
+  return Promise.all(
+    ids.map(async id => {
+      const rows = await db.select().from(table).where(eq(table.id, id)).limit(1);
+      return rows[0];
+    })
+  );
 };
 
 module.exports = {
