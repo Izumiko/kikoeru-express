@@ -1,13 +1,18 @@
-// @ts-nocheck
 import path from 'path';
 import express from 'express';
+import type { ErrorRequestHandler, Express } from 'express';
 import compression from 'compression';
 import history from 'connect-history-api-fallback';
 import serveIndex from 'serve-index';
 import { config } from '../../config.js';
 import { runtimeBaseDir } from '../../config.js';
 import api from '../api/mount.js';
-const createApp = () => {
+
+type HttpError = Error & {
+  code?: string;
+};
+
+const createApp = (): Express => {
   const app = express();
 
   if (config.behindProxy) {
@@ -53,7 +58,7 @@ const createApp = () => {
 
   // 返回错误响应
   // eslint-disable-next-line no-unused-vars
-  app.use((err, req, res, next) => {
+  const errorHandler: ErrorRequestHandler = (err: HttpError, req, res, next) => {
     if (err.name === 'UnauthorizedError') {
       // 验证错误
       res.set('WWW-Authenticate', 'Bearer realm="Authorization Required"');
@@ -71,7 +76,8 @@ const createApp = () => {
         res.status(500).send({ error: err.message || err });
       }
     }
-  });
+  };
+  app.use(errorHandler);
 
   return app;
 };

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express from 'express';
 import authRoutes from '../modules/auth/routes.js';
 import configRoutes from '../modules/config/routes.js';
