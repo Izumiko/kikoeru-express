@@ -28,8 +28,8 @@ const findRootFolder = work => config.rootFolders.find(rootFolder => rootFolder.
 const sendMissingRootFolder = (res, work) =>
   res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
 
-const getWorkRootAndTracks = async (id, fields = ['root_folder', 'dir']) => {
-  const work = await db.knex('t_work').select(...fields).where('id', '=', id).first();
+const getWorkRootAndTracks = async id => {
+  const work = await db.getWorkStorageLocation(id);
   const rootFolder = findRootFolder(work);
 
   if (!rootFolder) {

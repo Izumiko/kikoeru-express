@@ -15,19 +15,11 @@ const writeFile = (filePath, content = 'test') => {
   fs.writeFileSync(filePath, content);
 };
 
-const createKnexStub = work => () => ({
-  select: () => ({
-    where: () => ({
-      first: () => Promise.resolve(work),
-    }),
-  }),
-});
-
 describe('media routes', () => {
   let app;
   let tempDir;
   let originalConfig;
-  let originalKnex;
+  let originalGetWorkStorageLocation;
 
   beforeEach(() => {
     app = express();
@@ -39,16 +31,16 @@ describe('media routes', () => {
       offloadStreamPath: config.offloadStreamPath,
       offloadDownloadPath: config.offloadDownloadPath,
     };
-    originalKnex = db.knex;
+    originalGetWorkStorageLocation = db.getWorkStorageLocation;
     config.rootFolders = [{ name: 'VoiceWork', path: tempDir }];
     config.offloadMedia = false;
     config.offloadStreamPath = '/media/stream';
     config.offloadDownloadPath = '/media/download';
-    db.knex = createKnexStub({ root_folder: 'VoiceWork', dir: 'RJ000123' });
+    db.getWorkStorageLocation = () => Promise.resolve({ root_folder: 'VoiceWork', dir: 'RJ000123' });
   });
 
   afterEach(() => {
-    db.knex = originalKnex;
+    db.getWorkStorageLocation = originalGetWorkStorageLocation;
     config.rootFolders = originalConfig.rootFolders;
     config.offloadMedia = originalConfig.offloadMedia;
     config.offloadStreamPath = originalConfig.offloadStreamPath;

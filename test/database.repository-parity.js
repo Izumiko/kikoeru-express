@@ -154,6 +154,11 @@ describe('Database repository parity baseline', function () {
   });
 
   it('updates work metadata and removes orphaned metadata when a work is removed', async function () {
+    expect(await repositories.getWorkStorageLocation(100)).to.deep.equal({
+      root_folder: 'VoiceWork',
+      dir: 'RJ000100',
+    });
+
     await repositories.updateWorkMetadata(
       baseWork({
         id: 100,

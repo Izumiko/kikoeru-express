@@ -154,7 +154,25 @@ const removeWork = id =>
     );
   });
 
+/**
+ * 获取音声文件在本地根目录下的存储位置
+ * @param {Integer} id Work id.
+ */
+const getWorkStorageLocation = async id => {
+  const result = await db
+    .select({
+      root_folder: works.rootFolder,
+      dir: works.dir,
+    })
+    .from(works)
+    .where(eq(works.id, id))
+    .limit(1);
+
+  return result[0];
+};
+
 module.exports = {
+  getWorkStorageLocation,
   insertWorkMetadata,
   removeWork,
   updateWorkMetadata,
