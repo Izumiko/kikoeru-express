@@ -19,21 +19,22 @@ const db = require('../database/db').knex;
 
 const knexMigrate = require('../database/knex-migrate');
 const { dbVersion } = require('../database/schema');
+const { closeLibsqlConnection } = require('../src/database/libsql-client');
 const { createMetadataRepository } = require('../src/database/spikes/drizzle-libsql/metadata-repository');
 const { createReviewRepository } = require('../src/database/spikes/drizzle-libsql/review-repository');
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const unlinkWithRetry = async filePath => {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+const unlinkWithRetry = async (filePath, { attempts = 100, delay = 100 } = {}) => {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       await unlink(filePath);
       return;
     } catch (error) {
-      if (error.code !== 'EBUSY' || attempt === 19) {
+      if (error.code !== 'EBUSY' || attempt === attempts - 1) {
         throw error;
       }
-      await wait(50);
+      await wait(delay);
     }
   }
 };
@@ -138,7 +139,7 @@ describe('Database', function() {
       expect(replay.works.map(record => record.id)).to.deep.equal([100]);
     } finally {
       await client.close();
-      await unlinkWithRetry(libsqlDbPath).catch(() => {});
+      await unlinkWithRetry(libsqlDbPath, { attempts: 1 }).catch(() => {});
     }
   })
 
@@ -177,6 +178,8 @@ describe('Database v0.6.0-rc4', function() {
   })
 
   after('Delete test database', async function() {
+    this.timeout(15000);
+    await closeLibsqlConnection();
     await new Promise(resolve => db.destroy(resolve));
     await unlinkWithRetry(join(__dirname, 'db-test.sqlite3'));
   })

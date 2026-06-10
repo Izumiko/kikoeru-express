@@ -9,6 +9,9 @@ const databaseExist = fs.existsSync(path.join(config.databaseFolderDir, 'db.sqli
 const connEnv = process.env.KNEX_ENV || process.env.NODE_ENV || 'development';
 const conn = require('./knexfile')[connEnv];
 const knex = require('knex')(conn);
+const { initializeLibsqlConnection } = require('./libsql-client.js');
+
+initializeLibsqlConnection();
 
 module.exports = {
   databaseExist,
