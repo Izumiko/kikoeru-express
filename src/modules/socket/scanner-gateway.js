@@ -1,3 +1,5 @@
+const { SOCKET_EVENTS } = require('./events');
+
 const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScriptPath, config, consoleLogger = console }) => {
   let scanner = null;
 
@@ -5,7 +7,7 @@ const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScript
     scanner.on('exit', code => {
       scanner = null;
       if (code) {
-        io.emit('SCAN_ERROR');
+        io.emit(SOCKET_EVENTS.SCAN_ERROR);
       }
     });
 
@@ -26,30 +28,30 @@ const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScript
   };
 
   const bindSocket = socket => {
-    socket.emit('success', {
+    socket.emit(SOCKET_EVENTS.SUCCESS, {
       message: '成功登录管理后台.',
       user: socket.request.user,
       auth: config.auth,
     });
 
-    socket.on('ON_SCANNER_PAGE', () => {
+    socket.on(SOCKET_EVENTS.ON_SCANNER_PAGE, () => {
       if (scanner) {
         // 防止用户在扫描过程中刷新页面
         scanner.send({
-          emit: 'SCAN_INIT_STATE',
+          emit: SOCKET_EVENTS.SCAN_INIT_STATE,
         });
       }
     });
 
-    socket.on('PERFORM_SCAN', () => {
+    socket.on(SOCKET_EVENTS.PERFORM_SCAN, () => {
       startScannerProcess(scannerScriptPath);
     });
 
-    socket.on('PERFORM_UPDATE', () => {
+    socket.on(SOCKET_EVENTS.PERFORM_UPDATE, () => {
       startScannerProcess(updaterScriptPath, ['--refreshAll']);
     });
 
-    socket.on('KILL_SCAN_PROCESS', () => {
+    socket.on(SOCKET_EVENTS.KILL_SCAN_PROCESS, () => {
       scanner.send({
         exit: 1,
       });

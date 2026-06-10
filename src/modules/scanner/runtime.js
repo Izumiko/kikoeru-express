@@ -29,6 +29,7 @@ const { createUpdateRunner } = require('./update-runner');
 const { createVoiceActorRepairRunner } = require('./voice-actor-repair-runner');
 const { createWorkProcessor } = require('./work-processor');
 const { createWorkRefresher } = require('./work-refresher');
+const { SOCKET_EVENTS } = require('../socket/events');
 
 // 只有在子进程中 process 对象才有 send() 方法
 process.send = process.send || function () {};
@@ -58,7 +59,7 @@ const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) =>
   scannerLogger.emitTaskLog(message, rjcode, level, truncate);
 
 process.on('message', m => {
-  if (m.emit === 'SCAN_INIT_STATE') {
+  if (m.emit === SOCKET_EVENTS.SCAN_INIT_STATE) {
     scanSession.emitInitState();
   } else if (m.exit) {
     console.error(' ! 终止扫描进程.');

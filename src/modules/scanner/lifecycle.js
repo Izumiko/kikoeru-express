@@ -1,3 +1,5 @@
+const { SOCKET_EVENTS } = require('../socket/events');
+
 class ScannerLifecycle {
   constructor({ send, destroyDatabase, exit, consoleLogger = console }) {
     this.send = send;
@@ -9,7 +11,7 @@ class ScannerLifecycle {
   finish(message, exitCode = null) {
     this.console.log(` * ${message}`);
     this.send({
-      event: 'SCAN_FINISHED',
+      event: SOCKET_EVENTS.SCAN_FINISHED,
       payload: {
         message: message,
       },
