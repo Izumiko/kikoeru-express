@@ -2,6 +2,7 @@ const originAxios = require('axios');
 const { httpsOverHttp, httpOverHttp } = require('tunnel-agent');
 
 const { config } = require('../config');
+const { applyRetryConfig } = require('../src/modules/scraper/retry-config');
 const Config = config;
 
 const axios = originAxios.create();
@@ -66,23 +67,7 @@ axios.interceptors.request.use(function (config) {
 // });
 
 const retryGet = async (url, config) => {
-  let defaultLimit = Config.retry || 5;
-  let defaultRetryDelay = Config.retryDelay || 2000;
-  let defaultTimeout = 10000;
-
-  if (url.indexOf('dlsite') !== -1) {
-    defaultTimeout = Config.dlsiteTimeout || defaultLimit;
-  } else if (url.indexOf('hvdb') !== -1) {
-    defaultTimeout = Config.hvdbTimeout || defaultLimit;
-    config.proxy = false;
-  }
-
-  config.retry = {
-    limit: config.retry && config.retry.limit ? config.retry.limit : defaultLimit, // 5
-    retryCount: config.retry && config.retry.retryCount ? config.retry.retryCount : 0,
-    retryDelay: config.retry && config.retry.retryDelay ? config.retry.retryDelay : defaultRetryDelay, //2000,
-    timeout: config.retry && config.retry.timeout ? config.retry.timeout : defaultTimeout,
-  };
+  applyRetryConfig(url, config, Config);
 
   const abort = originAxios.CancelToken.source();
   const timeoutId = setTimeout(() => abort.cancel(`Timeout of ${config.retry.timeout}ms.`), config.retry.timeout);
