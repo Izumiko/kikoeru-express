@@ -35,12 +35,21 @@ npm start
 # Express listening on http://[::]:8888
 ```
 
+后端发布包通过 esbuild 生成 `build/server.js`、`build/scanner.js`、`build/updater.js` 三个入口，直接使用 Node.js 运行：
+
+```bash
+npm run build
+node build/server.js
+```
+
+bundle 默认把 `config/`、`sqlite/`、`covers/`、`VoiceWork/` 视为 `build/` 下的运行数据目录；如需把运行数据放在其他目录，可设置 `KIKOERU_RUNTIME_DIR`。
+
 关于选择 PWA 还是 SPA：  
 区别仅仅在于有无 Service Worker，由于 Service Worker 只能在本地和 HTTPS 上运行，因此如果远程以 HTTP 方式打开，PWA 和 SPA 二者没有任何区别。也就是说，如果 Kikoeru 的主要用途是在移动设备上局域网播放，并且您没有配置 HTTPS 证书，那么实际上打开的都是 SPA。  
 PWA 的优点：基本页面零延迟，可以像手机 APP 一样通过浏览器“添加到桌面”的方式安装成 App。作者自己使用的前端版本。  
 缺点：更新新版本时需要至少多刷新一次。
 
-本项目还有打包好的 [**windows、mac、linux系统下可用的可执行文件**](https://github.com/XunJiJiang/kikoeru-express/releases)与 **docker 镜像**版本，docker 镜像及 docker-compose 的使用说明详见[**用户文档**](https://github.com/umonaca/kikoeru-express/wiki/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)  
+本项目还有打包好的 [**windows、mac、linux系统下可用的 Node.js 运行包**](https://github.com/XunJiJiang/kikoeru-express/releases)与 **docker 镜像**版本，docker 镜像及 docker-compose 的使用说明详见[**用户文档**](https://github.com/umonaca/kikoeru-express/wiki/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)
 使用 docker-compose 只需调整`docker-compose.yml`内的挂载位置以符合您的存储路径即可。
 
 ## 技术栈
@@ -55,23 +64,21 @@ PWA 的优点：基本页面零延迟，可以像手机 APP 一样通过浏览�
 - lrc-file-parser (解析播放 LRC 歌词文件)
 - jschardet (判断文本文件编码)
 - child_process (nodejs 子进程)
-- pkg (打包为可执行文件)
+- esbuild (打包后端源码)
 
 ## 项目目录结构
 
 ```tree
 ├── config/                  # 存放配置文件
 ├── covers/                  # 存放音声封面
+├── build/                   # esbuild 生成的后端运行包
 ├── dist/                    # 存放前端项目 kikoeru-quasar 构建的 PWA
-├── filesystem/              # 扫描命令入口
-├── package/                 # 存放 pkg 打包后的可执行文件
-├── package-macos/           # 存放 pkg 打包后的可执行文件
+├── scripts/                 # 项目脚本
 ├── sqlite/                  # 存放 sqlite 数据库文件
 ├── src/                     # 后端应用源码
 ├── static/                  # 存放静态资源
 ├── .gitignore               # git 忽略路径
 ├── .dockerignore            # Docker 忽略路径
-├── app.js                   # 项目入口文件
 ├── config.js                # 用于生成与修改 config.json 配置文件，导出公共配置
 ├── Dockerfile               # 用于构建 docker 镜像的文本文件
 ├── docker-compose.yml       # 用于使用docker-compose一键构建环境

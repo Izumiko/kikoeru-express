@@ -4,6 +4,7 @@
 # Package
 package/*
 package-macos/*
+build/*
 
 # Config
 config/*

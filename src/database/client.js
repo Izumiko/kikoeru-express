@@ -12,6 +12,7 @@ const connEnv = process.env.DATABASE_ENV || process.env.NODE_ENV || 'development
 const databasePath =
   connEnv === 'test' ? path.join(rootDir, 'test/db-test.sqlite3') : path.join(config.databaseFolderDir, 'db.sqlite3');
 const databaseExist = fs.existsSync(databasePath);
+fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 const libsql = createClient({ url: 'file:' + databasePath });
 const drizzleDb = drizzle({ client: libsql, schema });
 

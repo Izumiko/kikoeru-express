@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 
-const { configureUnhandledRejectionCrash, startServer } = require('./src/app/server');
+const { configureUnhandledRejectionCrash, startServer } = require('../app/server');
 
 configureUnhandledRejectionCrash();
 startServer();

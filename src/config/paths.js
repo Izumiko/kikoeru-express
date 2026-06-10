@@ -1,6 +1,7 @@
 const path = require('path');
 
-const getRuntimeBaseDir = projectRoot => (process.pkg ? path.join(process.execPath, '..') : projectRoot);
+const getRuntimeBaseDir = projectRoot =>
+  process.env.KIKOERU_RUNTIME_DIR ? path.resolve(process.env.KIKOERU_RUNTIME_DIR) : projectRoot;
 
 const getConfigFolderDir = projectRoot => path.join(getRuntimeBaseDir(projectRoot), 'config');
 

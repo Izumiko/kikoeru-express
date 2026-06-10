@@ -2,21 +2,8 @@
 # It copies build artifacts the from front-end image
 # If you want to separate the front-end from the back-end, it should work as well
 
-FROM node:14-alpine AS build-dep
-
-# Create app directory
-WORKDIR /usr/src/kikoeru
-
-RUN apk update && apk add python3 make gcc g++
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
-RUN npm ci --only=production
-
 # Build SPA and PWA
-FROM node:14 AS build-frontend
+FROM node:24 AS build-frontend
 WORKDIR /frontend
 # @quasar/app v1 requires node-ass, which takes 30 minutes to compile libsass in CI for arm64 and armv7
 # So I prebuilt the binaries for arm64 and armv7
@@ -31,18 +18,30 @@ RUN git clone -b ${FRONTEND_VERSION} https://github.com/kikoeru-project/kikoeru-
 RUN npm ci
 RUN quasar build && quasar build -m pwa
 
-# Final stage
-FROM node:14-alpine
-ENV IS_DOCKER=true
+FROM node:24-alpine AS build-backend
 WORKDIR /usr/src/kikoeru
 
-# Copy build artifacts
-COPY --from=build-dep /usr/src/kikoeru /usr/src/kikoeru
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
 ARG FRONTEND_TYPE="pwa"
 COPY --from=build-frontend /frontend/dist/${FRONTEND_TYPE} /usr/src/kikoeru/dist
+RUN npm run build
+RUN npm prune --omit=dev
 
-# Bundle app source
-COPY . .
+# Final stage
+FROM node:24-alpine
+ENV IS_DOCKER=true
+ENV KIKOERU_RUNTIME_DIR=/usr/src/kikoeru
+WORKDIR /usr/src/kikoeru
+
+COPY --from=build-backend /usr/src/kikoeru/build /usr/src/kikoeru/build
+COPY --from=build-backend /usr/src/kikoeru/node_modules /usr/src/kikoeru/node_modules
+COPY --from=build-backend /usr/src/kikoeru/package*.json /usr/src/kikoeru/
+COPY --from=build-backend /usr/src/kikoeru/dist /usr/src/kikoeru/dist
+COPY --from=build-backend /usr/src/kikoeru/static /usr/src/kikoeru/static
+COPY --from=build-backend /usr/src/kikoeru/src/database/schema/migrations /usr/src/kikoeru/migrations
 
 # Tini
 RUN apk add --no-cache tini
@@ -52,4 +51,4 @@ ENTRYPOINT ["/sbin/tini", "--"]
 VOLUME [ "/usr/src/kikoeru/sqlite", "/usr/src/kikoeru/config", "/usr/src/kikoeru/covers"]
 
 EXPOSE 8888
-CMD [ "node", "app.js" ]
+CMD [ "node", "build/server.js" ]

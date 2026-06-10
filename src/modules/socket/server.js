@@ -6,12 +6,19 @@ const { toSocketAdminUser } = require('../auth/service.js');
 const { createSocketAuthMiddleware, createSocketJwtEngineMiddleware } = require('./auth');
 const { createScannerSocketGateway } = require('./scanner-gateway');
 
+const getDefaultCliRootDir = () => path.dirname(require.main ? require.main.filename : process.cwd());
+
+const resolveScannerScriptPaths = rootDir => ({
+  scannerScriptPath: path.join(rootDir, 'scanner.js'),
+  updaterScriptPath: path.join(rootDir, 'updater.js'),
+});
+
 const createSocketServer = ({
   server,
   ServerImpl = Server,
   childProcessImpl = childProcess,
   appConfig = config,
-  rootDir = path.join(__dirname, '../../..'),
+  rootDir = getDefaultCliRootDir(),
 }) => {
   const io = new ServerImpl(server);
   if (appConfig.auth) {
@@ -29,11 +36,12 @@ const createSocketServer = ({
     );
   }
 
+  const { scannerScriptPath, updaterScriptPath } = resolveScannerScriptPaths(rootDir);
   createScannerSocketGateway({
     io,
     fork: childProcessImpl.fork,
-    scannerScriptPath: path.join(rootDir, './filesystem/scanner.js'),
-    updaterScriptPath: path.join(rootDir, './filesystem/updater.js'),
+    scannerScriptPath,
+    updaterScriptPath,
     config: appConfig,
   }).bind();
 
@@ -47,5 +55,7 @@ const initSocket = server =>
 
 module.exports = {
   createSocketServer,
+  getDefaultCliRootDir,
   initSocket,
+  resolveScannerScriptPaths,
 };

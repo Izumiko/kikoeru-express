@@ -14,12 +14,13 @@
   },
   "include": [
     "*.js",
-    "filesystem/**/*.js",
+    "scripts/**/*.js",
     "src/**/*.js",
     "src/**/*.ts",
     "test/**/*.js"
   ],
   "exclude": [
+    "build",
     "node_modules",
     "dist",
     "package"

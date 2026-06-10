@@ -4,7 +4,7 @@ import js from "@eslint/js";
 import node from "eslint-plugin-n"
 
 export default defineConfig([
-    globalIgnores(["**/dist/", "eslint.config.mjs"]),
+    globalIgnores(["**/build/", "**/dist/", "eslint.config.mjs"]),
 
     js.configs.recommended,
 

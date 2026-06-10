@@ -1,11 +1,17 @@
 const path = require('path');
+const fs = require('fs');
 
 const { migrate } = require('drizzle-orm/libsql/migrator');
 
 const { db, libsql } = require('../client');
+const { runtimeBaseDir } = require('../../../config');
 
 const dbVersion = '20210502081522';
-const migrationsFolder = path.join(__dirname, 'migrations');
+const sourceMigrationsFolder = path.join(__dirname, 'migrations');
+const runtimeMigrationsFolder = path.join(runtimeBaseDir, 'migrations');
+
+const getMigrationsFolder = () =>
+  fs.existsSync(runtimeMigrationsFolder) ? runtimeMigrationsFolder : sourceMigrationsFolder;
 
 const hasCurrentSchema = async () => {
   const result = await libsql.execute({
@@ -24,7 +30,7 @@ const createSchema = async () => {
   }
 
   await libsql.execute('DROP TABLE IF EXISTS __drizzle_migrations;');
-  await migrate(db, { migrationsFolder });
+  await migrate(db, { migrationsFolder: getMigrationsFolder() });
   console.log(' * 成功构建数据库结构.');
 };
 

@@ -5,6 +5,7 @@ const compression = require('compression');
 const history = require('connect-history-api-fallback');
 
 const { config } = require('../../config');
+const { runtimeBaseDir } = require('../../config');
 const api = require('../api/mount');
 
 const createApp = () => {
@@ -48,7 +49,7 @@ const createApp = () => {
     })
   );
   // Serve WebApp routes
-  app.use(express.static(path.join(__dirname, '../../dist')));
+  app.use(express.static(path.join(runtimeBaseDir, 'dist')));
   // Expose API routes
   api(app);
 

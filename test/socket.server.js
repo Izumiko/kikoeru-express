@@ -1,5 +1,6 @@
+const path = require('path');
 const { expect } = require('chai');
-const { createSocketServer } = require('../src/modules/socket/server');
+const { createSocketServer, resolveScannerScriptPaths } = require('../src/modules/socket/server');
 
 describe('createSocketServer', () => {
   const createServerImpl = calls =>
@@ -85,5 +86,16 @@ describe('createSocketServer', () => {
     expect(calls.engineMiddleware).to.deep.equal([]);
     expect(calls.socketMiddleware).to.deep.equal([]);
     expect(calls.handlers.connection).to.be.a('function');
+  });
+
+  it('resolves scanner child process scripts next to the active CLI entrypoint', () => {
+    expect(resolveScannerScriptPaths('src/cli')).to.deep.equal({
+      scannerScriptPath: path.join('src/cli', 'scanner.js'),
+      updaterScriptPath: path.join('src/cli', 'updater.js'),
+    });
+    expect(resolveScannerScriptPaths('build')).to.deep.equal({
+      scannerScriptPath: path.join('build', 'scanner.js'),
+      updaterScriptPath: path.join('build', 'updater.js'),
+    });
   });
 });
