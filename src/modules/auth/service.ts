@@ -1,6 +1,8 @@
-// @ts-nocheck
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import type { JwtPayload, SignOptions } from 'jsonwebtoken';
+import type { Request } from 'express';
+import type { Params } from 'express-jwt';
 import legacyMd5 from 'md5';
 import { config } from '../../../config.js';
 
@@ -8,10 +10,21 @@ const issuer = 'http://kikoeru';
 const audience = 'http://kikoeru/api';
 const bcryptPrefix = '$2';
 const bcryptRounds = 12;
+const jwtAlgorithm = 'HS256' as const;
 
-const signPayload = payload => jwt.sign(payload, config.jwtsecret, { expiresIn: config.expiresIn });
+type AuthUser = {
+  name: string;
+  group: string;
+};
 
-const signToken = user => {
+type KikoeruJwtPayload = JwtPayload & AuthUser;
+
+type TokenGetter = (req: Request) => string | null;
+
+const signPayload = (payload: KikoeruJwtPayload): string =>
+  jwt.sign(payload, config.jwtsecret, { expiresIn: config.expiresIn } as SignOptions);
+
+const signToken = (user: AuthUser): string => {
   // RFC 7519
   const payload = {
     iss: issuer,
@@ -23,13 +36,14 @@ const signToken = user => {
   return signPayload(payload);
 };
 
-const hashLegacyPassword = password => legacyMd5(password + config.md5secret);
+const hashLegacyPassword = (password: string): string => legacyMd5(password + config.md5secret);
 
-const hashPassword = password => bcrypt.hashSync(password, bcryptRounds);
+const hashPassword = (password: string): string => bcrypt.hashSync(password, bcryptRounds);
 
-const isModernPasswordHash = passwordHash => typeof passwordHash === 'string' && passwordHash.startsWith(bcryptPrefix);
+const isModernPasswordHash = (passwordHash: unknown): passwordHash is string =>
+  typeof passwordHash === 'string' && passwordHash.startsWith(bcryptPrefix);
 
-const verifyPassword = (password, passwordHash) => {
+const verifyPassword = (password: string, passwordHash: string): boolean => {
   if (isModernPasswordHash(passwordHash)) {
     return bcrypt.compareSync(password, passwordHash);
   }
@@ -37,26 +51,26 @@ const verifyPassword = (password, passwordHash) => {
   return passwordHash === hashLegacyPassword(password);
 };
 
-const shouldUpgradePasswordHash = passwordHash => !isModernPasswordHash(passwordHash);
+const shouldUpgradePasswordHash = (passwordHash: string): boolean => !isModernPasswordHash(passwordHash);
 
-const getHttpJwtOptions = getToken => ({
+const getHttpJwtOptions = (getToken: TokenGetter): Params => ({
   secret: config.jwtsecret,
   audience,
   issuer,
   getToken,
-  algorithms: ['HS256'],
+  algorithms: [jwtAlgorithm],
 });
 
-const getRouteJwtOptions = () => ({
+const getRouteJwtOptions = (): Params => ({
   secret: config.jwtsecret,
-  algorithms: ['HS256'],
+  algorithms: [jwtAlgorithm],
 });
 
-const getSocketJwtOptions = () => ({
+const getSocketJwtOptions = (): { secret: string } => ({
   secret: config.jwtsecret,
 });
 
-const toSocketAdminUser = payload => ({
+const toSocketAdminUser = (payload: JwtPayload | AuthUser): AuthUser => ({
   name: payload.name,
   group: payload.group,
 });
@@ -75,6 +89,7 @@ export {
   toSocketAdminUser,
   verifyPassword,
 };
+export type { AuthUser, KikoeruJwtPayload, TokenGetter };
 
 export default {
   audience,
