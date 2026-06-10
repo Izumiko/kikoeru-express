@@ -6,7 +6,6 @@ const db = require('../database/db');
 const { createSchema } = require('../database/schema');
 const { deleteCoverImageFromDisk, saveCoverImageToDisk } = require('../src/modules/media/cover-storage');
 const { getFolderList } = require('../src/modules/media/folder-scanner');
-const { formatRjCode } = require('../src/modules/media/rj-code');
 const { md5 } = require('../auth/utils');
 const { nameToUUID } = require('../scraper/utils');
 
@@ -18,6 +17,7 @@ const { createFolderCollector } = require('../src/modules/scanner/folder-collect
 const { createFolderProcessorRunner } = require('../src/modules/scanner/folder-processor-runner');
 const { ScannerLifecycle } = require('../src/modules/scanner/lifecycle');
 const { ScannerLogger } = require('../src/modules/scanner/logger');
+const { createMetadataIngestion } = require('../src/modules/scanner/metadata-ingestion');
 const { createMetadataUpdater } = require('../src/modules/scanner/metadata-updater');
 const { createMissingWorkCleaner } = require('../src/modules/scanner/missing-work-cleaner');
 const { createScanInitializer } = require('../src/modules/scanner/scan-initializer');
@@ -69,65 +69,11 @@ process.on('message', m => {
   }
 });
 
-/**
- * 从 DLsite 抓取该音声的元数据，并保存到数据库，
- * 返回一个 Promise 对象，处理结果: 'added' or 'failed'
- * @param {number} id work id
- * @param {string} rootFolderName 根文件夹别名
- * @param {string} dir 音声文件夹相对路径
- * @param {string} tagLanguage 标签语言，'ja-jp', 'zh-tw' or 'zh-cn'，默认'zh-cn'
- */
-const getMetadata = (id, rootFolderName, dir, tagLanguage) => {
-  const rjcode = formatRjCode(id); // zero-pad to 6 digits
-  console.log(` -> [RJ${rjcode}] 从 DLSite 抓取元数据...`);
-  addLogForTask(rjcode, {
-    level: 'info',
-    message: '从 DLSite 抓取元数据...',
-  });
-
-  return scrapeWorkMetadataFromDLsite(id, tagLanguage) // 抓取该音声的元数据
-    .then(metadata => {
-      // 将抓取到的元数据插入到数据库
-      console.log(` -> [RJ${rjcode}] 元数据抓取成功，准备添加到数据库...`);
-      addLogForTask(rjcode, {
-        level: 'info',
-        message: '元数据抓取成功，准备添加到数据库...',
-      });
-
-      metadata.rootFolderName = rootFolderName;
-      metadata.dir = dir;
-      return db
-        .insertWorkMetadata(metadata)
-        .then(() => {
-          console.log(` -> [RJ${rjcode}] 元数据成功添加到数据库.`);
-          addLogForTask(rjcode, {
-            level: 'info',
-            message: '元数据成功添加到数据库.',
-          });
-
-          return 'added';
-        })
-        .catch(err => {
-          console.error(`  ! [RJ${rjcode}] 在插入元数据过程中出错: ${err.message}`);
-          addLogForTask(rjcode, {
-            level: 'error',
-            message: `在插入元数据过程中出错: ${err.message}`,
-          });
-
-          return 'failed';
-        });
-    })
-    .catch(err => {
-      console.error(`  ! [RJ${rjcode}] 在抓取元数据过程中出错: ${err.message}`);
-      addLogForTask(rjcode, {
-        level: 'error',
-        message: `在抓取元数据过程中出错: ${err.message}`,
-      });
-
-      return 'failed';
-    });
-};
-
+const { getMetadata } = createMetadataIngestion({
+  scrapeWorkMetadataFromDLsite,
+  insertWorkMetadata: db.insertWorkMetadata,
+  addLogForTask,
+});
 const { processFolder } = createWorkProcessor({
   knex: db.knex,
   coverFolderDir: config.coverFolderDir,
