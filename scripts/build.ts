@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,12 +12,12 @@ const entries = {
   updater: path.join(rootDir, 'src/cli/updater.ts'),
 };
 
-const copyIfExists = (from, to) => {
+const copyIfExists = (from: string, to: string): void => {
   if (!fs.existsSync(from)) return;
   fs.cpSync(from, to, { recursive: true });
 };
 
-async function build() {
+async function build(): Promise<void> {
   fs.rmSync(buildDir, { recursive: true, force: true });
   fs.mkdirSync(buildDir, { recursive: true });
 
@@ -38,7 +37,7 @@ async function build() {
   copyIfExists(path.join(rootDir, 'src/database/schema/migrations'), path.join(buildDir, 'migrations'));
 }
 
-build().catch(error => {
+build().catch((error: unknown) => {
   console.error(error);
   process.exit(1);
 });
