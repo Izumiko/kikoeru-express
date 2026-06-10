@@ -11,6 +11,27 @@ const {
   schema,
 } = require('../src/database/spikes/drizzle-libsql/probe');
 const { createMetadataRepository } = require('../src/database/spikes/drizzle-libsql/metadata-repository');
+const { createWorkRepository } = require('../src/database/spikes/drizzle-libsql/work-repository');
+
+const baseWork = values => ({
+  id: 200,
+  rootFolderName: 'VoiceWork',
+  dir: 'RJ000200',
+  title: 'Gamma Work',
+  circle: { id: 12, name: 'Gamma Circle' },
+  nsfw: false,
+  release: '2021-03-04',
+  dl_count: 25,
+  price: 550,
+  review_count: 1,
+  rate_count: 2,
+  rate_average_2dp: 4,
+  rate_count_detail: { 5: 1, 3: 1 },
+  rank: { monthly: 7 },
+  tags: [{ id: 30, name: 'Inserted Tag' }],
+  vas: [{ id: 'va-gamma', name: 'Gamma VA' }],
+  ...values,
+});
 
 describe('Drizzle libSQL spike', function () {
   it('can query typed tables through Drizzle libSQL driver', async function () {
@@ -95,6 +116,87 @@ describe('Drizzle libSQL spike', function () {
         { id: 20, name: 'Relax' },
         { id: 21, name: 'Drama' },
       ]);
+    } finally {
+      probe.client.close();
+    }
+  });
+
+  it('matches the Knex work metadata write behavior', async function () {
+    const probe = await createProbeDatabase();
+    const metadataRepository = createMetadataRepository(probe.client);
+    const workRepository = createWorkRepository(probe.client);
+
+    try {
+      await workRepository.insertWorkMetadata(baseWork());
+
+      const inserted = await metadataRepository.getWorkMetadata(200, 'listener');
+      expect(inserted[0]).to.include({
+        id: 200,
+        title: 'Gamma Work',
+        circle_id: 12,
+        name: 'Gamma Circle',
+        nsfw: 0,
+        dl_count: 25,
+        price: 550,
+      });
+      expect(JSON.parse(inserted[0].tagObj).tags).to.deep.equal([{ id: 30, name: 'Inserted Tag' }]);
+      expect(JSON.parse(inserted[0].vaObj).vas).to.deep.equal([{ id: 'va-gamma', name: 'Gamma VA' }]);
+
+      await workRepository.updateWorkMetadata(
+        baseWork({
+          id: 100,
+          title: 'Alpha Work Updated',
+          nsfw: true,
+          dl_count: 200,
+          price: 1200,
+          review_count: 5,
+          rate_count: 6,
+          rate_average_2dp: 4.8,
+          rate_count_detail: { 5: 6 },
+          rank: { weekly: 2 },
+          tags: [{ id: 22, name: 'New Tag' }],
+          vas: [{ id: 'va-new', name: 'New VA' }],
+        }),
+        {
+          refreshAll: true,
+          purgeTags: true,
+        }
+      );
+
+      const updated = await metadataRepository.getWorkMetadata(100, 'listener');
+      expect(updated[0]).to.include({
+        id: 100,
+        title: 'Alpha Work Updated',
+        nsfw: 1,
+        dl_count: 200,
+        price: 1200,
+      });
+      expect(JSON.parse(updated[0].tagObj).tags).to.deep.equal([{ id: 22, name: 'New Tag' }]);
+      expect(JSON.parse(updated[0].vaObj).vas).to.deep.equal([{ id: 'va-new', name: 'New VA' }]);
+
+      await workRepository.removeWork(100);
+
+      const removedWork = await probe.client.execute({
+        sql: 'SELECT * FROM t_work WHERE id = ?',
+        args: [100],
+      });
+      const orphanCircle = await probe.client.execute({
+        sql: 'SELECT * FROM t_circle WHERE id = ?',
+        args: [10],
+      });
+      const orphanTag = await probe.client.execute({
+        sql: 'SELECT * FROM t_tag WHERE id = ?',
+        args: [22],
+      });
+      const orphanVa = await probe.client.execute({
+        sql: 'SELECT * FROM t_va WHERE id = ?',
+        args: ['va-new'],
+      });
+
+      expect(removedWork.rows).to.deep.equal([]);
+      expect(orphanCircle.rows).to.deep.equal([]);
+      expect(orphanTag.rows).to.deep.equal([]);
+      expect(orphanVa.rows).to.deep.equal([]);
     } finally {
       probe.client.close();
     }
