@@ -1,11 +1,11 @@
-// @ts-nocheck
-const formatRjCode = id => {
-  if (id < 1000000) {
-    return `000000${id}`.slice(-6);
-  } else if (id < 100000000) {
-    return `00000000${id}`.slice(-8);
+const formatRjCode = (id: number | string): string => {
+  const numericId = Number(id);
+  if (numericId < 1000000) {
+    return `000000${numericId}`.slice(-6);
+  } else if (numericId < 100000000) {
+    return `00000000${numericId}`.slice(-8);
   } else {
-    const str = `${id}`;
+    const str = `${numericId}`;
     if (str.length % 2 === 0) {
       return str;
     } else {

@@ -1,12 +1,33 @@
-// @ts-nocheck
 import { config } from '../../../config.js';
+import type { RootFolderConfig } from '../../config/types.js';
 import { joinFragments } from '../../shared/http/url.js';
+import type { Track } from './tracks.js';
 
 const textExtensions = new Set(['.txt', '.lrc', '.srt', '.ass']);
 const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 
-const toTree = (tracks, workTitle, workDir, rootFolder) => {
-  const tree = [];
+export type TrackTreeNode =
+  | {
+      type: 'folder';
+      title: string;
+      children: TrackTreeNode[];
+    }
+  | {
+      type: 'text' | 'image' | 'other' | 'audio';
+      hash: string;
+      title: string;
+      workTitle: string;
+      mediaStreamUrl: string;
+      mediaDownloadUrl: string;
+    };
+
+type FolderNode = Extract<TrackTreeNode, { type: 'folder' }>;
+
+const findFolderNode = (nodes: TrackTreeNode[], title: string): FolderNode | undefined =>
+  nodes.find((item): item is FolderNode => item.type === 'folder' && item.title === title);
+
+const toTree = (tracks: Track[], workTitle: string, workDir: string, rootFolder: RootFolderConfig): TrackTreeNode[] => {
+  const tree: TrackTreeNode[] = [];
 
   tracks.forEach(track => {
     let fatherFolder = tree;
@@ -20,7 +41,7 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
           children: [],
         });
       }
-      fatherFolder = fatherFolder.find(item => item.type === 'folder' && item.title === folderName).children;
+      fatherFolder = findFolderNode(fatherFolder, folderName)?.children || fatherFolder;
     });
   });
 
@@ -28,7 +49,7 @@ const toTree = (tracks, workTitle, workDir, rootFolder) => {
     let fatherFolder = tree;
     const paths = track.subtitle ? track.subtitle.split('/') : [];
     paths.forEach(folderName => {
-      fatherFolder = fatherFolder.find(item => item.type === 'folder' && item.title === folderName).children;
+      fatherFolder = findFolderNode(fatherFolder, folderName)?.children || fatherFolder;
     });
 
     let offloadStreamUrl = joinFragments(

@@ -1,9 +1,9 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
+import type { Readable } from 'stream';
 import { config } from '../../../config.js';
 
-const deleteCoverImageFromDisk = rjcode =>
+const deleteCoverImageFromDisk = (rjcode: number | string): Promise<void> =>
   new Promise((resolve, reject) => {
     const types = ['main', 'sam', '240x240', '360x360'];
     types.forEach(type => {
@@ -17,7 +17,7 @@ const deleteCoverImageFromDisk = rjcode =>
     resolve();
   });
 
-const saveCoverImageToDisk = (stream, rjcode, type) =>
+const saveCoverImageToDisk = (stream: Readable, rjcode: number | string, type: string): Promise<void> =>
   new Promise((resolve, reject) => {
     try {
       stream.pipe(
