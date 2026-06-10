@@ -14,6 +14,8 @@ const createVoiceActorRepairRunner = ({ updateLock, repairVoiceActors, emitMainL
       return false;
     }
 
+    // Fix hash collision bug in t_va.
+    // Scan to repopulate the Voice Actor data for those problematic works: かの仔 and こっこ.
     emitMainLog(' * 开始进行声优元数据修复，需要联网');
     try {
       const updateResult = await repairVoiceActors();

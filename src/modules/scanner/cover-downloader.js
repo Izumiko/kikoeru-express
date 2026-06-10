@@ -15,8 +15,10 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
         .then(response => response.data)
         .then(data => {
           const $ = cheerio.load(data);
+          // 展示图的第一个；之后仅需修改 type 部分即可拼出其他封面尺寸。
           const img = $('div.slider_body ul li:first-child picture img').attr('srcset');
           if (img) {
+            // _img_ 前的部分。
             const prefix = img.split('_img_')[0];
             resolve(type => {
               if (type === '240x240' || type === '360x360') {
@@ -50,6 +52,7 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
     const promises = [];
 
     types.forEach(type => {
+      // 对于不是合集的音声，封面图片的请求地址通常由 RJ 分组目录和作品 RJ 号拼出。
       let url = `https://img.dlsite.jp/modpub/images2/work/doujin/RJ${rjcode2}/RJ${rjcode}_img_${type}.jpg`;
       if (type === '240x240' || type === '360x360') {
         url = `https://img.dlsite.jp/resize/images2/work/doujin/RJ${rjcode2}/RJ${rjcode}_img_main_${type}.jpg`;
@@ -60,6 +63,7 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
           .then(imageRes => saveCoverImage(imageRes, rjcode, type))
           .catch(async err => {
             try {
+              // 可能是网站转发导致图片 RJ code 和音声 RJ code 不同；失败后回到作品首页解析真实头图地址。
               const imageRequestUrlTemplate = await getImageRequestUrlTemplate(rjcode);
 
               return axios

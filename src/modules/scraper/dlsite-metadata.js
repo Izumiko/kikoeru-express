@@ -42,14 +42,14 @@ const buildDlsiteDynamicMetadataUrl = id => {
 
 const parseDynamicWorkMetadata = data => {
   const work = {};
-  work.dl_count = data.dl_count ? data.dl_count : '0';
-  work.rate_average_2dp = data.rate_average_2dp ? data.rate_average_2dp : 0.0;
-  work.rate_count = data.rate_count ? data.rate_count : 0;
-  work.rate_count_detail = data.rate_count_detail;
-  work.review_count = data.review_count;
-  work.price = data.price;
+  work.dl_count = data.dl_count ? data.dl_count : '0'; // 售出数
+  work.rate_average_2dp = data.rate_average_2dp ? data.rate_average_2dp : 0.0; // 平均评价
+  work.rate_count = data.rate_count ? data.rate_count : 0; // 评价数量
+  work.rate_count_detail = data.rate_count_detail; // 评价分布明细
+  work.review_count = data.review_count; // 评论数量
+  work.price = data.price; // 价格
   if (data.rank.length) {
-    work.rank = data.rank;
+    work.rank = data.rank; // 成绩
   }
   return work;
 };
@@ -63,6 +63,7 @@ const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID
     work.title = $(`a[href="${url}"] span`).text();
   }
 
+  // 'xxxxx [circle_name] | DLsite' => 'xxxxx'
   const titlePattern = / \[.+\] \| DLsite$/;
   work.title = work.title.replace(titlePattern, '');
 
@@ -96,6 +97,7 @@ const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID
     .children('td')
     .text()
     .replace(/[^0-9]/gi, '');
+  // 贩卖日页面文案会随 locale 变化，这里只保留数字并标准化为 YYYY-MM-DD。
   work.release = release.length >= 8 ? `${release.slice(0, 4)}-${release.slice(4, 6)}-${release.slice(6, 8)}` : '';
 
   const seriesElement = workOutline

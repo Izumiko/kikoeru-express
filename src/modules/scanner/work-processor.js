@@ -27,6 +27,7 @@ const createWorkProcessor = ({
         const rjcode = formatRjCode(folder.id);
         const count = res['count(*)'];
         if (count) {
+          // 数据库中已有元数据时，只检查封面是否缺失。
           const lostCoverTypes = findMissingCoverTypes(rjcode);
 
           if (lostCoverTypes.length) {
@@ -51,6 +52,7 @@ const createWorkProcessor = ({
 
           return getMetadata(folder.id, folder.rootFolderName, folder.relativePath, tagLanguage).then(result => {
             if (result === 'failed') {
+              // 如果获取元数据失败，跳过封面图片下载。
               return 'failed';
             } else {
               return getCoverImage(folder.id, coverTypes);

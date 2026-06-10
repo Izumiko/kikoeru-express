@@ -1,3 +1,7 @@
+/**
+ * 通过数组中每个对象的 id 属性去重。
+ * 返回的 duplicate 以 id 为键，值为被跳过的重复项数组。
+ */
 const dedupeFoldersById = folders => {
   const uniqueArr = [];
   const duplicate = {};

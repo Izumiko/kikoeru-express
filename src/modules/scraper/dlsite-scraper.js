@@ -19,11 +19,14 @@ const createDlsiteScraper = ({
       return work;
     }
 
+    // 从 DLsite 抓不到声优信息时，从 HVDB 抓取声优信息。
     const metadata = await scrapeWorkMetadataFromHVDB(id);
     if (metadata.vas.length <= 1) {
+      // HVDB 只有一个声优时可能是 N/A，保留旧行为直接使用。
       work.vas = metadata.vas;
     } else {
       metadata.vas.forEach(va => {
+        // HVDB 有时会同时返回英文别名；旧逻辑会过滤掉英文声优名。
         if (!hasLetter(va.name)) {
           work.vas.push(va);
         }
@@ -65,6 +68,8 @@ const createDlsiteScraper = ({
       return work;
     } catch (error) {
       try {
+        // 尝试从其他语言版本获取元数据，保留旧 fallback 顺序：zh-cn -> zh-tw -> ja-jp。
+        // TODO: 验证是语言设置生效还是节点位置生效。
         const fallbackState = successLanguage || {
           language: null,
           initLanguage: language,
@@ -83,10 +88,11 @@ const createDlsiteScraper = ({
           return metadata;
         }
       } catch {
-        // Keep the first error as the observable failure, matching the legacy fallback path.
+        // 此处不需要处理错误：其他语言版本失败时，继续抛出第一轮请求的错误。
       }
 
       if (error.response) {
+        // 请求已发出，但服务器响应的状态码不在 2xx 范围内。
         throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`);
       }
       throw error;
@@ -104,6 +110,7 @@ const createDlsiteScraper = ({
       return work;
     } catch (error) {
       if (error.response) {
+        // 请求已发出，但服务器响应的状态码不在 2xx 范围内。
         throw new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`);
       }
       throw error;
