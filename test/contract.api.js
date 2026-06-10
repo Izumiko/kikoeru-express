@@ -4,10 +4,10 @@ process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const expect = chai.expect;
 
-const { createApp } = require('../app-factory');
+const { createApp } = require('../src/app/factory');
 const { request } = require('./helpers/http');
 const { config } = require('../config');
-const db = require('../database/db');
+const db = require('../src/database');
 
 const createWorkRecord = values => ({
   id: 1,

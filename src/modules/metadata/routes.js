@@ -1,7 +1,7 @@
 const path = require('path');
 const express = require('express');
 const { param, query } = require('express-validator');
-const db = require('../../../database/db');
+const db = require('../../database');
 const { config } = require('../../../config');
 const { formatRjCode } = require('../media/rj-code');
 const { getTrackList } = require('../media/tracks');

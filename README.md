@@ -21,7 +21,7 @@
 
 ## 源码安装部署
 
-> 建议 Node 版本 12 至 14。
+> 建议 Node 版本 22 或更新版本。
 
 将 kikoeru-quasar 项目生成的 SPA 或 PWA 文件夹全部文件置于`dist`文件夹下，确保`dist/index.html`存在，然后：
 
@@ -47,9 +47,8 @@ PWA 的优点：基本页面零延迟，可以像手机 APP 一样通过浏览�
 
 - axios (网络请求)
 - express (构建后端服务)
-- sqlite3 (文件型数据库)
-- knexjs (操作数据库)
-- knex-migrate (数据库迁移)
+- libSQL client (SQLite 文件数据库驱动)
+- Drizzle ORM (数据库 schema 和查询)
 - cheerio (将 html 解析为 jQuery 对象)
 - jsonwebtoken (用户认证)
 - socket.io (用于将扫描音声库的结果实时传给客户端)
@@ -61,23 +60,19 @@ PWA 的优点：基本页面零延迟，可以像手机 APP 一样通过浏览�
 ## 项目目录结构
 
 ```tree
-├── routes/                  # 主要路由
 ├── config/                  # 存放配置文件
 ├── covers/                  # 存放音声封面
-├── database/                # 操作数据库相关代码
 ├── dist/                    # 存放前端项目 kikoeru-quasar 构建的 PWA
-├── filesystem/              # 存放扫描相关代码
+├── filesystem/              # 扫描命令入口
 ├── package/                 # 存放 pkg 打包后的可执行文件
 ├── package-macos/           # 存放 pkg 打包后的可执行文件
-├── scraper/                 # 存放爬虫相关代码
 ├── sqlite/                  # 存放 sqlite 数据库文件
+├── src/                     # 后端应用源码
 ├── static/                  # 存放静态资源
 ├── .gitignore               # git 忽略路径
 ├── .dockerignore            # Docker 忽略路径
-├── api.js                   # 为 express 实例添加路由与 jwt 验证中间件
 ├── app.js                   # 项目入口文件
-├── socket.js                # 用于初始化socket.io
-├── config.js                # 用于生成与修改 config.json 配置文件，导出公共配置以及升级锁
+├── config.js                # 用于生成与修改 config.json 配置文件，导出公共配置
 ├── Dockerfile               # 用于构建 docker 镜像的文本文件
 ├── docker-compose.yml       # 用于使用docker-compose一键构建环境
 ├── package.json             # npm 脚本和依赖项

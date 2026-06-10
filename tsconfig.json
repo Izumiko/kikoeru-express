@@ -14,14 +14,8 @@
   },
   "include": [
     "*.js",
-    "auth/**/*.js",
-    "database/**/*.js",
     "filesystem/**/*.js",
-    "routes/**/*.js",
-    "scraper/**/*.js",
     "src/**/*.js",
-    "socket.js",
-    "upgrade.js",
     "src/**/*.ts",
     "test/**/*.js"
   ],

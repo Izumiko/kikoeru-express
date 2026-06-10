@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const compareVersions = require('compare-versions');
 const { config } = require('../../../config');
-const { updateLock } = require('../../../upgrade');
+const { updateLock } = require('../../upgrade/lock');
 const pjson = require('../../../package.json');
 
 const router = express.Router();

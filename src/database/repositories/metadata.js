@@ -1,6 +1,6 @@
 const { eq, sql } = require('drizzle-orm');
 
-const { db } = require('../libsql-client.js');
+const { db } = require('../client.js');
 const {
   circles,
   tagWorks,

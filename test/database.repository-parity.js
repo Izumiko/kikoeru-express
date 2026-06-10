@@ -4,10 +4,15 @@ process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const expect = chai.expect;
 
-const { knex } = require('../database/db');
+const { libsql } = require('../src/database/client');
 const repositories = require('../src/database/repositories');
-const { createSchema } = require('../database/schema');
+const { createSchema } = require('../src/database/schema');
 const { dropDatabase } = require('./teardown/teardown-0.6.0');
+
+const selectRows = async sql => {
+  const result = await libsql.execute(sql);
+  return result.rows.map(row => ({ ...row }));
+};
 
 const baseWork = values => ({
   id: 100,
@@ -205,12 +210,12 @@ describe('Database repository parity baseline', function () {
     expect(JSON.parse(updated[0].tagObj).tags).to.deep.equal([{ id: 22, name: 'New Tag' }]);
     expect(JSON.parse(updated[0].vaObj).vas).to.deep.equal([{ id: 'va-new', name: 'New VA' }]);
 
-    await repositories.removeWork(100, () => knex);
+    await repositories.removeWork(100);
 
-    expect(await knex('t_work').where('id', 100)).to.deep.equal([]);
-    expect(await knex('t_circle').where('id', 10)).to.deep.equal([]);
-    expect(await knex('t_tag').where('id', 22)).to.deep.equal([]);
-    expect(await knex('t_va').where('id', 'va-new')).to.deep.equal([]);
+    expect(await selectRows('SELECT * FROM t_work WHERE id = 100')).to.deep.equal([]);
+    expect(await selectRows('SELECT * FROM t_circle WHERE id = 10')).to.deep.equal([]);
+    expect(await selectRows('SELECT * FROM t_tag WHERE id = 22')).to.deep.equal([]);
+    expect(await selectRows("SELECT * FROM t_va WHERE id = 'va-new'")).to.deep.equal([]);
   });
 
   it('keeps user repository behavior stable', async function () {
@@ -223,12 +228,12 @@ describe('Database repository parity baseline', function () {
     expect(await repositories.getUsers()).to.deep.include({ name: 'temporary', group: 'user' });
 
     await repositories.updateUserPassword({ name: 'temporary' }, 'new');
-    expect(await knex('t_user').where('name', 'temporary').first()).to.include({ password: 'new' });
+    expect(await repositories.getUserByName('temporary')).to.include({ password: 'new' });
 
     await repositories.resetUserPassword({ name: 'temporary' });
-    expect(await knex('t_user').where('name', 'temporary').first()).to.include({ password: 'password' });
+    expect(await repositories.getUserByName('temporary')).to.include({ password: 'password' });
 
     await repositories.deleteUser([{ name: 'temporary' }]);
-    expect(await knex('t_user').where('name', 'temporary')).to.deep.equal([]);
+    expect(await repositories.getUserByName('temporary')).to.equal(undefined);
   });
 });

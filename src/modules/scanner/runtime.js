@@ -1,9 +1,9 @@
-const db = require('../../../database/db');
-const { closeLibsqlConnection } = require('../../database/libsql-client');
-const { createSchema } = require('../../../database/schema');
+const db = require('../../database');
+const { closeDatabaseConnection } = require('../../database/client');
+const { createSchema } = require('../../database/schema');
 const { deleteCoverImageFromDisk, saveCoverImageToDisk } = require('../media/cover-storage');
 const { getFolderList } = require('../media/folder-scanner');
-const { md5 } = require('../../../auth/utils');
+const { hashLegacyPassword } = require('../auth/service');
 const {
   httpClient,
   nameToUUID,
@@ -12,7 +12,7 @@ const {
 } = require('../scraper');
 
 const { config } = require('../../../config');
-const { updateLock } = require('../../../upgrade');
+const { updateLock } = require('../../upgrade/lock');
 const { createCleanupRunner } = require('./cleanup-runner');
 const { createConcurrencyLimiter } = require('./concurrency-limiter');
 const { createCoverDownloader } = require('./cover-downloader');
@@ -39,7 +39,7 @@ const scanSession = new ScanSession(event => process.send(event));
 const scannerLogger = new ScannerLogger(scanSession);
 const scannerLifecycle = new ScannerLifecycle({
   send: event => process.send(event),
-  destroyDatabase: closeLibsqlConnection,
+  destroyDatabase: closeDatabaseConnection,
   exit: code => process.exit(code),
 });
 const tasks = scanSession.tasks;
@@ -124,7 +124,7 @@ const { initializeScan } = createScanInitializer({
   coverFolderDir: config.coverFolderDir,
   createSchema,
   createUser: db.createUser,
-  hashPassword: md5,
+  hashPassword: hashLegacyPassword,
   addMainLog,
 });
 const { runCleanup } = createCleanupRunner({

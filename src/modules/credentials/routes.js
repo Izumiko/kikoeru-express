@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator'); // 后端校验
 
 const { config } = require('../../../config');
-const db = require('../../../database/db');
+const db = require('../../database');
 const { hashPassword } = require('../auth/service.js');
 
 const router = express.Router();

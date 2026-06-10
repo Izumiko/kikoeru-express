@@ -2,7 +2,7 @@ const express = require('express');
 const { query, body } = require('express-validator');
 
 const { config } = require('../../../config');
-const db = require('../../../database/db');
+const db = require('../../database');
 const normalize = require('../../shared/metadata/normalize');
 const { isValidRequest } = require('../../shared/http/validate');
 

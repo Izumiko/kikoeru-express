@@ -3,8 +3,8 @@ const https = require('https');
 const fs = require('fs');
 const os = require('os');
 
-const { initApp } = require('../../database/init');
-const initSocket = require('../../socket');
+const { initApp } = require('../database/init');
+const { initSocket } = require('../modules/socket/server');
 const { config } = require('../../config');
 const { createApp } = require('./factory');
 

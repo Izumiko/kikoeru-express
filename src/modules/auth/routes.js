@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator'); // 后端校验
 const { expressjwt: expressJwt } = require('express-jwt'); // 把 JWT 的 payload 部分赋值于 req.auth
 
-const db = require('../../../database/db');
+const db = require('../../database');
 const {
   getRouteJwtOptions,
   hashPassword,

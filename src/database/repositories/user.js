@@ -1,6 +1,6 @@
 const { eq, inArray } = require('drizzle-orm');
 
-const { db } = require('../libsql-client.js');
+const { db } = require('../client.js');
 const { users } = require('../schema/tables.js');
 
 /**

@@ -1,6 +1,5 @@
 const { expect } = require('chai');
 const { NAME_UUID_NAMESPACE, hasLetter, nameToUUID } = require('../src/modules/scraper/utils');
-const legacyUtils = require('../scraper/utils');
 
 describe('scraper utils', () => {
   it('keeps the legacy UUID namespace for voice actor names', () => {
@@ -15,8 +14,4 @@ describe('scraper utils', () => {
     expect(hasLetter('かな')).to.equal(false);
   });
 
-  it('keeps the old scraper utils facade compatible', () => {
-    expect(legacyUtils.nameToUUID).to.equal(nameToUUID);
-    expect(legacyUtils.hasLetter).to.equal(hasLetter);
-  });
 });

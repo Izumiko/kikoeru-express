@@ -21,13 +21,10 @@
       "src/**/*.js",
       "filesystem/scanner.js",
       "filesystem/updater.js",
-      "dist/**/*.js",
-      "database/migrations/*",
-      "database/knexfile.js",
-      "database/storage.js"
+      "dist/**/*.js"
     ],
     "assets": [
-      "src/database/drizzle/**/*",
+      "src/database/schema/migrations/**/*",
       "dist/**/*",
       "static/**/*"
     ]
@@ -60,7 +57,6 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@libsql/client": "^0.17.3",
-    "@umonaca/umzug": "^2.3.1",
     "axios": "^1.17.0",
     "bcryptjs": "^3.0.3",
     "bluebird": "^3.7.2",
@@ -76,17 +72,13 @@
     "express-validator": "^7.3.2",
     "htmlparser2": "^10.1.0",
     "https": "^1.0.0",
-    "invariant": "^2.2.4",
     "jschardet": "^3.1.4",
     "jsonwebtoken": "^9.0.3",
-    "knex": "^0.21.17",
-    "knex-migrate": "^1.7.4",
     "limit-promise": "^1.0.6",
     "lodash": "^4.18.1",
     "md5": "^2.3.0",
     "natural-orderby": "^5.0.0",
     "socket.io": "^4.8.3",
-    "sqlite3": "^5.0.2",
     "tunnel-agent": "^0.6.0",
     "url-join": "^4.0.1",
     "uuid": "^11.1.1",

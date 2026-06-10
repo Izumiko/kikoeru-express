@@ -1,6 +1,6 @@
 const { and, eq, sql } = require('drizzle-orm');
 
-const { db } = require('../libsql-client.js');
+const { db } = require('../client.js');
 const { reviews } = require('../schema/tables.js');
 
 const reviewKey = (username, workid) =>

@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const { expect } = require('chai');
 const { config } = require('../config');
-const db = require('../database/db');
+const db = require('../src/database');
 const mediaRouter = require('../src/modules/media/routes');
 const { request } = require('./helpers/http');
 
