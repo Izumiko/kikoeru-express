@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { databaseExist } from './client.js';
 import * as repositories from './repositories/index.js';
 

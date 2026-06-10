@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { sql } from 'drizzle-orm';
 import { index, integer, primaryKey, real, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 
