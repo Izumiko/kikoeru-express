@@ -1,5 +1,5 @@
 const { sql } = require('drizzle-orm');
-const { index, integer, primaryKey, real, sqliteTable, text } = require('drizzle-orm/sqlite-core');
+const { index, integer, primaryKey, real, sqliteTable, sqliteView, text } = require('drizzle-orm/sqlite-core');
 
 const circles = sqliteTable('t_circle', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -13,7 +13,9 @@ const works = sqliteTable(
     rootFolder: text('root_folder').notNull(),
     dir: text('dir').notNull(),
     title: text('title').notNull(),
-    circleId: integer('circle_id').notNull(),
+    circleId: integer('circle_id')
+      .notNull()
+      .references(() => circles.id),
     nsfw: integer('nsfw', { mode: 'boolean' }),
     release: text('release'),
     dlCount: integer('dl_count'),
@@ -49,8 +51,8 @@ const voiceActors = sqliteTable('t_va', {
 const tagWorks = sqliteTable(
   'r_tag_work',
   {
-    tagId: integer('tag_id'),
-    workId: integer('work_id'),
+    tagId: integer('tag_id').references(() => tags.id),
+    workId: integer('work_id').references(() => works.id),
   },
   table => ({
     pk: primaryKey({ columns: [table.tagId, table.workId] }),
@@ -60,8 +62,8 @@ const tagWorks = sqliteTable(
 const voiceActorWorks = sqliteTable(
   'r_va_work',
   {
-    vaId: text('va_id'),
-    workId: integer('work_id'),
+    vaId: text('va_id').references(() => voiceActors.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
+    workId: integer('work_id').references(() => works.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
   },
   table => ({
     pk: primaryKey({ columns: [table.vaId, table.workId] }),
@@ -77,8 +79,12 @@ const users = sqliteTable('t_user', {
 const reviews = sqliteTable(
   't_review',
   {
-    userName: text('user_name').notNull(),
-    workId: text('work_id').notNull(),
+    userName: text('user_name')
+      .notNull()
+      .references(() => users.name, { onDelete: 'cascade' }),
+    workId: text('work_id')
+      .notNull()
+      .references(() => works.id, { onDelete: 'cascade' }),
     rating: integer('rating'),
     reviewText: text('review_text'),
     createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -90,9 +96,60 @@ const reviews = sqliteTable(
   })
 );
 
+const staticMetadata = sqliteView('staticMetadata', {
+  id: integer('id'),
+  title: text('title'),
+  circleId: integer('circle_id'),
+  name: text('name'),
+  circleObj: text('circleObj'),
+  nsfw: integer('nsfw', { mode: 'boolean' }),
+  release: text('release'),
+  dlCount: integer('dl_count'),
+  price: integer('price'),
+  reviewCount: integer('review_count'),
+  rateCount: integer('rate_count'),
+  rateAverage2dp: real('rate_average_2dp'),
+  rateCountDetail: text('rate_count_detail'),
+  rank: text('rank'),
+  vaObj: text('vaObj'),
+  tagObj: text('tagObj'),
+}).as(sql`
+  SELECT baseQueryWithVA.*,
+    json_object('tags', json_group_array(json_object('id', t_tag.id, 'name', t_tag.name))) AS tagObj
+  FROM (
+    SELECT baseQuery.*,
+      json_object('vas', json_group_array(json_object('id', t_va.id, 'name', t_va.name))) AS vaObj
+    FROM (
+      SELECT t_work.id,
+        t_work.title,
+        t_work.circle_id,
+        t_circle.name,
+        json_object('id', t_work.circle_id, 'name', t_circle.name) AS circleObj,
+        t_work.nsfw,
+        t_work.release,
+        t_work.dl_count,
+        t_work.price,
+        t_work.review_count,
+        t_work.rate_count,
+        t_work.rate_average_2dp,
+        t_work.rate_count_detail,
+        t_work.rank
+      FROM t_work
+      JOIN t_circle ON t_circle.id = t_work.circle_id
+    ) AS baseQuery
+    JOIN r_va_work ON r_va_work.work_id = baseQuery.id
+    JOIN t_va ON t_va.id = r_va_work.va_id
+    GROUP BY baseQuery.id
+  ) AS baseQueryWithVA
+  LEFT JOIN r_tag_work ON r_tag_work.work_id = baseQueryWithVA.id
+  LEFT JOIN t_tag ON t_tag.id = r_tag_work.tag_id
+  GROUP BY baseQueryWithVA.id
+`);
+
 module.exports = {
   circles,
   reviews,
+  staticMetadata,
   tagWorks,
   tags,
   users,

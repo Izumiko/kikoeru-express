@@ -27,6 +27,7 @@
       "database/storage.js"
     ],
     "assets": [
+      "src/database/drizzle/**/*",
       "dist/**/*",
       "static/**/*"
     ]

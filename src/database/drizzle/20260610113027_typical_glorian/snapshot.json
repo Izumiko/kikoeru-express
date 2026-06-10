@@ -1,0 +1,604 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "9f34f882-35e3-4a00-8214-59af814bfc5a",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "name": "t_circle",
+      "entityType": "tables"
+    },
+    {
+      "name": "t_review",
+      "entityType": "tables"
+    },
+    {
+      "name": "r_tag_work",
+      "entityType": "tables"
+    },
+    {
+      "name": "t_tag",
+      "entityType": "tables"
+    },
+    {
+      "name": "t_user",
+      "entityType": "tables"
+    },
+    {
+      "name": "t_va",
+      "entityType": "tables"
+    },
+    {
+      "name": "r_va_work",
+      "entityType": "tables"
+    },
+    {
+      "name": "t_work",
+      "entityType": "tables"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "t_circle"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "t_circle"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "user_name",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "work_id",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "rating",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "review_text",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": "CURRENT_TIMESTAMP",
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": "CURRENT_TIMESTAMP",
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "progress",
+      "entityType": "columns",
+      "table": "t_review"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tag_id",
+      "entityType": "columns",
+      "table": "r_tag_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "work_id",
+      "entityType": "columns",
+      "table": "r_tag_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "t_tag"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "t_tag"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "t_user"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "password",
+      "entityType": "columns",
+      "table": "t_user"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "group",
+      "entityType": "columns",
+      "table": "t_user"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "t_va"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "t_va"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "va_id",
+      "entityType": "columns",
+      "table": "r_va_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "work_id",
+      "entityType": "columns",
+      "table": "r_va_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "root_folder",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "dir",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "circle_id",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "nsfw",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "release",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "dl_count",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "price",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "review_count",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "rate_count",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "rate_average_2dp",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "rate_count_detail",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "rank",
+      "entityType": "columns",
+      "table": "t_work"
+    },
+    {
+      "columns": [
+        "user_name"
+      ],
+      "tableTo": "t_user",
+      "columnsTo": [
+        "name"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_t_review_user_name_t_user_name_fk",
+      "entityType": "fks",
+      "table": "t_review"
+    },
+    {
+      "columns": [
+        "work_id"
+      ],
+      "tableTo": "t_work",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_t_review_work_id_t_work_id_fk",
+      "entityType": "fks",
+      "table": "t_review"
+    },
+    {
+      "columns": [
+        "tag_id"
+      ],
+      "tableTo": "t_tag",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_r_tag_work_tag_id_t_tag_id_fk",
+      "entityType": "fks",
+      "table": "r_tag_work"
+    },
+    {
+      "columns": [
+        "work_id"
+      ],
+      "tableTo": "t_work",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_r_tag_work_work_id_t_work_id_fk",
+      "entityType": "fks",
+      "table": "r_tag_work"
+    },
+    {
+      "columns": [
+        "va_id"
+      ],
+      "tableTo": "t_va",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_r_va_work_va_id_t_va_id_fk",
+      "entityType": "fks",
+      "table": "r_va_work"
+    },
+    {
+      "columns": [
+        "work_id"
+      ],
+      "tableTo": "t_work",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_r_va_work_work_id_t_work_id_fk",
+      "entityType": "fks",
+      "table": "r_va_work"
+    },
+    {
+      "columns": [
+        "circle_id"
+      ],
+      "tableTo": "t_circle",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_t_work_circle_id_t_circle_id_fk",
+      "entityType": "fks",
+      "table": "t_work"
+    },
+    {
+      "columns": [
+        "user_name",
+        "work_id"
+      ],
+      "nameExplicit": false,
+      "name": "t_review_pk",
+      "entityType": "pks",
+      "table": "t_review"
+    },
+    {
+      "columns": [
+        "tag_id",
+        "work_id"
+      ],
+      "nameExplicit": false,
+      "name": "r_tag_work_pk",
+      "entityType": "pks",
+      "table": "r_tag_work"
+    },
+    {
+      "columns": [
+        "va_id",
+        "work_id"
+      ],
+      "nameExplicit": false,
+      "name": "r_va_work_pk",
+      "entityType": "pks",
+      "table": "r_va_work"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "t_circle_pk",
+      "table": "t_circle",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "t_tag_pk",
+      "table": "t_tag",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "name"
+      ],
+      "nameExplicit": false,
+      "name": "t_user_pk",
+      "table": "t_user",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "t_va_pk",
+      "table": "t_va",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "t_work_pk",
+      "table": "t_work",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "circle_id",
+          "isExpression": false
+        },
+        {
+          "value": "release",
+          "isExpression": false
+        },
+        {
+          "value": "dl_count",
+          "isExpression": false
+        },
+        {
+          "value": "review_count",
+          "isExpression": false
+        },
+        {
+          "value": "price",
+          "isExpression": false
+        },
+        {
+          "value": "rate_average_2dp",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "t_work_index",
+      "entityType": "indexes",
+      "table": "t_work"
+    },
+    {
+      "definition": "\n  SELECT baseQueryWithVA.*,\n    json_object('tags', json_group_array(json_object('id', t_tag.id, 'name', t_tag.name))) AS tagObj\n  FROM (\n    SELECT baseQuery.*,\n      json_object('vas', json_group_array(json_object('id', t_va.id, 'name', t_va.name))) AS vaObj\n    FROM (\n      SELECT t_work.id,\n        t_work.title,\n        t_work.circle_id,\n        t_circle.name,\n        json_object('id', t_work.circle_id, 'name', t_circle.name) AS circleObj,\n        t_work.nsfw,\n        t_work.release,\n        t_work.dl_count,\n        t_work.price,\n        t_work.review_count,\n        t_work.rate_count,\n        t_work.rate_average_2dp,\n        t_work.rate_count_detail,\n        t_work.rank\n      FROM t_work\n      JOIN t_circle ON t_circle.id = t_work.circle_id\n    ) AS baseQuery\n    JOIN r_va_work ON r_va_work.work_id = baseQuery.id\n    JOIN t_va ON t_va.id = r_va_work.va_id\n    GROUP BY baseQuery.id\n  ) AS baseQueryWithVA\n  LEFT JOIN r_tag_work ON r_tag_work.work_id = baseQueryWithVA.id\n  LEFT JOIN t_tag ON t_tag.id = r_tag_work.tag_id\n  GROUP BY baseQueryWithVA.id\n",
+      "isExisting": false,
+      "error": null,
+      "name": "staticMetadata",
+      "entityType": "views"
+    }
+  ],
+  "renames": []
+}
