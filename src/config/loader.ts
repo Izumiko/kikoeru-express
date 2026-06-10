@@ -1,7 +1,7 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
 import compareVersions from 'compare-versions';
+import type { AppConfig, ConfigStore, PublicConfigSnapshot } from './types.js';
 import { createDefaultConfig } from './defaults.js';
 import {
   getConfigFolderDir,
@@ -15,25 +15,34 @@ const versionWithoutVerTracking = '0.4.1';
 // Before the following version, db path is using the absolute path in databaseFolderDir of config.json
 const versionDbRelativePath = '0.5.8';
 
-const createConfigStore = ({ projectRoot, version }) => {
+const hasOwn = (target: object, key: string): boolean => Object.prototype.hasOwnProperty.call(target, key);
+
+const readConfigFile = (configPath: string): Partial<AppConfig> =>
+  JSON.parse(fs.readFileSync(configPath, 'utf8')) as Partial<AppConfig>;
+
+const assignConfigKey = (target: Partial<AppConfig>, key: keyof AppConfig, value: AppConfig[keyof AppConfig]): void => {
+  (target as Record<keyof AppConfig, AppConfig[keyof AppConfig]>)[key] = value;
+};
+
+const createConfigStore = ({ projectRoot, version }: { projectRoot: string; version: string }): ConfigStore => {
   const configFolderDir = getConfigFolderDir(projectRoot);
   const configPath = path.join(configFolderDir, 'config.json');
   const defaultConfig = createDefaultConfig({ projectRoot, version });
-  const config = {};
+  const config = {} as AppConfig;
 
-  const replaceConfig = nextConfig => {
+  const replaceConfig = (nextConfig: Partial<AppConfig>) => {
     Object.keys(config).forEach(key => delete config[key]);
     Object.assign(config, nextConfig);
   };
 
-  const initConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
+  const initConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE): void => {
     Object.assign(config, defaultConfig);
     if (writeConfigToFile) {
       fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, '\t'));
     }
   };
 
-  const setConfig = (newConfig, writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
+  const setConfig = (newConfig: Partial<AppConfig>, writeConfigToFile = !process.env.FREEZE_CONFIG_FILE): void => {
     // Prevent changing some values, overwrite with old ones
     newConfig.production = config.production;
     if (process.env.NODE_ENV === 'production' || config.production) {
@@ -50,14 +59,14 @@ const createConfigStore = ({ projectRoot, version }) => {
   };
 
   // Get or use default value
-  const readConfig = () => {
-    replaceConfig(JSON.parse(fs.readFileSync(configPath)));
-    for (let key in defaultConfig) {
-      if (!config.hasOwnProperty(key)) {
+  const readConfig = (): void => {
+    replaceConfig(readConfigFile(configPath));
+    for (const key of Object.keys(defaultConfig) as Array<keyof AppConfig>) {
+      if (!hasOwn(config, key)) {
         if (key === 'version') {
-          config[key] = versionWithoutVerTracking;
+          assignConfigKey(config, key, versionWithoutVerTracking);
         } else {
-          config[key] = defaultConfig[key];
+          assignConfigKey(config, key, defaultConfig[key]);
         }
       }
     }
@@ -82,13 +91,13 @@ const createConfigStore = ({ projectRoot, version }) => {
   };
 
   // Migrate config
-  const updateConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE) => {
-    let cfg = JSON.parse(fs.readFileSync(configPath));
+  const updateConfig = (writeConfigToFile = !process.env.FREEZE_CONFIG_FILE): void => {
+    const cfg = readConfigFile(configPath);
     let countChanged = 0;
-    for (let key in defaultConfig) {
-      if (!cfg.hasOwnProperty(key)) {
+    for (const key of Object.keys(defaultConfig) as Array<keyof AppConfig>) {
+      if (!hasOwn(cfg, key)) {
         console.log('写入设置', key);
-        cfg[key] = defaultConfig[key];
+        assignConfigKey(cfg, key, defaultConfig[key]);
         countChanged += 1;
       }
     }
@@ -104,14 +113,14 @@ const createConfigStore = ({ projectRoot, version }) => {
     }
   };
 
-  class publicConfig {
+  class PublicConfig {
     get rewindSeekTime() {
       return config.rewindSeekTime;
     }
     get forwardSeekTime() {
       return config.forwardSeekTime;
     }
-    export() {
+    export(): PublicConfigSnapshot {
       return {
         rewindSeekTime: this.rewindSeekTime,
         forwardSeekTime: this.forwardSeekTime,
@@ -119,17 +128,18 @@ const createConfigStore = ({ projectRoot, version }) => {
     }
   }
 
-  const sharedConfigHandle = new publicConfig();
+  const sharedConfigHandle = new PublicConfig();
 
-  const initialize = () => {
+  const initialize = (): void => {
     // This part runs when the module is initialized
     // TODO: refactor global side effect
     if (!fs.existsSync(configPath)) {
       if (!fs.existsSync(configFolderDir)) {
         try {
           fs.mkdirSync(configFolderDir, { recursive: true });
-        } catch (err) {
-          console.error(` ! 在创建存放配置文件的文件夹时出错: ${err.message}`);
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(` ! 在创建存放配置文件的文件夹时出错: ${message}`);
         }
       }
       const writeConfigToFile = !process.env.FREEZE_CONFIG_FILE;

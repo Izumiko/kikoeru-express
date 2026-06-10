@@ -1,12 +1,12 @@
-// @ts-nocheck
 import crypto from 'crypto';
+import type { AppConfig } from './types.js';
 import {
   getDefaultCoverFolderDir,
   getDefaultDatabaseFolderDir,
   getVoiceWorkDefaultPath,
 } from './paths.js';
 
-const createDefaultConfig = ({ projectRoot, version }) => ({
+const createDefaultConfig = ({ projectRoot, version }: { projectRoot: string; version: string }): AppConfig => ({
   version,
   production: process.env.NODE_ENV === 'production' ? true : false,
   dbBusyTimeout: 1000,

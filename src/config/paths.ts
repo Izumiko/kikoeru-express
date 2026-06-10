@@ -1,15 +1,14 @@
-// @ts-nocheck
 import path from 'path';
-const getRuntimeBaseDir = projectRoot =>
+const getRuntimeBaseDir = (projectRoot: string): string =>
   process.env.KIKOERU_RUNTIME_DIR ? path.resolve(process.env.KIKOERU_RUNTIME_DIR) : projectRoot;
 
-const getConfigFolderDir = projectRoot => path.join(getRuntimeBaseDir(projectRoot), 'config');
+const getConfigFolderDir = (projectRoot: string): string => path.join(getRuntimeBaseDir(projectRoot), 'config');
 
-const getDefaultCoverFolderDir = projectRoot => path.join(getRuntimeBaseDir(projectRoot), 'covers');
+const getDefaultCoverFolderDir = (projectRoot: string): string => path.join(getRuntimeBaseDir(projectRoot), 'covers');
 
-const getDefaultDatabaseFolderDir = projectRoot => path.join(getRuntimeBaseDir(projectRoot), 'sqlite');
+const getDefaultDatabaseFolderDir = (projectRoot: string): string => path.join(getRuntimeBaseDir(projectRoot), 'sqlite');
 
-const getVoiceWorkDefaultPath = projectRoot => {
+const getVoiceWorkDefaultPath = (projectRoot: string): string => {
   if (process.env.IS_DOCKER) {
     return '/usr/src/kikoeru/VoiceWork';
   }
@@ -17,7 +16,7 @@ const getVoiceWorkDefaultPath = projectRoot => {
   return path.join(getRuntimeBaseDir(projectRoot), 'VoiceWork');
 };
 
-const resolveRuntimePath = (projectRoot, value) => {
+const resolveRuntimePath = (projectRoot: string, value: string): string => {
   if (path.isAbsolute(value)) {
     return value;
   }
