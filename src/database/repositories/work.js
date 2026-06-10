@@ -189,10 +189,20 @@ const getWorkTrackMetadata = async id => {
   return result[0];
 };
 
+/**
+ * 检查指定作品是否已存在
+ * @param {Integer} id Work id.
+ */
+const workExists = async id => {
+  const result = await db.select({ id: works.id }).from(works).where(eq(works.id, id)).limit(1);
+  return Boolean(result[0]);
+};
+
 module.exports = {
   getWorkStorageLocation,
   getWorkTrackMetadata,
   insertWorkMetadata,
   removeWork,
   updateWorkMetadata,
+  workExists,
 };

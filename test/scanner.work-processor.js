@@ -6,16 +6,6 @@ const { createWorkProcessor } = require('../src/modules/scanner/work-processor')
 
 const makeTempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kikoeru-work-processor-test-'));
 
-const createKnex = count => () => ({
-  select: () => ({
-    where: () => ({
-      count: () => ({
-        first: () => Promise.resolve({ 'count(*)': count }),
-      }),
-    }),
-  }),
-});
-
 describe('createWorkProcessor', () => {
   let tempDir;
   let calls;
@@ -37,7 +27,7 @@ describe('createWorkProcessor', () => {
 
   const createProcessor = options =>
     createWorkProcessor({
-      knex: createKnex(options.count),
+      workExists: () => Promise.resolve(Boolean(options.exists)),
       coverFolderDir: tempDir,
       tagLanguage: 'zh-cn',
       getMetadata: (...args) => {
@@ -59,7 +49,7 @@ describe('createWorkProcessor', () => {
     ['main', 'sam', '240x240'].forEach(type => {
       fs.writeFileSync(path.join(tempDir, `RJ000123_img_${type}.jpg`), type);
     });
-    const { processFolder } = createProcessor({ count: 1 });
+    const { processFolder } = createProcessor({ exists: true });
 
     const result = await processFolder({ id: 123, absolutePath: 'VoiceWork/RJ000123' });
 
@@ -70,7 +60,7 @@ describe('createWorkProcessor', () => {
 
   it('downloads missing covers for existing works', async () => {
     fs.writeFileSync(path.join(tempDir, 'RJ000123_img_main.jpg'), 'main');
-    const { processFolder } = createProcessor({ count: 1 });
+    const { processFolder } = createProcessor({ exists: true });
 
     const result = await processFolder({ id: 123, absolutePath: 'VoiceWork/RJ000123' });
 
@@ -80,7 +70,7 @@ describe('createWorkProcessor', () => {
   });
 
   it('adds metadata before downloading covers for new works', async () => {
-    const { processFolder } = createProcessor({ count: 0 });
+    const { processFolder } = createProcessor({ exists: false });
     const folder = {
       id: 123,
       rootFolderName: 'VoiceWork',
@@ -96,7 +86,7 @@ describe('createWorkProcessor', () => {
   });
 
   it('does not download covers when metadata collection fails', async () => {
-    const { processFolder } = createProcessor({ count: 0, metadataResult: 'failed' });
+    const { processFolder } = createProcessor({ exists: false, metadataResult: 'failed' });
 
     const result = await processFolder({
       id: 123,

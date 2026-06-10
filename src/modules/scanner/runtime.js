@@ -78,7 +78,7 @@ const { getMetadata } = createMetadataIngestion({
   addLogForTask,
 });
 const { processFolder } = createWorkProcessor({
-  knex: db.knex,
+  workExists: db.workExists,
   coverFolderDir: config.coverFolderDir,
   tagLanguage: config.tagLanguage,
   getMetadata,
