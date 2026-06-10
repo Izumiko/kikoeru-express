@@ -1,4 +1,5 @@
 const db = require('../../../database/db');
+const { closeLibsqlConnection } = require('../../database/libsql-client');
 const { createSchema } = require('../../../database/schema');
 const { deleteCoverImageFromDisk, saveCoverImageToDisk } = require('../media/cover-storage');
 const { getFolderList } = require('../media/folder-scanner');
@@ -38,7 +39,7 @@ const scanSession = new ScanSession(event => process.send(event));
 const scannerLogger = new ScannerLogger(scanSession);
 const scannerLifecycle = new ScannerLifecycle({
   send: event => process.send(event),
-  destroyDatabase: () => db.knex.destroy(),
+  destroyDatabase: closeLibsqlConnection,
   exit: code => process.exit(code),
 });
 const tasks = scanSession.tasks;
