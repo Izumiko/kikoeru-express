@@ -11,6 +11,8 @@ const {
   schema,
 } = require('../src/database/spikes/drizzle-libsql/probe');
 const { createMetadataRepository } = require('../src/database/spikes/drizzle-libsql/metadata-repository');
+const { createReviewRepository } = require('../src/database/spikes/drizzle-libsql/review-repository');
+const { createUserRepository } = require('../src/database/spikes/drizzle-libsql/user-repository');
 const { createWorkRepository } = require('../src/database/spikes/drizzle-libsql/work-repository');
 
 const baseWork = values => ({
@@ -197,6 +199,71 @@ describe('Drizzle libSQL spike', function () {
       expect(orphanCircle.rows).to.deep.equal([]);
       expect(orphanTag.rows).to.deep.equal([]);
       expect(orphanVa.rows).to.deep.equal([]);
+    } finally {
+      probe.client.close();
+    }
+  });
+
+  it('matches the Knex review repository behavior', async function () {
+    const probe = await createProbeDatabase();
+    const reviewRepository = createReviewRepository(probe.client);
+
+    try {
+      await reviewRepository.updateUserReview('listener', 101, 4, '', 'replay', false, true);
+
+      const reviewed = await reviewRepository.getWorksWithReviews({
+        username: 'listener',
+        orderBy: 'id',
+        sortOption: 'asc',
+      });
+      const replay = await reviewRepository.getWorksWithReviews({
+        username: 'listener',
+        orderBy: 'id',
+        sortOption: 'asc',
+        filter: 'replay',
+      });
+
+      expect(reviewed.works.map(work => work.id)).to.deep.equal([100, 101]);
+      expect(reviewed.totalCount[0].count).to.equal(2);
+      expect(replay.works.map(work => work.id)).to.deep.equal([101]);
+
+      await reviewRepository.deleteUserReview('listener', 101);
+      const afterDelete = await reviewRepository.getWorksWithReviews({ username: 'listener' });
+
+      expect(afterDelete.works.map(work => work.id)).to.deep.equal([100]);
+      expect(afterDelete.totalCount[0].count).to.equal(1);
+    } finally {
+      probe.client.close();
+    }
+  });
+
+  it('matches the Knex user repository behavior', async function () {
+    const probe = await createProbeDatabase();
+    const userRepository = createUserRepository(probe.client);
+
+    try {
+      await userRepository.createUser({ name: 'temporary', password: 'old', group: 'user' });
+      await userRepository.updateUserPassword({ name: 'temporary' }, 'new');
+
+      const updated = await probe.client.execute({
+        sql: 'SELECT * FROM t_user WHERE name = ?',
+        args: ['temporary'],
+      });
+      expect(updated.rows[0]).to.include({ password: 'new' });
+
+      await userRepository.resetUserPassword({ name: 'temporary' });
+      const reset = await probe.client.execute({
+        sql: 'SELECT * FROM t_user WHERE name = ?',
+        args: ['temporary'],
+      });
+      expect(reset.rows[0]).to.include({ password: 'password' });
+
+      await userRepository.deleteUser([{ name: 'temporary' }]);
+      const deleted = await probe.client.execute({
+        sql: 'SELECT * FROM t_user WHERE name = ?',
+        args: ['temporary'],
+      });
+      expect(deleted.rows).to.deep.equal([]);
     } finally {
       probe.client.close();
     }
