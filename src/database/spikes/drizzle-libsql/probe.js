@@ -121,6 +121,9 @@ const fixtureSql = `
   INSERT INTO t_va(id, name) VALUES ('va-alpha', 'Alpha VA'), ('va-beta', 'Beta VA');
   INSERT INTO r_tag_work(tag_id, work_id) VALUES (20, 100), (21, 100), (20, 101);
   INSERT INTO r_va_work(va_id, work_id) VALUES ('va-alpha', 100), ('va-beta', 101);
+  INSERT INTO t_user(name, password, "group") VALUES ('admin', 'password', 'administrator'), ('listener', 'password', 'user');
+  INSERT INTO t_review(user_name, work_id, rating, review_text, progress)
+    VALUES ('listener', 100, 5, 'great', 'listened'), ('listener', 101, 4, NULL, NULL);
 `;
 
 const createProbeDatabase = async () => {
