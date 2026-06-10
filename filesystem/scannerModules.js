@@ -1,5 +1,3 @@
-const LimitPromise = require('limit-promise'); // 限制并发数量
-
 const axios = require('../scraper/axios.js'); // 数据请求
 const { scrapeWorkMetadataFromDLsite, scrapeDynamicWorkMetadataFromDLsite } = require('../scraper/dlsite');
 const db = require('../database/db');
@@ -12,6 +10,7 @@ const { nameToUUID } = require('../scraper/utils');
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
 const { createCleanupRunner } = require('../src/modules/scanner/cleanup-runner');
+const { createConcurrencyLimiter } = require('../src/modules/scanner/concurrency-limiter');
 const { createCoverDownloader } = require('../src/modules/scanner/cover-downloader');
 const { createFolderCollector } = require('../src/modules/scanner/folder-collector');
 const { createFolderProcessorRunner } = require('../src/modules/scanner/folder-processor-runner');
@@ -134,15 +133,10 @@ const { runVoiceActorRepair } = createVoiceActorRepairRunner({
   emitMainLog,
 });
 
-const MAX = config.maxParallelism; // 并发请求上限
-const limitP = new LimitPromise(MAX); // 核心控制器
-/**
- * 限制 processFolder 并发数量，
- * 使用控制器包装 processFolder 方法，实际上是将请求函数递交给控制器处理
- */
-const processFolderLimited = folder => {
-  return limitP.call(processFolder, folder);
-};
+const { limit } = createConcurrencyLimiter({
+  max: config.maxParallelism, // 并发请求上限
+});
+const processFolderLimited = limit(processFolder);
 const { runScan } = createScanRunner({
   initializeScan,
   runVoiceActorRepair,
@@ -160,8 +154,8 @@ const { runScan } = createScanRunner({
  */
 const performScan = () => runScan();
 
-const updateMetadataLimited = (id, options = null) => limitP.call(updateMetadata, id, options);
-const updateVoiceActorLimited = id => limitP.call(updateMetadata, id, { includeVA: true });
+const updateMetadataLimited = limit((id, options = null) => updateMetadata(id, options));
+const updateVoiceActorLimited = limit(id => updateMetadata(id, { includeVA: true }));
 const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
   knex: db.knex,
   refreshWorks,
