@@ -69,7 +69,7 @@
     "connect-history-api-fallback": "^1.6.0",
     "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^5.2.1",
     "express-jwt": "^6.0.0",
     "express-validator": "^6.10.1",
     "htmlparser2": "^4.1.0",

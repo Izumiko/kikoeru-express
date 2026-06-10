@@ -11,11 +11,15 @@ const { isValidRequest } = require('../../shared/http/validate');
 
 const router = express.Router();
 const PAGE_SIZE = config.pageSize || 12;
+const METADATA_FIELD_ROUTES = ['/circles/:id', '/tags/:id', '/vas/:id'];
+const METADATA_FIELD_WORK_ROUTES = ['/circles/:id/works', '/tags/:id/works', '/vas/:id/works'];
+const METADATA_LABEL_ROUTES = ['/circles', '/tags', '/vas', '/circles/', '/tags/', '/vas/'];
 
 const getUsername = req => (config.auth ? req.user.name : 'admin');
+const getMetadataField = req => req.path.split('/')[1].replace(/s$/, '');
 
 const getMetadataIds = req =>
-  req.params.field === 'tag' || req.params.field === 'circle'
+  getMetadataField(req) === 'tag' || getMetadataField(req) === 'circle'
     ? req.params.id
         .split(',')
         .map(id => parseInt(id.trim()))
@@ -134,14 +138,15 @@ router.get(
   }
 );
 
-router.get('/:field(circle|tag|va)s/:id', param('field').isIn(['circle', 'tag', 'va']), (req, res, next) => {
+router.get(METADATA_FIELD_ROUTES, (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
   const ids = getMetadataIds(req);
+  const field = getMetadataField(req);
 
   return db
     .getMetadata({
-      field: req.params.field,
+      field,
       ids,
     })
     .then(items => {
@@ -153,13 +158,13 @@ router.get('/:field(circle|tag|va)s/:id', param('field').isIn(['circle', 'tag', 
           tag: `标签${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
           va: `声优${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
         };
-        res.status(404).send({ error: errorMessage[req.params.field] });
+        res.status(404).send({ error: errorMessage[field] });
       }
     })
     .catch(err => next(err));
 });
 
-router.get('/search/:keyword?', async (req, res) => {
+router.get(['/search', '/search/:keyword'], async (req, res) => {
   const keyword = req.params.keyword ? req.params.keyword.trim() : '';
   const currentPage = parseInt(req.query.page) || 1;
   const order = req.query.order || 'release';
@@ -185,8 +190,7 @@ router.get('/search/:keyword?', async (req, res) => {
 });
 
 router.get(
-  '/:field(circle|tag|va)s/:id/works',
-  param('field').isIn(['circle', 'tag', 'va']),
+  METADATA_FIELD_WORK_ROUTES,
   async (req, res) => {
     if (!isValidRequest(req, res)) return;
 
@@ -196,11 +200,12 @@ router.get(
     const username = getUsername(req);
     const shuffleSeed = req.query.seed ? req.query.seed : 7;
     const ids = getMetadataIds(req);
+    const field = getMetadataField(req);
 
     try {
       await sendPaginatedWorks(
         res,
-        () => db.getWorksBy({ id: ids, field: req.params.field, username: username }),
+        () => db.getWorksBy({ id: ids, field, username: username }),
         currentPage,
         PAGE_SIZE,
         order,
@@ -215,10 +220,10 @@ router.get(
   }
 );
 
-router.get('/:field(circle|tag|va)s/', param('field').isIn(['circle', 'tag', 'va']), (req, res, next) => {
+router.get(METADATA_LABEL_ROUTES, (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
-  db.getLabels(req.params.field)
+  db.getLabels(getMetadataField(req))
     .orderBy('name', 'asc')
     .then(list => res.send(list))
     .catch(err => next(err));

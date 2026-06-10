@@ -8,6 +8,33 @@ const expect = chai.expect;
 const { createApp } = require('../app-factory');
 const { request } = require('./helpers/http');
 const { config } = require('../config');
+const db = require('../database/db');
+
+const createWorksQuery = works => {
+  const query = {
+    count: () => Promise.resolve([{ count: works.length }]),
+    offset: () => query,
+    limit: () => query,
+    orderBy: () => query,
+    then: resolve => Promise.resolve(works).then(resolve),
+  };
+
+  return query;
+};
+
+const createWorkRecord = values => ({
+  id: 1,
+  title: 'work',
+  nsfw: false,
+  userRating: null,
+  progress: null,
+  circleObj: JSON.stringify({ id: 1, name: 'circle' }),
+  rate_count_detail: JSON.stringify({ 5: 1 }),
+  rank: null,
+  vaObj: JSON.stringify({ vas: [] }),
+  tagObj: JSON.stringify({ tags: [] }),
+  ...values,
+});
 
 describe('API contract', function () {
   let app;
@@ -152,5 +179,67 @@ describe('API contract', function () {
 
     expect(res.statusCode).to.equal(400);
     expect(res.body.errors).to.be.an('array');
+  });
+
+  it('GET /api/circles keeps the legacy metadata label route', async function () {
+    const getLabels = db.getLabels;
+    db.getLabels = field => ({
+      orderBy: () => Promise.resolve([{ id: 1, name: `${field}-label` }]),
+    });
+
+    try {
+      const res = await request(app, { path: '/api/circles' });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body).to.deep.equal([{ id: 1, name: 'circle-label' }]);
+    } finally {
+      db.getLabels = getLabels;
+    }
+  });
+
+  it('GET /api/circles/:id keeps the legacy metadata lookup route', async function () {
+    const getMetadata = db.getMetadata;
+    db.getMetadata = options => Promise.resolve([{ id: options.ids[0], name: `${options.field}-metadata` }]);
+
+    try {
+      const res = await request(app, { path: '/api/circles/1' });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body).to.deep.equal([{ id: 1, name: 'circle-metadata' }]);
+    } finally {
+      db.getMetadata = getMetadata;
+    }
+  });
+
+  it('GET /api/circles/:id/works keeps the legacy metadata works route', async function () {
+    const getWorksBy = db.getWorksBy;
+    db.getWorksBy = options =>
+      createWorksQuery([createWorkRecord({ id: options.id[0], title: `${options.field}-work` })]);
+
+    try {
+      const res = await request(app, { path: '/api/circles/1/works' });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body.works[0]).to.include({ id: 1, title: 'circle-work' });
+      expect(res.body.pagination.totalCount).to.equal(1);
+    } finally {
+      db.getWorksBy = getWorksBy;
+    }
+  });
+
+  it('GET /api/search keeps the legacy optional keyword route', async function () {
+    const getWorksByKeyWord = db.getWorksByKeyWord;
+    db.getWorksByKeyWord = options =>
+      createWorksQuery([createWorkRecord({ title: `keyword:${options.keyword}` })]);
+
+    try {
+      const res = await request(app, { path: '/api/search' });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body.works[0]).to.include({ id: 1, title: 'keyword:' });
+      expect(res.body.pagination.totalCount).to.equal(1);
+    } finally {
+      db.getWorksByKeyWord = getWorksByKeyWord;
+    }
   });
 });
