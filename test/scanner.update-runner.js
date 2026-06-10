@@ -2,33 +2,13 @@ const { expect } = require('chai');
 const { ScanCounters } = require('../src/modules/scanner/counters');
 const { createUpdateRunner } = require('../src/modules/scanner/update-runner');
 
-const createQuery = tableName => {
-  const query = {
-    tableName,
-    selected: [],
-    filters: [],
-    select: (...columns) => {
-      query.selected = columns;
-      return query;
-    },
-    where: (...args) => {
-      query.filters.push({ method: 'where', args });
-      return query;
-    },
-    orWhere: (...args) => {
-      query.filters.push({ method: 'orWhere', args });
-      return query;
-    },
-  };
-  return query;
-};
-
 describe('createUpdateRunner', () => {
   let calls;
 
   beforeEach(() => {
     calls = {
-      queries: [],
+      listedWorkIds: [],
+      listedVoiceActorIds: [],
       refreshes: [],
       metadataUpdates: [],
       voiceActorUpdates: [],
@@ -39,10 +19,15 @@ describe('createUpdateRunner', () => {
 
   const createRunner = refreshCounts =>
     createUpdateRunner({
-      knex: tableName => {
-        const query = createQuery(tableName);
-        calls.queries.push(query);
-        return query;
+      listWorkIds: () => {
+        const works = Promise.resolve([{ id: 123 }]);
+        calls.listedWorkIds.push(works);
+        return works;
+      },
+      listWorkIdsByVoiceActorIds: voiceActorIds => {
+        const works = Promise.resolve([{ work_id: 456 }]);
+        calls.listedVoiceActorIds.push(voiceActorIds);
+        return works;
       },
       refreshWorks: (query, idColumnName, processor) => {
         calls.refreshes.push({ query, idColumnName, processor });
@@ -68,8 +53,7 @@ describe('createUpdateRunner', () => {
 
     await performUpdate({ refreshAll: true });
 
-    expect(calls.queries[0].tableName).to.equal('t_work');
-    expect(calls.queries[0].selected).to.deep.equal(['id']);
+    expect(calls.listedWorkIds).to.have.lengthOf(1);
     expect(calls.refreshes[0].idColumnName).to.equal('id');
     await calls.refreshes[0].processor(123);
     expect(calls.metadataUpdates).to.deep.equal([{ id: 123, options: { refreshAll: true } }]);
@@ -98,12 +82,7 @@ describe('createUpdateRunner', () => {
     const counts = await fixVoiceActorBug();
 
     expect(counts.updated).to.equal(2);
-    expect(calls.queries[0].tableName).to.equal('r_va_work');
-    expect(calls.queries[0].selected).to.deep.equal(['va_id', 'work_id']);
-    expect(calls.queries[0].filters).to.deep.equal([
-      { method: 'where', args: ['va_id', 'uuid-かの仔'] },
-      { method: 'orWhere', args: ['va_id', 'uuid-こっこ'] },
-    ]);
+    expect(calls.listedVoiceActorIds).to.deep.equal([['uuid-かの仔', 'uuid-こっこ']]);
     expect(calls.uuids).to.deep.equal(['かの仔', 'こっこ']);
     expect(calls.refreshes[0].idColumnName).to.equal('work_id');
     await calls.refreshes[0].processor(456);

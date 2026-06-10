@@ -170,6 +170,8 @@ describe('Database repository parity baseline', function () {
       root_folder: 'VoiceWork',
       dir: 'RJ000100',
     });
+    expect(await repositories.listWorkIds()).to.deep.include({ id: 100 });
+    expect(await repositories.listWorkIdsByVoiceActorIds(['va-alpha'])).to.deep.equal([{ work_id: 100 }]);
 
     await repositories.updateWorkMetadata(
       baseWork({

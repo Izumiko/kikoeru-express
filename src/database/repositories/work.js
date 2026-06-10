@@ -1,4 +1,4 @@
-const { eq, sql } = require('drizzle-orm');
+const { eq, inArray, sql } = require('drizzle-orm');
 
 const { db } = require('../libsql-client.js');
 const {
@@ -210,10 +210,29 @@ const listWorkStorageLocations = () =>
     })
     .from(works);
 
+/**
+ * 列出所有作品 id，用于更新扫描。
+ */
+const listWorkIds = () => db.select({ id: works.id }).from(works);
+
+/**
+ * 列出指定声优关联的作品 id，用于修复旧版声优 UUID 碰撞。
+ * @param {String[]} voiceActorIds Voice actor ids.
+ */
+const listWorkIdsByVoiceActorIds = voiceActorIds =>
+  db
+    .select({
+      work_id: voiceActorWorks.workId,
+    })
+    .from(voiceActorWorks)
+    .where(inArray(voiceActorWorks.vaId, voiceActorIds));
+
 module.exports = {
   getWorkStorageLocation,
   getWorkTrackMetadata,
   insertWorkMetadata,
+  listWorkIds,
+  listWorkIdsByVoiceActorIds,
   listWorkStorageLocations,
   removeWork,
   updateWorkMetadata,

@@ -161,7 +161,8 @@ const performScan = () => runScan();
 const updateMetadataLimited = limit((id, options = null) => updateMetadata(id, options));
 const updateVoiceActorLimited = limit(id => updateMetadata(id, { includeVA: true }));
 const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
-  knex: db.knex,
+  listWorkIds: db.listWorkIds,
+  listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds,
   refreshWorks,
   updateMetadata: updateMetadataLimited,
   updateVoiceActor: updateVoiceActorLimited,
