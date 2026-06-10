@@ -9,18 +9,6 @@ const { request } = require('./helpers/http');
 const { config } = require('../config');
 const db = require('../database/db');
 
-const createWorksQuery = works => {
-  const query = {
-    count: () => Promise.resolve([{ count: works.length }]),
-    offset: () => query,
-    limit: () => query,
-    orderBy: () => query,
-    then: resolve => Promise.resolve(works).then(resolve),
-  };
-
-  return query;
-};
-
 const createWorkRecord = values => ({
   id: 1,
   title: 'work',
@@ -212,8 +200,7 @@ describe('API contract', function () {
 
   it('GET /api/circles/:id/works keeps the legacy metadata works route', async function () {
     const getWorksBy = db.getWorksBy;
-    db.getWorksBy = options =>
-      createWorksQuery([createWorkRecord({ id: options.id[0], title: `${options.field}-work` })]);
+    db.getWorksBy = options => Promise.resolve([createWorkRecord({ id: options.id[0], title: `${options.field}-work` })]);
 
     try {
       const res = await request(app, { path: '/api/circles/1/works' });
@@ -228,8 +215,7 @@ describe('API contract', function () {
 
   it('GET /api/search keeps the legacy optional keyword route', async function () {
     const getWorksByKeyWord = db.getWorksByKeyWord;
-    db.getWorksByKeyWord = options =>
-      createWorksQuery([createWorkRecord({ title: `keyword:${options.keyword}` })]);
+    db.getWorksByKeyWord = options => Promise.resolve([createWorkRecord({ title: `keyword:${options.keyword}` })]);
 
     try {
       const res = await request(app, { path: '/api/search' });

@@ -171,8 +171,27 @@ const getWorkStorageLocation = async id => {
   return result[0];
 };
 
+/**
+ * 获取音声曲目列表需要的基础元数据
+ * @param {Integer} id Work id.
+ */
+const getWorkTrackMetadata = async id => {
+  const result = await db
+    .select({
+      title: works.title,
+      root_folder: works.rootFolder,
+      dir: works.dir,
+    })
+    .from(works)
+    .where(eq(works.id, id))
+    .limit(1);
+
+  return result[0];
+};
+
 module.exports = {
   getWorkStorageLocation,
+  getWorkTrackMetadata,
   insertWorkMetadata,
   removeWork,
   updateWorkMetadata,

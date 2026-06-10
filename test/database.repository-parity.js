@@ -158,6 +158,11 @@ describe('Database repository parity baseline', function () {
       root_folder: 'VoiceWork',
       dir: 'RJ000100',
     });
+    expect(await repositories.getWorkTrackMetadata(100)).to.deep.equal({
+      title: 'Alpha Work',
+      root_folder: 'VoiceWork',
+      dir: 'RJ000100',
+    });
 
     await repositories.updateWorkMetadata(
       baseWork({

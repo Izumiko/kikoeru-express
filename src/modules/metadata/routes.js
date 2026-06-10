@@ -14,6 +14,17 @@ const PAGE_SIZE = config.pageSize || 12;
 const METADATA_FIELD_ROUTES = ['/circles/:id', '/tags/:id', '/vas/:id'];
 const METADATA_FIELD_WORK_ROUTES = ['/circles/:id/works', '/tags/:id/works', '/vas/:id/works'];
 const METADATA_LABEL_ROUTES = ['/circles', '/tags', '/vas', '/circles/', '/tags/', '/vas/'];
+const WORK_ORDER_FIELDS = new Set([
+  'id',
+  'title',
+  'release',
+  'dl_count',
+  'price',
+  'review_count',
+  'rate_count',
+  'rate_average_2dp',
+  'random',
+]);
 
 const getUsername = req => (config.auth ? req.user.name : 'admin');
 const getMetadataField = req => req.path.split('/')[1].replace(/s$/, '');
@@ -26,25 +37,47 @@ const getMetadataIds = req =>
         .filter(id => !isNaN(id))
     : req.params.id.split(',');
 
-const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, order, sort, shuffleSeed, betterRandom) => {
-  const offset = (currentPage - 1) * pageSize;
-  const totalCount = await queryFactory().count('id as count');
+const compareValues = (left, right, sort) => {
+  if (left === right) return 0;
+  if (left === null || left === undefined) return 1;
+  if (right === null || right === undefined) return -1;
 
-  let works;
+  const direction = sort === 'asc' ? 1 : -1;
+  return left > right ? direction : -direction;
+};
+
+const sortWorks = (works, order, sort, shuffleSeed) => {
+  if (!WORK_ORDER_FIELDS.has(order)) {
+    order = 'release';
+  }
 
   if (order === 'random') {
-    works = await queryFactory().offset(offset).limit(pageSize).orderBy(db.knex.raw('id % ?', shuffleSeed));
+    return works.sort((left, right) => (left.id % shuffleSeed) - (right.id % shuffleSeed));
+  }
+
+  return works.sort((left, right) => {
+    const primary = compareValues(left[order], right[order], sort);
+    if (primary !== 0) return primary;
+
+    const release = compareValues(left.release, right.release, 'desc');
+    if (release !== 0) return release;
+
+    return compareValues(left.id, right.id, 'desc');
+  });
+};
+
+const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, order, sort, shuffleSeed, betterRandom) => {
+  const offset = (currentPage - 1) * pageSize;
+  const allWorks = await queryFactory();
+  const totalCount = allWorks.length;
+  let works = [...allWorks];
+
+  if (order === 'random') {
+    works = sortWorks(works, order, sort, shuffleSeed).slice(offset, offset + pageSize);
   } else if (betterRandom && order === 'betterRandom') {
-    works = await queryFactory().limit(1).orderBy(db.knex.raw('random()'));
+    works = works.length > 0 ? [works[Math.floor(Math.random() * works.length)]] : [];
   } else {
-    works = await queryFactory()
-      .offset(offset)
-      .limit(pageSize)
-      .orderBy(order, sort)
-      .orderBy([
-        { column: 'release', order: 'desc' },
-        { column: 'id', order: 'desc' },
-      ]);
+    works = sortWorks(works, order, sort, shuffleSeed).slice(offset, offset + pageSize);
   }
 
   works = normalize(works);
@@ -54,7 +87,7 @@ const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, orde
     pagination: {
       currentPage,
       pageSize,
-      totalCount: totalCount[0]['count'],
+      totalCount,
     },
   });
 };
@@ -89,10 +122,7 @@ router.get('/work/:id', param('id').isInt(), (req, res, next) => {
 router.get('/tracks/:id', param('id').isInt(), (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
-  db.knex('t_work')
-    .select('title', 'root_folder', 'dir')
-    .where('id', '=', req.params.id)
-    .first()
+  db.getWorkTrackMetadata(req.params.id)
     .then(work => {
       const rootFolder = config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
       if (rootFolder) {
