@@ -101,12 +101,26 @@ Validation status:
 - A local in-memory libSQL probe can execute the legacy table/view SQL.
 - Drizzle can query typed tables through the libSQL driver.
 - The legacy `staticMetadata` view shape can be reproduced.
+- The isolated libSQL spike now covers the current repository parity baseline for:
+  - metadata reads: `getWorkMetadata`, `getWorksBy`, `getWorksByKeyWord`, `getLabels`, `getMetadata`.
+  - work writes: `insertWorkMetadata`, `updateWorkMetadata`, `removeWork`.
+  - review reads/writes: `getWorksWithReviews`, `updateUserReview`, `deleteUserReview`.
+  - user writes: `createUser`, `updateUserPassword`, `resetUserPassword`, `deleteUser`.
 
 Validation still required:
 
-- Full repository parity against the stage 10 baseline tests.
-- Transaction behavior for metadata insert/update/remove paths.
 - Migration story for existing Knex migrations and historical user databases.
+- Production wiring plan for replacing Knex repositories without changing the public `database/db.js` facade.
+- Blocking/performance behavior during scan/update while HTTP API and media requests are active.
+
+Compatibility notes from the spike:
+
+- `t_review.work_id` is a text column in the legacy schema even though it references numeric work ids. The libSQL
+  spike must stringify review work ids before `INSERT OR IGNORE`, otherwise duplicate review rows can be inserted
+  when parameter storage classes differ.
+- The current Drizzle/libSQL spike still uses raw SQL for the complex repository queries. Drizzle is useful for
+  schema modeling and typed simple table access, but the existing `staticMetadata` view and query shapes should not
+  be mechanically rewritten until parity tests cover the production repository facade.
 
 ## Decision
 
@@ -117,7 +131,9 @@ Stage 10 should proceed as:
 1. Build repository parity tests that can run against the current Knex implementation.
 2. Add an isolated Drizzle schema and driver spike outside the production request path.
 3. Use libSQL as the current executable Drizzle spike target.
-4. Keep Knex if the replacement does not provide clear maintenance or packaging value.
+4. Keep root Knex migrations as the compatibility migration path unless a tested bridge replaces them.
+5. Replace production repositories only behind the existing `database/db.js`/`src/database/repositories` facade.
+6. Keep Knex if the replacement does not provide clear maintenance or packaging value.
 
 ## Parity Requirements
 
@@ -133,8 +149,8 @@ A candidate implementation must match current behavior for:
 - `createUser`
 - `updateUserPassword`
 - `deleteUser`
-- database migration from historical fixtures
 - `staticMetadata` result fields consumed by `src/shared/metadata/normalize.js`
+- database migration from historical fixtures
 
 ## Notes
 
