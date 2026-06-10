@@ -1,3 +1,4 @@
+const { sql } = require('drizzle-orm');
 const { index, integer, primaryKey, real, sqliteTable, text } = require('drizzle-orm/sqlite-core');
 
 const circles = sqliteTable('t_circle', {
@@ -80,8 +81,8 @@ const reviews = sqliteTable(
     workId: text('work_id').notNull(),
     rating: integer('rating'),
     reviewText: text('review_text'),
-    createdAt: text('created_at'),
-    updatedAt: text('updated_at'),
+    createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
     progress: text('progress'),
   },
   table => ({
