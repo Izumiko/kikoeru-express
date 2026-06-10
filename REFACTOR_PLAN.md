@@ -1,5 +1,33 @@
 # Kikoeru-Express 渐进式重构评审与实施方案
 
+## 当前执行状态
+
+更新时间：2026-06-11。
+
+这份文档最初用于评审旧代码的渐进式重构路径。当前仓库已经执行了多轮破坏性重构，下面的历史分析仍可作为背景，但不再代表当前代码状态。
+
+已经完成：
+
+- 运行时和工具链已迁到现代 Node 目标，当前 `engines.node` 为 `>=22.0.0`，CI/发布链路面向 Node 24。
+- 旧根目录兼容入口已经移除，运行入口统一为 `src/cli/server.js`、`src/cli/scanner.js`、`src/cli/updater.js`。
+- `pkg` 打包链路已经移除，后端发布改为 esbuild 生成 `build/server.js`、`build/scanner.js`、`build/updater.js`，再用 Node 直接运行。
+- 配置路径解析已经集中到 `src/config`，bundle 运行数据目录可通过 `KIKOERU_RUNTIME_DIR` 覆盖。
+- 路由、媒体、metadata、review、auth、config、version、socket、scanner、scraper 模块已经迁入 `src/modules`。
+- Socket.IO 已升级到 4.x，并保留现有事件协议；HTTP JWT 和 Socket.IO 认证复用同一 auth service。
+- Express 已升级到 5.x。当前决策是继续使用 Express，暂不切换 Elysia/Fastify。
+- 数据库已从 Knex/sqlite3/自定义迁移迁到 Drizzle ORM + libSQL client。
+- 旧数据库升级路径、旧 Knex 迁移、spinup 测试和 `spikes` 已删除。这是有意的破坏性变更，不再兼容旧库升级。
+- `src/database` 已重组为 `client.js`、`schema/`、`repositories/`、`init.js`。
+- 契约测试、媒体测试、扫描器测试、Socket 测试和数据库 repository parity 测试已覆盖当前主要行为。
+
+当前保留/待完善：
+
+- 源码仍是 CommonJS JavaScript。TypeScript 迁移作为下一阶段处理。
+- 发布链路已改为 esbuild bundle，但真实 CI、Docker multiarch 和 release archive 仍需在发布前验证。
+- 数据库仓储中仍有一部分过渡期 raw SQL，后续应逐步用 Drizzle 查询构造器替换；`staticMetadata` 视图定义和 SQLite 特有函数可以保留 SQL。
+- 配置兼容迁移逻辑仍保留，是否进一步做破坏性清理需要单独决策。
+- 前端尚未重构，需要在前端升级时真实验证 Socket.IO 4 客户端兼容性。
+
 ## 结论
 
 原方案的方向有价值，但不适合作为可直接执行的重构计划。
@@ -557,4 +585,3 @@ kikoeru-express/
 - Elysia Node adapter documentation: https://elysiajs.com/integrations/node
 - Drizzle SQLite documentation: https://orm.drizzle.team/docs/get-started/sqlite-new
 - Socket.IO documentation: https://socket.io/docs/v4/
-

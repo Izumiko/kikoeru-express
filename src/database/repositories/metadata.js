@@ -1,14 +1,17 @@
-const { eq, sql } = require('drizzle-orm');
+const { and, count, countDistinct, eq, inArray, like, or, sql } = require('drizzle-orm');
 
 const { db } = require('../client.js');
 const {
   circles,
+  reviews,
+  staticMetadata,
   tagWorks,
   tags,
   voiceActorWorks,
   voiceActors,
   works,
 } = require('../schema/tables.js');
+const { staticMetadataFields, workWithUserReviewFields } = require('./static-metadata-select.js');
 
 const tableByField = {
   circle: circles,
@@ -16,34 +19,46 @@ const tableByField = {
   va: voiceActors,
 };
 
-const ratingSelectSql = username => sql`
-  SELECT
-    t_review.work_id,
-    t_review.rating AS userRating,
-    t_review.review_text,
-    t_review.progress,
-    strftime('%Y-%m-%d %H-%M-%S', t_review.updated_at, 'localtime') AS updated_at,
-    t_review.user_name
-  FROM t_review
-  JOIN t_work ON t_work.id = t_review.work_id
-  WHERE t_review.user_name = ${username}
-`;
+const reviewJoinKey = username =>
+  and(eq(reviews.workId, staticMetadata.id), eq(reviews.userName, username));
 
-const userRatingSelectSql = username => sql`
-  SELECT t_review.work_id, t_review.rating
-  FROM t_review
-  JOIN t_work ON t_work.id = t_review.work_id
-  WHERE t_review.user_name = ${username}
-`;
+const workRowsWithRatings = (username, where) => {
+  let query = db
+    .select({
+      ...staticMetadataFields,
+      userRating: reviews.rating,
+    })
+    .from(staticMetadata)
+    .leftJoin(reviews, reviewJoinKey(username));
 
-const sqlList = values => sql.join(values.map(value => sql`${value}`), sql`, `);
+  if (where) {
+    query = query.where(where);
+  }
 
-const workRowsWithRatings = (username, whereSql = sql``) => db.all(sql`
-  SELECT staticMetadata.*, userrate.rating AS userRating
-  FROM staticMetadata
-  LEFT JOIN (${userRatingSelectSql(username)}) AS userrate ON userrate.work_id = staticMetadata.id
-  ${whereSql}
-`);
+  return query;
+};
+
+const getWorkIdsForAllTags = async tagIds => {
+  const rows = await db
+    .select({ workId: tagWorks.workId })
+    .from(tagWorks)
+    .where(inArray(tagWorks.tagId, tagIds))
+    .groupBy(tagWorks.workId)
+    .having(eq(countDistinct(tagWorks.tagId), tagIds.length));
+
+  return rows.map(row => row.workId);
+};
+
+const getWorkIdsByVoiceActor = async voiceActorId => {
+  const rows = await db
+    .select({ workId: voiceActorWorks.workId })
+    .from(voiceActorWorks)
+    .where(eq(voiceActorWorks.vaId, voiceActorId));
+
+  return rows.map(row => row.workId);
+};
+
+const inArrayOrNoMatch = (column, values) => (values.length ? inArray(column, values) : sql`0 = 1`);
 
 /**
  * Fetches metadata for a specific work id.
@@ -51,18 +66,11 @@ const workRowsWithRatings = (username, whereSql = sql``) => db.all(sql`
  * @param {String} username 'admin' or other usernames for current user
  */
 const getWorkMetadata = async (id, username) => {
-  const work = await db.all(sql`
-    SELECT
-      staticMetadata.*,
-      userrate.userRating,
-      userrate.review_text,
-      userrate.progress,
-      userrate.updated_at,
-      userrate.user_name
-    FROM staticMetadata
-    LEFT JOIN (${ratingSelectSql(username)}) AS userrate ON userrate.work_id = staticMetadata.id
-    WHERE id = ${id}
-  `);
+  const work = await db
+    .select(workWithUserReviewFields)
+    .from(staticMetadata)
+    .leftJoin(reviews, reviewJoinKey(username))
+    .where(eq(staticMetadata.id, id));
 
   if (work.length === 0) throw new Error(`There is no work with id ${id} in the database.`);
   return work;
@@ -73,57 +81,62 @@ const getWorkMetadata = async (id, username) => {
  * @param {Number[]} id Which id to filter by.
  * @param {String} field Which field to filter by.
  */
-const getWorksBy = ({ id, field, username = '' } = {}) => {
+const getWorksBy = async ({ id, field, username = '' } = {}) => {
   switch (field) {
     case 'circle':
-      return workRowsWithRatings(username, sql`WHERE circle_id = ${id[0]}`);
+      return workRowsWithRatings(username, eq(staticMetadata.circleId, id[0]));
 
     case 'tag':
-      return workRowsWithRatings(
-        username,
-        sql`
-          WHERE id IN (
-            SELECT work_id
-            FROM r_tag_work
-            WHERE tag_id IN (${sqlList(id)})
-            GROUP BY work_id
-            HAVING COUNT(DISTINCT tag_id) = ${id.length}
-          )
-        `
-      );
+      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsForAllTags(id)));
 
     case 'va':
-      return workRowsWithRatings(
-        username,
-        sql`WHERE id IN (SELECT work_id FROM r_va_work WHERE va_id = ${id[0]})`
-      );
+      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsByVoiceActor(id[0])));
 
     default:
       return workRowsWithRatings(username);
   }
 };
 
+const getWorkIdsByMatchingTags = async keyword => {
+  const rows = await db
+    .select({ workId: tagWorks.workId })
+    .from(tagWorks)
+    .innerJoin(tags, eq(tagWorks.tagId, tags.id))
+    .where(like(tags.name, `%${keyword}%`));
+
+  return rows.map(row => row.workId);
+};
+
+const getWorkIdsByMatchingVoiceActors = async keyword => {
+  const rows = await db
+    .select({ workId: voiceActorWorks.workId })
+    .from(voiceActorWorks)
+    .innerJoin(voiceActors, eq(voiceActorWorks.vaId, voiceActors.id))
+    .where(like(voiceActors.name, `%${keyword}%`));
+
+  return rows.map(row => row.workId);
+};
+
 /**
  * 根据关键字查询音声
  * @param {String} keyword
  */
-const getWorksByKeyWord = ({ keyword, username = 'admin' } = {}) => {
+const getWorksByKeyWord = async ({ keyword, username = 'admin' } = {}) => {
   const workid = keyword.match(/((R|r)(J|j))?(\d+)/) ? keyword.match(/((R|r)(J|j))?(\d+)/)[4] : '';
   if (workid) {
-    return workRowsWithRatings(username, sql`WHERE id = ${workid}`);
+    return workRowsWithRatings(username, eq(staticMetadata.id, Number(workid)));
   }
+
+  const tagWorkIds = await getWorkIdsByMatchingTags(keyword);
+  const voiceActorWorkIds = await getWorkIdsByMatchingVoiceActors(keyword);
 
   return workRowsWithRatings(
     username,
-    sql`
-      WHERE title LIKE ${`%${keyword}%`}
-        OR circle_id IN (SELECT id FROM t_circle WHERE name LIKE ${`%${keyword}%`})
-        OR id IN (
-          SELECT work_id FROM r_tag_work WHERE tag_id IN (SELECT id FROM t_tag WHERE name LIKE ${`%${keyword}%`})
-          UNION
-          SELECT work_id FROM r_va_work WHERE va_id IN (SELECT id FROM t_va WHERE name LIKE ${`%${keyword}%`})
-        )
-    `
+    or(
+      like(staticMetadata.title, `%${keyword}%`),
+      like(staticMetadata.name, `%${keyword}%`),
+      inArrayOrNoMatch(staticMetadata.id, [...new Set([...tagWorkIds, ...voiceActorWorkIds])])
+    )
   );
 };
 
@@ -137,7 +150,7 @@ const getLabels = field => {
       .select({
         id: circles.id,
         name: circles.name,
-        count: sql`COUNT(${works.circleId})`,
+        count: count(works.circleId),
       })
       .from(works)
       .innerJoin(circles, eq(works.circleId, circles.id))
@@ -147,7 +160,7 @@ const getLabels = field => {
       .select({
         id: tags.id,
         name: tags.name,
-        count: sql`COUNT(${tagWorks.tagId})`,
+        count: count(tagWorks.tagId),
       })
       .from(tagWorks)
       .innerJoin(tags, eq(tagWorks.tagId, tags.id))
@@ -157,7 +170,7 @@ const getLabels = field => {
       .select({
         id: voiceActors.id,
         name: voiceActors.name,
-        count: sql`COUNT(${voiceActorWorks.vaId})`,
+        count: count(voiceActorWorks.vaId),
       })
       .from(voiceActorWorks)
       .innerJoin(voiceActors, eq(voiceActorWorks.vaId, voiceActors.id))

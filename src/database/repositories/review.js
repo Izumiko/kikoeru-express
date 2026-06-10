@@ -1,7 +1,8 @@
-const { and, eq, sql } = require('drizzle-orm');
+const { and, asc, count, desc, eq, sql } = require('drizzle-orm');
 
 const { db } = require('../client.js');
-const { reviews } = require('../schema/tables.js');
+const { reviews, staticMetadata } = require('../schema/tables.js');
+const { workWithUserReviewFields } = require('./static-metadata-select.js');
 
 const reviewKey = (username, workid) =>
   and(eq(reviews.userName, username), eq(reviews.workId, String(workid)));
@@ -26,8 +27,23 @@ const orderColumns = new Set([
   'rate_average_2dp',
 ]);
 
-const normalizeOrderBy = orderBy => (orderColumns.has(orderBy) ? orderBy : 'release');
+const orderColumnByName = {
+  id: staticMetadata.id,
+  title: staticMetadata.title,
+  circle_id: staticMetadata.circleId,
+  name: staticMetadata.name,
+  nsfw: staticMetadata.nsfw,
+  release: staticMetadata.release,
+  dl_count: staticMetadata.dlCount,
+  price: staticMetadata.price,
+  review_count: staticMetadata.reviewCount,
+  rate_count: staticMetadata.rateCount,
+  rate_average_2dp: staticMetadata.rateAverage2dp,
+};
+
+const normalizeOrderBy = orderBy => orderColumnByName[orderColumns.has(orderBy) ? orderBy : 'release'];
 const normalizeSortOption = sortOption => (sortOption === 'asc' ? 'asc' : 'desc');
+const sortExpression = (column, sortOption) => (normalizeSortOption(sortOption) === 'asc' ? asc(column) : desc(column));
 
 // 添加星标或评语或进度
 const updateUserReview = async (
@@ -77,46 +93,25 @@ const getWorksWithReviews = async ({
   sortOption = 'desc',
   filter,
 } = {}) => {
-  const filterSql = filter ? sql`WHERE progress = ${filter}` : sql``;
-  const orderBySql = sql.raw(normalizeOrderBy(orderBy));
-  const sortOptionSql = sql.raw(normalizeSortOption(sortOption));
+  const reviewWhere = filter
+    ? and(eq(reviews.userName, username), eq(reviews.progress, filter))
+    : eq(reviews.userName, username);
+  const orderByColumn = normalizeOrderBy(orderBy);
 
-  const works = await db.all(sql`
-    SELECT
-      staticMetadata.*,
-      userrate.userRating,
-      userrate.review_text,
-      userrate.progress,
-      userrate.updated_at,
-      userrate.user_name
-    FROM staticMetadata
-    JOIN (
-      SELECT
-        t_review.work_id,
-        t_review.rating AS userRating,
-        t_review.review_text,
-        t_review.progress,
-        strftime('%Y-%m-%d %H-%M-%S', t_review.updated_at, 'localtime') AS updated_at,
-        t_review.user_name
-      FROM t_review
-      JOIN t_work ON t_work.id = t_review.work_id
-      WHERE t_review.user_name = ${username}
-    ) AS userrate ON userrate.work_id = staticMetadata.id
-    ${filterSql}
-    ORDER BY ${orderBySql} ${sortOptionSql}, release DESC, id DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `);
-  const totalCount = await db.all(sql`
-    SELECT COUNT(id) AS count
-    FROM staticMetadata
-    JOIN (
-      SELECT t_review.work_id, t_review.progress
-      FROM t_review
-      JOIN t_work ON t_work.id = t_review.work_id
-      WHERE t_review.user_name = ${username}
-    ) AS userrate ON userrate.work_id = staticMetadata.id
-    ${filterSql}
-  `);
+  const works = await db
+    .select(workWithUserReviewFields)
+    .from(staticMetadata)
+    .innerJoin(reviews, eq(reviews.workId, staticMetadata.id))
+    .where(reviewWhere)
+    .orderBy(sortExpression(orderByColumn, sortOption), desc(staticMetadata.release), desc(staticMetadata.id))
+    .limit(limit)
+    .offset(offset);
+
+  const totalCount = await db
+    .select({ count: count(staticMetadata.id) })
+    .from(staticMetadata)
+    .innerJoin(reviews, eq(reviews.workId, staticMetadata.id))
+    .where(reviewWhere);
 
   return { works, totalCount };
 };
