@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "checkJs": false,
     "noEmit": true,
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2021",
     "lib": ["ES2021"],
     "strict": false,
@@ -13,11 +13,10 @@
     "skipLibCheck": true
   },
   "include": [
-    "*.js",
-    "scripts/**/*.js",
-    "src/**/*.js",
+    "*.ts",
+    "scripts/**/*.ts",
     "src/**/*.ts",
-    "test/**/*.js"
+    "test/**/*.ts"
   ],
   "exclude": [
     "build",

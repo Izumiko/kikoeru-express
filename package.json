@@ -2,6 +2,7 @@
   "name": "kikoeru-express",
   "version": "0.7.1",
   "description": "A self-hosted media server for listening to your DLsite voice works.",
+  "type": "module",
   "homepage": "https://github.com/XunJiJiang/kikoeru-express",
   "repository": {
     "type": "git",
@@ -14,7 +15,7 @@
     "node": ">=22.0.0"
   },
   "bin": {
-    "kikoeru-express": "src/cli/server.js"
+    "kikoeru-express": "build/server.js"
   },
   "nodemonConfig": {
     "ignore": [
@@ -24,19 +25,19 @@
     "delay": "2500"
   },
   "scripts": {
-    "start": "node --trace-warnings src/cli/server.js",
+    "start": "tsx --trace-warnings src/cli/server.ts",
     "start:bundle": "node --trace-warnings build/server.js",
-    "dev": "nodemon --trace-warnings src/cli/server.js",
-    "dev:tsx": "tsx src/cli/server.js",
-    "scan": "node --trace-warnings src/cli/scanner.js",
-    "update": "node --trace-warnings src/cli/updater.js",
-    "build": "node scripts/build.js",
+    "dev": "nodemon --exec tsx --trace-warnings src/cli/server.ts",
+    "dev:tsx": "tsx src/cli/server.ts",
+    "scan": "tsx --trace-warnings src/cli/scanner.ts",
+    "update": "tsx --trace-warnings src/cli/updater.ts",
+    "build": "tsx scripts/build.ts",
     "build:tauri": "npm run build:quasar && npm run move-quasar && npm run build",
     "build:quasar": "cd ../kikoeru-quasar && npx quasar build",
     "move-quasar": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-quasar/dist/spa ../kikoeru-express/dist",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:unit": "cross-env NODE_ENV=test mocha test/",
+    "test:unit": "cross-env NODE_ENV=test tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
     "test": "npm run lint && npm run typecheck && npm run test:unit"
   },
   "author": "Watanuki-Kimihiro",

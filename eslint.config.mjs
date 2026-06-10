@@ -1,7 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import js from "@eslint/js";
-import node from "eslint-plugin-n"
+import node from "eslint-plugin-n";
 
 export default defineConfig([
     globalIgnores(["**/build/", "**/dist/", "eslint.config.mjs"]),
@@ -9,16 +9,16 @@ export default defineConfig([
     js.configs.recommended,
 
     {
+        files: ["**/*.ts", "**/*.mjs"],
         plugins: {n: node},
         languageOptions: {
             globals: {
-                ...globals.commonjs,
                 ...globals.node,
                 ...globals.mocha,
             },
 
-            ecmaVersion: 12,
-            sourceType: "commonjs",
+            ecmaVersion: "latest",
+            sourceType: "module",
         },
 
         rules: {
