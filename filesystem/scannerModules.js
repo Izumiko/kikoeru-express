@@ -1,11 +1,14 @@
-const axios = require('../scraper/axios.js'); // 数据请求
-const { scrapeWorkMetadataFromDLsite, scrapeDynamicWorkMetadataFromDLsite } = require('../scraper/dlsite');
 const db = require('../database/db');
 const { createSchema } = require('../database/schema');
 const { deleteCoverImageFromDisk, saveCoverImageToDisk } = require('../src/modules/media/cover-storage');
 const { getFolderList } = require('../src/modules/media/folder-scanner');
 const { md5 } = require('../auth/utils');
-const { nameToUUID } = require('../scraper/utils');
+const {
+  httpClient,
+  nameToUUID,
+  scrapeDynamicWorkMetadataFromDLsite,
+  scrapeWorkMetadataFromDLsite,
+} = require('../src/modules/scraper');
 
 const { config } = require('../config');
 const { updateLock } = require('../upgrade');
@@ -45,7 +48,7 @@ const addLogForTask = (rjcode, log) => scanSession.addLogForTask(rjcode, log);
 const addResult = (rjcode, result, count) => scanSession.addResult(rjcode, result, count);
 const addMainLog = log => scanSession.addMainLog(log);
 const { getCoverImage } = createCoverDownloader({
-  axios,
+  axios: httpClient,
   saveCoverImageToDisk,
   addLogForTask,
 });
