@@ -1,228 +1,158 @@
-const { knex } = require('../client.js');
+const { eq, sql } = require('drizzle-orm');
+
+const { db } = require('../libsql-client.js');
+const {
+  circles,
+  reviews,
+  tagWorks,
+  tags,
+  voiceActorWorks,
+  voiceActors,
+  works,
+} = require('../schema/tables.js');
+
+const toWorkRow = work => ({
+  id: work.id,
+  rootFolder: work.rootFolderName,
+  dir: work.dir,
+  title: work.title,
+  circleId: work.circle.id,
+  nsfw: work.nsfw,
+  release: work.release,
+  dlCount: work.dl_count,
+  price: work.price,
+  reviewCount: work.review_count,
+  rateCount: work.rate_count,
+  rateAverage2dp: work.rate_average_2dp,
+  rateCountDetail: JSON.stringify(work.rate_count_detail),
+  rank: work.rank ? JSON.stringify(work.rank) : null,
+});
+
+const toDynamicWorkRow = work => ({
+  dlCount: work.dl_count,
+  price: work.price,
+  reviewCount: work.review_count,
+  rateCount: work.rate_count,
+  rateAverage2dp: work.rate_average_2dp,
+  rateCountDetail: JSON.stringify(work.rate_count_detail),
+  rank: work.rank ? JSON.stringify(work.rank) : null,
+});
+
+const insertWorkRelationships = async (tx, work, options = {}) => {
+  if (options.includeTags) {
+    if (options.purgeTags) {
+      await tx.delete(tagWorks).where(eq(tagWorks.workId, work.id));
+    }
+
+    for (const tag of work.tags) {
+      await tx.insert(tags).values({ id: tag.id, name: tag.name }).onConflictDoNothing();
+      await tx.insert(tagWorks).values({ tagId: tag.id, workId: work.id }).onConflictDoNothing();
+    }
+  }
+
+  if (options.includeVA) {
+    if (options.replaceVA) {
+      await tx.delete(voiceActorWorks).where(eq(voiceActorWorks.workId, work.id));
+    }
+
+    for (const va of work.vas) {
+      await tx.insert(voiceActors).values({ id: va.id, name: va.name }).onConflictDoNothing();
+      await tx.insert(voiceActorWorks).values({ vaId: va.id, workId: work.id }).onConflictDoNothing();
+    }
+  }
+};
 
 /**
  * Takes a work metadata object and inserts it into the database.
  * @param {Object} work Work object.
  */
-// Using trx as a query builder:
 const insertWorkMetadata = work =>
-  knex.transaction(trx =>
-    trx
-      .raw(
-        trx('t_circle')
-          .insert({
-            id: work.circle.id,
-            name: work.circle.name,
-          })
-          .toString()
-          .replace('insert', 'insert or ignore')
-      )
-      .then(() =>
-        trx('t_work').insert({
-          id: work.id,
-          root_folder: work.rootFolderName,
-          dir: work.dir,
-          title: work.title,
-          circle_id: work.circle.id,
-          nsfw: work.nsfw,
-          release: work.release,
-
-          dl_count: work.dl_count,
-          price: work.price,
-          review_count: work.review_count,
-          rate_count: work.rate_count,
-          rate_average_2dp: work.rate_average_2dp,
-          rate_count_detail: JSON.stringify(work.rate_count_detail),
-          rank: work.rank ? JSON.stringify(work.rank) : null,
-        })
-      )
-      .then(() => {
-        // Now that work is in the database, insert relationships
-        const promises = [];
-
-        for (let i = 0; i < work.tags.length; i += 1) {
-          promises.push(
-            trx
-              .raw(
-                trx('t_tag')
-                  .insert({
-                    id: work.tags[i].id,
-                    name: work.tags[i].name,
-                  })
-                  .toString()
-                  .replace('insert', 'insert or ignore')
-              )
-              .then(() =>
-                trx('r_tag_work').insert({
-                  tag_id: work.tags[i].id,
-                  work_id: work.id,
-                })
-              )
-          );
-        }
-
-        for (let i = 0; i < work.vas.length; i += 1) {
-          promises.push(
-            trx
-              .raw(
-                trx('t_va')
-                  .insert({
-                    id: work.vas[i].id,
-                    name: work.vas[i].name,
-                  })
-                  .toString()
-                  .replace('insert', 'insert or ignore')
-              )
-              .then(() =>
-                trx.raw(
-                  trx('r_va_work')
-                    .insert({
-                      va_id: work.vas[i].id,
-                      work_id: work.id,
-                    })
-                    .toString()
-                    .replace('insert', 'insert or ignore')
-                )
-              )
-          );
-        }
-
-        return Promise.all(promises).then(() => trx);
-      })
-  );
+  db.transaction(async tx => {
+    await tx.insert(circles).values({ id: work.circle.id, name: work.circle.name }).onConflictDoNothing();
+    await tx.insert(works).values(toWorkRow(work));
+    await insertWorkRelationships(tx, work, {
+      includeTags: true,
+      includeVA: true,
+    });
+  });
 
 /**
  * 更新音声的动态元数据
  * @param {Object} work Work object.
  */
 const updateWorkMetadata = (work, options = {}) =>
-  knex.transaction(async trx => {
-    await trx('t_work')
-      .where('id', '=', work.id)
-      .update({
-        dl_count: work.dl_count,
-        price: work.price,
-        review_count: work.review_count,
-        rate_count: work.rate_count,
-        rate_average_2dp: work.rate_average_2dp,
-        rate_count_detail: JSON.stringify(work.rate_count_detail),
-        rank: work.rank ? JSON.stringify(work.rank) : null,
-      });
+  db.transaction(async tx => {
+    await tx.update(works).set(toDynamicWorkRow(work)).where(eq(works.id, work.id));
 
-    if (options.includeVA || options.refreshAll) {
-      await trx('r_va_work').where('work_id', work.id).del();
-      for (const va of work.vas) {
-        await trx.raw('INSERT OR IGNORE INTO t_va(id, name) VALUES (?, ?)', [va.id, va.name]);
-        await trx.raw('INSERT OR IGNORE INTO r_va_work(va_id, work_id) VALUES (?, ?)', [va.id, work.id]);
-      }
-    }
-    if (options.includeTags || options.refreshAll) {
-      if (options.purgeTags) {
-        await trx('r_tag_work').where('work_id', work.id).del();
-      }
-      for (const tag of work.tags) {
-        await trx.raw('INSERT OR IGNORE INTO t_tag(id, name) VALUES (?, ?)', [tag.id, tag.name]);
-        await trx.raw('INSERT OR IGNORE INTO r_tag_work(tag_id, work_id) VALUES (?, ?)', [tag.id, work.id]);
-      }
-    }
+    await insertWorkRelationships(tx, work, {
+      includeTags: options.includeTags || options.refreshAll,
+      includeVA: options.includeVA || options.refreshAll,
+      purgeTags: options.purgeTags,
+      replaceVA: options.includeVA || options.refreshAll,
+    });
 
-    // Fix a bug caused by DLsite changes
+    // Fix a bug caused by DLsite changes.
     if (options.includeNSFW) {
-      await trx('t_work').where('id', '=', work.id).update({
-        nsfw: work.nsfw,
-      });
+      await tx.update(works).set({ nsfw: work.nsfw }).where(eq(works.id, work.id));
     }
 
     if (options.refreshAll) {
-      await trx('t_work').where('id', '=', work.id).update({
-        nsfw: work.nsfw,
-        title: work.title,
-        release: work.release,
-      });
+      await tx
+        .update(works)
+        .set({ nsfw: work.nsfw, title: work.title, release: work.release })
+        .where(eq(works.id, work.id));
     }
   });
 
-/**
- * Tests if the given circle, tags and VAs are orphans and if so, removes them.
- * @param {*} trx Knex transaction object.
- * @param {*} circle Circle id to check.
- * @param {*} tags Array of tag ids to check.
- * @param {*} vas Array of VA ids to check.
- */
-const cleanupOrphans = async (trxProvider, circle, tags, vas) => {
-  const trx = await trxProvider();
-  const getCount = (tableName, colName, colValue) =>
-    new Promise((resolveCount, rejectCount) => {
-      trx(tableName)
-        .select(colName)
-        .where(colName, '=', colValue)
-        .count()
-        .first()
-        .then(res => res['count(*)'])
-        .then(count => resolveCount(count))
-        .catch(err => rejectCount(err));
-    });
+const countRows = async (tx, table, where) => {
+  const rows = await tx.select({ count: sql`COUNT(*)` }).from(table).where(where);
+  return rows[0].count;
+};
 
-  const promises = [];
-  promises.push(
-    new Promise((resolveCircle, rejectCircle) => {
-      getCount('t_work', 'circle_id', circle).then(count => {
-        if (count === 0) {
-          trx('t_circle')
-            .del()
-            .where('id', '=', circle)
-            .then(() => resolveCircle())
-            .catch(err => rejectCircle(err));
-        } else {
-          resolveCircle();
-        }
-      });
-    })
-  );
+const cleanupOrphans = async (tx, circleId, tagIds, vaIds) => {
+  if ((await countRows(tx, works, eq(works.circleId, circleId))) === 0) {
+    await tx.delete(circles).where(eq(circles.id, circleId));
+  }
 
-  for (let i = 0; i < tags.length; i += 1) {
-    const tag = tags[i];
-    const count = await getCount('r_tag_work', 'tag_id', tag);
-
-    if (count === 0) {
-      promises.push(trx('t_tag').delete().where('id', '=', tag));
+  for (const tagId of tagIds) {
+    if ((await countRows(tx, tagWorks, eq(tagWorks.tagId, tagId))) === 0) {
+      await tx.delete(tags).where(eq(tags.id, tagId));
     }
   }
 
-  for (let i = 0; i < vas.length; i += 1) {
-    const va = vas[i];
-    const count = await getCount('r_va_work', 'va_id', va);
-
-    if (count === 0) {
-      promises.push(trx('t_va').delete().where('id', '=', va));
+  for (const vaId of vaIds) {
+    if ((await countRows(tx, voiceActorWorks, eq(voiceActorWorks.vaId, vaId))) === 0) {
+      await tx.delete(voiceActors).where(eq(voiceActors.id, vaId));
     }
   }
-
-  await Promise.all(promises);
 };
 
 /**
  * Removes a work and then its orphaned circles, tags & VAs from the database.
  * @param {Integer} id Work id.
  */
-const removeWork = async (id, trxProvider) => {
-  const trx = await trxProvider();
-  // Save circle, tags and VAs to array for later testing
-  const circle = await trx('t_work').select('circle_id').where('id', '=', id).first();
-  const tags = await trx('r_tag_work').select('tag_id').where('work_id', '=', id);
-  const vas = await trx('r_va_work').select('va_id').where('work_id', '=', id);
+const removeWork = id =>
+  db.transaction(async tx => {
+    const [work] = await tx.select({ circleId: works.circleId }).from(works).where(eq(works.id, id)).limit(1);
+    if (!work) return;
 
-  await trx('r_tag_work').del().where('work_id', '=', id);
-  await trx('r_va_work').del().where('work_id', '=', id);
-  await trx('t_review').del().where('work_id', '=', id);
-  await trx('t_work').del().where('id', '=', id);
-  await cleanupOrphans(
-    trxProvider,
-    circle.circle_id,
-    tags.map(tag => tag.tag_id),
-    vas.map(va => va.va_id)
-  );
-};
+    const workTags = await tx.select({ tagId: tagWorks.tagId }).from(tagWorks).where(eq(tagWorks.workId, id));
+    const workVas = await tx
+      .select({ vaId: voiceActorWorks.vaId })
+      .from(voiceActorWorks)
+      .where(eq(voiceActorWorks.workId, id));
+
+    await tx.delete(tagWorks).where(eq(tagWorks.workId, id));
+    await tx.delete(voiceActorWorks).where(eq(voiceActorWorks.workId, id));
+    await tx.delete(reviews).where(eq(reviews.workId, String(id)));
+    await tx.delete(works).where(eq(works.id, id));
+    await cleanupOrphans(
+      tx,
+      work.circleId,
+      workTags.map(tag => tag.tagId),
+      workVas.map(va => va.vaId)
+    );
+  });
 
 module.exports = {
   insertWorkMetadata,
