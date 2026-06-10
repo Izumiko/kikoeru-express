@@ -1,26 +1,24 @@
 const path = require('path');
-const socket = require('socket.io');
-const jwtAuth = require('socketio-jwt-auth'); // 用于 JWT 验证的 socket.io 中间件
+const { Server } = require('socket.io');
 const child_process = require('child_process'); // 子进程
 const { config } = require('./config');
-const { getSocketJwtOptions, toSocketAdminUser } = require('./src/modules/auth/service.js');
+const { toSocketAdminUser } = require('./src/modules/auth/service.js');
+const { createSocketAuthMiddleware, createSocketJwtEngineMiddleware } = require('./src/modules/socket/auth');
 
 const initSocket = server => {
-  const io = socket(server);
+  const io = new Server(server);
   if (config.auth) {
+    io.engine.use(
+      createSocketJwtEngineMiddleware({
+        jwtSecret: config.jwtsecret,
+        toSocketAdminUser,
+      })
+    );
     io.use(
-      jwtAuth.authenticate(
-        getSocketJwtOptions(),
-        (payload, done) => {
-          const user = toSocketAdminUser(payload);
-
-          if (user.name === 'admin') {
-            done(null, user);
-          } else {
-            done(null, false, '只有 admin 账号能登录管理后台.');
-          }
-        }
-      )
+      createSocketAuthMiddleware({
+        jwtSecret: config.jwtsecret,
+        toSocketAdminUser,
+      })
     );
   }
 
