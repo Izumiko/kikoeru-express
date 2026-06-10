@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* Port of strftime() by T. H. Doan (https://thdoan.github.io/strftime/)
  *
  * Day of year (%j) code based on Joe Orost's answer:
@@ -7,13 +6,14 @@
  * Week number (%V) code based on Taco van den Broek's prototype:
  * http://techblog.procurios.nl/k/news/view/33796/14863/calculate-iso-8601-week-and-year-in-javascript.html
  */
-function strftime(sFormat, date) {
+function strftime(sFormat: string, date?: Date | string | number): string {
   if (!(date instanceof Date)) date = new Date();
-  var nDay = date.getDay(),
-    nDate = date.getDate(),
-    nMonth = date.getMonth(),
-    nYear = date.getFullYear(),
-    nHour = date.getHours(),
+  var resolvedDate = date;
+  var nDay = resolvedDate.getDay(),
+    nDate = resolvedDate.getDate(),
+    nMonth = resolvedDate.getMonth(),
+    nYear = resolvedDate.getFullYear(),
+    nHour = resolvedDate.getHours(),
     aDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     aMonths = [
       'January',
@@ -48,11 +48,11 @@ function strftime(sFormat, date) {
         '%A': aDays[nDay],
         '%b': aMonths[nMonth].slice(0, 3),
         '%B': aMonths[nMonth],
-        '%c': date.toUTCString(),
+        '%c': resolvedDate.toUTCString(),
         '%C': Math.floor(nYear / 100),
         '%d': zeroPad(nDate, 2),
         '%e': nDate,
-        '%F': date.toISOString().slice(0, 10),
+        '%F': resolvedDate.toISOString().slice(0, 10),
         '%G': getThursday().getFullYear(),
         '%g': (getThursday().getFullYear() + '').slice(2),
         '%H': zeroPad(nHour, 2),
@@ -62,11 +62,11 @@ function strftime(sFormat, date) {
         '%l': ((nHour + 11) % 12) + 1,
         '%m': zeroPad(nMonth + 1, 2),
         '%n': nMonth + 1,
-        '%M': zeroPad(date.getMinutes(), 2),
+        '%M': zeroPad(resolvedDate.getMinutes(), 2),
         '%p': nHour < 12 ? 'AM' : 'PM',
         '%P': nHour < 12 ? 'am' : 'pm',
-        '%s': Math.round(date.getTime() / 1000),
-        '%S': zeroPad(date.getSeconds(), 2),
+        '%s': Math.round(resolvedDate.getTime() / 1000),
+        '%S': zeroPad(resolvedDate.getSeconds(), 2),
         '%u': nDay || 7,
         '%V': (function () {
           var target = getThursday(),
@@ -74,15 +74,15 @@ function strftime(sFormat, date) {
           target.setMonth(0, 1);
           var nJan1 = target.getDay();
           if (nJan1 !== 4) target.setMonth(0, 1 + ((4 - nJan1 + 7) % 7));
-          return zeroPad(1 + Math.ceil((n1stThu - target) / 604800000), 2);
+          return zeroPad(1 + Math.ceil((n1stThu - target.valueOf()) / 604800000), 2);
         })(),
         '%w': nDay,
-        '%x': date.toLocaleDateString(),
-        '%X': date.toLocaleTimeString(),
+        '%x': resolvedDate.toLocaleDateString(),
+        '%X': resolvedDate.toLocaleTimeString(),
         '%y': (nYear + '').slice(2),
         '%Y': nYear,
-        '%z': date.toTimeString().replace(/.+GMT([+-]\d+).+/, '$1'),
-        '%Z': date.toTimeString().replace(/.+\((.+?)\)$/, '$1'),
+        '%z': resolvedDate.toTimeString().replace(/.+GMT([+-]\d+).+/, '$1'),
+        '%Z': resolvedDate.toTimeString().replace(/.+\((.+?)\)$/, '$1'),
       }[sMatch] || '') + '' || sMatch
     );
   });

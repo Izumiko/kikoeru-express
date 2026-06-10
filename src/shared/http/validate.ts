@@ -1,7 +1,7 @@
-// @ts-nocheck
 import { validationResult } from 'express-validator';
+import type { Request, Response } from 'express';
 
-const isValidRequest = (req, res, sendMessage = true) => {
+const isValidRequest = (req: Request, res: Response, sendMessage = true): boolean => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     if (sendMessage) {
