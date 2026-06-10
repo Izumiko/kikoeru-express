@@ -196,6 +196,13 @@ describe('Database repository parity baseline', function () {
 
   it('keeps user repository behavior stable', async function () {
     await repositories.createUser({ name: 'temporary', password: 'old', group: 'user' });
+    expect(await repositories.getUserByName('temporary')).to.include({
+      name: 'temporary',
+      password: 'old',
+      group: 'user',
+    });
+    expect(await repositories.getUsers()).to.deep.include({ name: 'temporary', group: 'user' });
+
     await repositories.updateUserPassword({ name: 'temporary' }, 'new');
     expect(await knex('t_user').where('name', 'temporary').first()).to.include({ password: 'new' });
 

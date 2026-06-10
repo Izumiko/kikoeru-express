@@ -32,9 +32,7 @@ router.post(
     const name = req.body.name;
     const password = req.body.password;
 
-    db.knex('t_user')
-      .where('name', '=', name)
-      .first()
+    db.getUserByName(name)
       .then(user => {
         if (!user || !verifyPassword(password, user.password)) {
           res.set('WWW-Authenticate', 'Bearer realm="Authorization Required"');

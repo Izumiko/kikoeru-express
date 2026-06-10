@@ -112,8 +112,7 @@ router.delete('/user', (req, res, next) => {
 // 获取所有用户
 router.get('/users', (req, res, next) => {
   if (!config.auth || req.user.name === 'admin') {
-    db.knex('t_user')
-      .select('name', 'group')
+    db.getUsers()
       .then(users => {
         res.send({ users });
       })

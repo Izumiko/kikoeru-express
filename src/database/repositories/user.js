@@ -53,9 +53,25 @@ const resetUserPassword = user =>
 const deleteUser = usersToDelete =>
   db.transaction(tx => tx.delete(users).where(inArray(users.name, usersToDelete.map(user => user.name))));
 
+/**
+ * 按用户名查找用户
+ * @param {String} name username
+ */
+const getUserByName = async name => {
+  const result = await db.select().from(users).where(eq(users.name, name)).limit(1);
+  return result[0];
+};
+
+/**
+ * 获取所有用户的公开信息
+ */
+const getUsers = () => db.select({ name: users.name, group: users.group }).from(users);
+
 module.exports = {
   createUser,
   deleteUser,
+  getUserByName,
+  getUsers,
   resetUserPassword,
   updateUserPassword,
 };
