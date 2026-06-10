@@ -3,7 +3,7 @@ const path = require('path');
 const { formatRjCode } = require('../media/rj-code');
 
 const createMissingWorkCleaner = ({
-  knex,
+  listWorkStorageLocations,
   rootFolders,
   removeWork,
   deleteCoverImageFromDisk,
@@ -26,8 +26,8 @@ const createMissingWorkCleaner = ({
     });
   };
 
-  const removeMissingWork = (work, trxProvider) =>
-    removeWork(work.id, trxProvider).then(result => {
+  const removeMissingWork = work =>
+    removeWork(work.id).then(result => {
       const rjcode = formatRjCode(work.id);
       return deleteCoverImageFromDisk(rjcode)
         .catch(err => {
@@ -38,15 +38,12 @@ const createMissingWorkCleaner = ({
         .then(() => result);
     });
 
-  const cleanupWorks = (works, trxProvider) =>
-    Promise.all(works.map(work => (isWorkFolderPresent(work) ? Promise.resolve() : removeMissingWork(work, trxProvider))));
+  const cleanupWorks = works =>
+    Promise.all(works.map(work => (isWorkFolderPresent(work) ? Promise.resolve() : removeMissingWork(work))));
 
   const performCleanup = async () => {
-    const trxProvider = knex.transactionProvider();
-    const trx = await trxProvider();
-    const works = await trx('t_work').select('id', 'root_folder', 'dir');
-    await cleanupWorks(works, trxProvider);
-    await trx.commit();
+    const works = await listWorkStorageLocations();
+    await cleanupWorks(works);
   };
 
   return {

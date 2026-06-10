@@ -18,10 +18,10 @@ describe('createMissingWorkCleaner', () => {
 
   const createCleaner = options =>
     createMissingWorkCleaner({
-      knex: options.knex || {},
+      listWorkStorageLocations: () => Promise.resolve(options.works || []),
       rootFolders: [{ name: 'VoiceWork', path: '/library' }],
-      removeWork: (id, trxProvider) => {
-        calls.removed.push({ id, trxProvider });
+      removeWork: id => {
+        calls.removed.push({ id });
         return Promise.resolve(`removed-${id}`);
       },
       deleteCoverImageFromDisk: rjcode => {
@@ -42,7 +42,7 @@ describe('createMissingWorkCleaner', () => {
   it('keeps works whose local folder still exists', async () => {
     const { cleanupWorks } = createCleaner({ existingPaths: [existingWorkPath] });
 
-    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }], 'trx-provider');
+    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }]);
 
     expect(calls.removed).to.deep.equal([]);
     expect(calls.deletedCovers).to.deep.equal([]);
@@ -51,18 +51,18 @@ describe('createMissingWorkCleaner', () => {
   it('removes metadata and cover files for missing work folders', async () => {
     const { cleanupWorks } = createCleaner({ existingPaths: [] });
 
-    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }], 'trx-provider');
+    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }]);
 
-    expect(calls.removed).to.deep.equal([{ id: 123, trxProvider: 'trx-provider' }]);
+    expect(calls.removed).to.deep.equal([{ id: 123 }]);
     expect(calls.deletedCovers).to.deep.equal(['000123']);
   });
 
   it('treats missing root folder configuration as a missing work folder', async () => {
     const { cleanupWorks } = createCleaner({ existingPaths: [existingWorkPath] });
 
-    await cleanupWorks([{ id: 123, root_folder: 'RemovedRoot', dir: 'RJ000123' }], 'trx-provider');
+    await cleanupWorks([{ id: 123, root_folder: 'RemovedRoot', dir: 'RJ000123' }]);
 
-    expect(calls.removed).to.deep.equal([{ id: 123, trxProvider: 'trx-provider' }]);
+    expect(calls.removed).to.deep.equal([{ id: 123 }]);
   });
 
   it('ignores already-missing cover files during cleanup', async () => {
@@ -71,7 +71,7 @@ describe('createMissingWorkCleaner', () => {
       deleteCoverImageFromDisk: () => Promise.reject(Object.assign(new Error('missing'), { code: 'ENOENT' })),
     });
 
-    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }], 'trx-provider');
+    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }]);
 
     expect(calls.mainLogs).to.deep.equal([]);
     expect(calls.consoleErrors).to.deep.equal([]);
@@ -83,7 +83,7 @@ describe('createMissingWorkCleaner', () => {
       deleteCoverImageFromDisk: () => Promise.reject(new Error('disk failure')),
     });
 
-    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }], 'trx-provider');
+    await cleanupWorks([{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }]);
 
     expect(calls.mainLogs).to.deep.equal([
       {
@@ -92,5 +92,17 @@ describe('createMissingWorkCleaner', () => {
       },
     ]);
     expect(calls.consoleErrors).to.deep.equal(['  ! [RJ000123] 在删除封面过程中出错: disk failure']);
+  });
+
+  it('loads work storage locations before performing cleanup', async () => {
+    const { performCleanup } = createCleaner({
+      existingPaths: [],
+      works: [{ id: 123, root_folder: 'VoiceWork', dir: 'RJ000123' }],
+    });
+
+    await performCleanup();
+
+    expect(calls.removed).to.deep.equal([{ id: 123 }]);
+    expect(calls.deletedCovers).to.deep.equal(['000123']);
   });
 });

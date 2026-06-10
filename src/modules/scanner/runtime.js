@@ -87,7 +87,7 @@ const { processFolder } = createWorkProcessor({
   addLogForTask,
 });
 const { performCleanup } = createMissingWorkCleaner({
-  knex: db.knex,
+  listWorkStorageLocations: db.listWorkStorageLocations,
   rootFolders: config.rootFolders,
   removeWork: db.removeWork,
   deleteCoverImageFromDisk,

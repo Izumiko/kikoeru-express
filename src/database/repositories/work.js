@@ -198,10 +198,23 @@ const workExists = async id => {
   return Boolean(result[0]);
 };
 
+/**
+ * 列出所有作品的本地存储位置，用于扫描前清理缺失文件夹。
+ */
+const listWorkStorageLocations = () =>
+  db
+    .select({
+      id: works.id,
+      root_folder: works.rootFolder,
+      dir: works.dir,
+    })
+    .from(works);
+
 module.exports = {
   getWorkStorageLocation,
   getWorkTrackMetadata,
   insertWorkMetadata,
+  listWorkStorageLocations,
   removeWork,
   updateWorkMetadata,
   workExists,

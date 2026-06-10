@@ -165,6 +165,11 @@ describe('Database repository parity baseline', function () {
     });
     expect(await repositories.workExists(100)).to.equal(true);
     expect(await repositories.workExists(999999)).to.equal(false);
+    expect(await repositories.listWorkStorageLocations()).to.deep.include({
+      id: 100,
+      root_folder: 'VoiceWork',
+      dir: 'RJ000100',
+    });
 
     await repositories.updateWorkMetadata(
       baseWork({
