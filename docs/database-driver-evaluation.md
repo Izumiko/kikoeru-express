@@ -58,6 +58,14 @@ Validation required:
 - Transaction and busy timeout behavior.
 - Blocking impact during scan/update while HTTP media/API requests are active.
 
+Local installation result:
+
+- `better-sqlite3` installation failed after the prebuilt binary download hit `ECONNRESET`.
+- The fallback build path used the repository's old `node-gyp@3.8.0`, which is incompatible with the available
+  Python 3 runtime.
+- Because installation is fragile on the current Windows + Node 24 environment, this candidate is not the preferred
+  stage 10 spike target.
+
 ### Drizzle + node:sqlite
 
 Promising long-term candidate. Drizzle documents native SQLite support through `node:sqlite`, `better-sqlite3`,
@@ -83,6 +91,23 @@ Validation required:
 - Same query parity checks as `node:sqlite`.
 - Packaging and native dependency cost compared with current `sqlite3`.
 
+### Drizzle + libSQL
+
+Preferred current spike target. Drizzle has a published `drizzle-orm/libsql` driver in the installed package, and
+`@libsql/client` installs cleanly in the current environment.
+
+Validation status:
+
+- A local in-memory libSQL probe can execute the legacy table/view SQL.
+- Drizzle can query typed tables through the libSQL driver.
+- The legacy `staticMetadata` view shape can be reproduced.
+
+Validation still required:
+
+- Full repository parity against the stage 10 baseline tests.
+- Transaction behavior for metadata insert/update/remove paths.
+- Migration story for existing Knex migrations and historical user databases.
+
 ## Decision
 
 Do not replace the production database layer in one step.
@@ -91,7 +116,7 @@ Stage 10 should proceed as:
 
 1. Build repository parity tests that can run against the current Knex implementation.
 2. Add an isolated Drizzle schema and driver spike outside the production request path.
-3. Compare `node:sqlite` and `better-sqlite3` against the same parity fixture.
+3. Use libSQL as the current executable Drizzle spike target.
 4. Keep Knex if the replacement does not provide clear maintenance or packaging value.
 
 ## Parity Requirements
