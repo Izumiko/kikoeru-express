@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { md5 } = require('../../auth/utils');
 const knexMigrate = require('./migrate');
-const { databaseExist } = require('./client');
+const { databaseExist } = require('./libsql-client');
 const { createUser } = require('./repositories');
 const pjson = require('../../package.json');
 const compareVersions = require('compare-versions');
