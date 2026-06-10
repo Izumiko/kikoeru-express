@@ -6,7 +6,7 @@ const bodyParser = require('body-parser'); // 获取 req.body
 const history = require('connect-history-api-fallback');
 
 const { config } = require('../../config');
-const api = require('../../api');
+const api = require('../api/mount');
 
 const createApp = () => {
   const app = express();
