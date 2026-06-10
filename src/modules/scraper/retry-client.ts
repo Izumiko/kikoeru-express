@@ -1,7 +1,44 @@
-// @ts-nocheck
-const createDelay = (setTimeoutFn = setTimeout) => ms => new Promise(resolve => setTimeoutFn(resolve, ms));
+import type { RetryRequestConfig, RetryState } from './retry-config.js';
 
-const getRetryUrl = (error, fallbackUrl) =>
+type CancelTokenSource = {
+  token: unknown;
+  cancel: (message: string) => void;
+};
+
+type RetryHttpResponse = unknown;
+
+type RetryHttpGet = (url: string, requestConfig: RetryRequestConfig) => Promise<RetryHttpResponse>;
+
+type RetryError = {
+  response?: unknown;
+  request?: {
+    _currentRequest?: {
+      path?: string;
+    };
+  };
+};
+
+type TimeoutHandle = ReturnType<typeof setTimeout>;
+
+type RetryGetFactoryOptions = {
+  httpGet: RetryHttpGet;
+  cancelTokenSource: () => CancelTokenSource;
+  applyRetryConfig: (url: string, requestConfig: RetryRequestConfig, appConfig: unknown) => RetryRequestConfig;
+  appConfig: unknown;
+  delay?: (ms: number) => Promise<void>;
+  setTimeoutFn?: (fn: () => void, ms: number) => TimeoutHandle;
+  clearTimeoutFn?: (handle: TimeoutHandle) => void;
+  consoleLogger?: Pick<Console, 'log'>;
+};
+
+type RetryGet = (url: string, requestConfig: RetryRequestConfig) => Promise<RetryHttpResponse>;
+
+const createDelay =
+  (setTimeoutFn: (fn: () => void, ms: number) => TimeoutHandle = setTimeout) =>
+  (ms: number): Promise<void> =>
+    new Promise(resolve => setTimeoutFn(resolve, ms));
+
+const getRetryUrl = (error: RetryError, fallbackUrl: string): string =>
   // error.request._currentRequest.path 是请求被转发后的地址，重试时优先复用它。
   error.request && error.request._currentRequest && error.request._currentRequest.path
     ? error.request._currentRequest.path
@@ -16,14 +53,15 @@ const createRetryGet = ({
   setTimeoutFn = setTimeout,
   clearTimeoutFn = clearTimeout,
   consoleLogger = console,
-}) => {
-  const retryGet = async (url, requestConfig) => {
+}: RetryGetFactoryOptions): RetryGet => {
+  const retryGet: RetryGet = async (url, requestConfig) => {
     applyRetryConfig(url, requestConfig, appConfig);
+    const retry = requestConfig.retry as RetryState;
 
     const abort = cancelTokenSource();
     const timeoutId = setTimeoutFn(
-      () => abort.cancel(`Timeout of ${requestConfig.retry.timeout}ms.`),
-      requestConfig.retry.timeout
+      () => abort.cancel(`Timeout of ${retry.timeout}ms.`),
+      retry.timeout
     );
     requestConfig.cancelToken = abort.token;
 
@@ -32,11 +70,12 @@ const createRetryGet = ({
       clearTimeoutFn(timeoutId);
       return response;
     } catch (error) {
-      if (requestConfig.retry.retryCount < requestConfig.retry.limit && !error.response) {
-        requestConfig.retry.retryCount += 1;
-        await delay(requestConfig.retry.retryDelay);
-        consoleLogger.log(`${url} 第 ${requestConfig.retry.retryCount} 次重试请求`);
-        return retryGet(getRetryUrl(error, url), requestConfig);
+      const retryError = error as RetryError;
+      if (retry.retryCount < retry.limit && !retryError.response) {
+        retry.retryCount += 1;
+        await delay(retry.retryDelay);
+        consoleLogger.log(`${url} 第 ${retry.retryCount} 次重试请求`);
+        return retryGet(getRetryUrl(retryError, url), requestConfig);
       }
 
       throw error;
