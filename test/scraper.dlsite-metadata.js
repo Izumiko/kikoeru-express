@@ -5,6 +5,7 @@ const {
   buildDlsiteWorkUrl,
   getDlsiteLanguageConfig,
   parseDynamicWorkMetadata,
+  parseStaticWorkMetadataHtml,
 } = require('../src/modules/scraper/dlsite-metadata');
 
 describe('dlsite metadata helpers', () => {
@@ -86,5 +87,82 @@ describe('dlsite metadata helpers', () => {
       price: 770,
       rank: [{ term: 'daily', rank: 1 }],
     });
+  });
+
+  it('parses static metadata from DLsite work HTML', () => {
+    const html = `
+      <html>
+        <head>
+          <meta property="og:title" content="测试作品 [测试社团] | DLsite">
+        </head>
+        <body>
+          <span class="maker_name">
+            <a href="https://www.dlsite.com/maniax/circle/profile/=/maker_id/RG12345.html">测试社团</a>
+          </span>
+          <table id="work_outline">
+            <tbody>
+              <tr><th>年龄指定</th><td><span>18禁</span></td></tr>
+              <tr><th>贩卖日</th><td>2024年06月01日</td></tr>
+              <tr><th>系列名</th><td><a href="/maniax/fsr/=/keyword/SRI0000012345">测试系列</a></td></tr>
+              <tr><th>分类</th><td><div><a href="/genre/123">ASMR</a></div></td></tr>
+              <tr><th>声优</th><td><a href="/search/=/keyword/声优A"> 声优A </a></td></tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    expect(
+      parseStaticWorkMetadataHtml({
+        html,
+        id: 123,
+        url: buildDlsiteWorkUrl(123),
+        languageConfig: getDlsiteLanguageConfig('zh-cn'),
+        nameToUUID: name => `uuid-${name}`,
+      })
+    ).to.deep.equal({
+      id: 123,
+      title: '测试作品',
+      circle: {
+        id: 12345,
+        name: '测试社团',
+      },
+      nsfw: true,
+      release: '2024-06-01',
+      series: {
+        id: 12345,
+        name: '测试系列',
+      },
+      tags: [
+        {
+          id: 123,
+          name: 'ASMR',
+        },
+      ],
+      vas: [
+        {
+          id: 'uuid-声优A',
+          name: '声优A',
+        },
+      ],
+    });
+  });
+
+  it('falls back to the product link title when og:title is absent', () => {
+    const url = buildDlsiteWorkUrl(123);
+    const html = `
+      <a href="${url}"><span>备用标题 [社团] | DLsite</span></a>
+      <table id="work_outline"><tbody></tbody></table>
+    `;
+
+    const metadata = parseStaticWorkMetadataHtml({
+      html,
+      id: 123,
+      url,
+      languageConfig: getDlsiteLanguageConfig('zh-cn'),
+      nameToUUID: name => name,
+    });
+
+    expect(metadata.title).to.equal('备用标题');
   });
 });

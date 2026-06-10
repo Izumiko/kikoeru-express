@@ -1,3 +1,4 @@
+const cheerio = require('cheerio');
 const { formatRjCode } = require('../media/rj-code');
 
 const DLSITE_LANGUAGE_CONFIG = {
@@ -53,9 +54,117 @@ const parseDynamicWorkMetadata = data => {
   return work;
 };
 
+const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID }) => {
+  const $ = cheerio.load(html);
+  const work = { id, tags: [], vas: [] };
+
+  work.title = $('meta[property="og:title"]').attr('content');
+  if (work.title === undefined) {
+    work.title = $(`a[href="${url}"] span`).text();
+  }
+
+  const titlePattern = / \[.+\] \| DLsite$/;
+  work.title = work.title.replace(titlePattern, '');
+
+  const circleElement = $('span[class="maker_name"]').children('a');
+  const circleUrl = circleElement.attr('href');
+  const circleName = circleElement.text();
+  work.circle = circleUrl && circleName ? { id: parseInt(circleUrl.substr(-10, 5)), name: circleName } : {};
+
+  const workOutline = $('#work_outline');
+  const r18 = workOutline
+    .children('tbody')
+    .children('tr')
+    .children('th')
+    .filter(function () {
+      return $(this).text() === languageConfig.ageRatingsLabel;
+    })
+    .parent()
+    .children('td')
+    .find('span:first')
+    .text();
+  work.nsfw = r18 === '18禁';
+
+  const release = workOutline
+    .children('tbody')
+    .children('tr')
+    .children('th')
+    .filter(function () {
+      return $(this).text() === languageConfig.releaseLabel;
+    })
+    .parent()
+    .children('td')
+    .text()
+    .replace(/[^0-9]/gi, '');
+  work.release = release.length >= 8 ? `${release.slice(0, 4)}-${release.slice(4, 6)}-${release.slice(6, 8)}` : '';
+
+  const seriesElement = workOutline
+    .children('tbody')
+    .children('tr')
+    .children('th')
+    .filter(function () {
+      return $(this).text() === languageConfig.seriesLabel;
+    })
+    .parent()
+    .children('td')
+    .children('a');
+  if (seriesElement.length) {
+    const seriesUrl = seriesElement.attr('href');
+    if (seriesUrl.match(/SRI(\d{10})/)) {
+      work.series = {
+        id: parseInt(seriesUrl.match(/SRI(\d{10})/)[1]),
+        name: seriesElement.text(),
+      };
+    }
+  }
+
+  workOutline
+    .children('tbody')
+    .children('tr')
+    .children('th')
+    .filter(function () {
+      return $(this).text() === languageConfig.genreLabel;
+    })
+    .parent()
+    .children('td')
+    .children('div')
+    .children('a')
+    .each(function () {
+      const tagUrl = $(this).attr('href');
+      const tagName = $(this).text();
+      if (tagUrl.match(/genre\/(\d{3})/)) {
+        work.tags.push({
+          id: parseInt(tagUrl.match(/genre\/(\d{3})/)[1]),
+          name: tagName,
+        });
+      }
+    });
+
+  workOutline
+    .children('tbody')
+    .children('tr')
+    .children('th')
+    .filter(function () {
+      return $(this).text() === languageConfig.voiceActorLabel;
+    })
+    .parent()
+    .children('td')
+    .children('a')
+    .each(function () {
+      const vaName = $(this).text().trim();
+      work.vas.push({
+        id: nameToUUID(vaName),
+        name: vaName,
+      });
+    });
+
+  return work;
+};
+
 module.exports = {
   buildDlsiteDynamicMetadataUrl,
   buildDlsiteWorkUrl,
   getDlsiteLanguageConfig,
   parseDynamicWorkMetadata,
+  parseStaticWorkMetadataHtml,
 };

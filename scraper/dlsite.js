@@ -1,5 +1,3 @@
-const cheerio = require('cheerio'); // 解析器
-
 const axios = require('./axios'); // 数据请求
 const { nameToUUID, hasLetter } = require('./utils');
 const scrapeWorkMetadataFromHVDB = require('./hvdb');
@@ -9,6 +7,7 @@ const {
   buildDlsiteWorkUrl,
   getDlsiteLanguageConfig,
   parseDynamicWorkMetadata,
+  parseStaticWorkMetadataHtml,
 } = require('../src/modules/scraper/dlsite-metadata');
 
 /**
@@ -22,7 +21,7 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
     const rjcode = formatRjCode(id);
     const url = buildDlsiteWorkUrl(id);
 
-    const work = { id, tags: [], vas: [] };
+    let work;
     const dlsiteLanguage = getDlsiteLanguageConfig(language);
 
     axios
@@ -32,119 +31,13 @@ const scrapeStaticWorkMetadataFromDLsite = (id, language, successLanguage = {}) 
       })
       .then(response => response.data)
       .then(data => {
-        // 解析
-        // 转换成 jQuery 对象
-        const $ = cheerio.load(data);
-
-        // 标题
-        work.title = $('meta[property="og:title"]').attr('content');
-        // fallback
-        if (work.title === undefined) {
-          work.title = $(`a[href="${url}"] span`).text();
-        }
-
-        // 'xxxxx [circle_name] | DLsite' => 'xxxxx'
-        const titlePattern = / \[.+\] \| DLsite$/;
-        work.title = work.title.replace(titlePattern, '');
-
-        // 社团
-        const circleElement = $('span[class="maker_name"]').children('a');
-        const circleUrl = circleElement.attr('href');
-        const circleName = circleElement.text();
-        work.circle = circleUrl && circleName ? { id: parseInt(circleUrl.substr(-10, 5)), name: circleName } : {};
-
-        const workOutline = $('#work_outline');
-        // NSFW
-        const R18 = workOutline
-          .children('tbody')
-          .children('tr')
-          .children('th')
-          .filter(function () {
-            return $(this).text() === dlsiteLanguage.ageRatingsLabel;
-          })
-          .parent()
-          .children('td')
-          .find('span:first')
-          .text();
-        work.nsfw = R18 === '18禁';
-
-        // 贩卖日 (YYYY-MM-DD)
-        const release = workOutline
-          .children('tbody')
-          .children('tr')
-          .children('th')
-          .filter(function () {
-            return $(this).text() === dlsiteLanguage.releaseLabel;
-          })
-          .parent()
-          .children('td')
-          .text()
-          .replace(/[^0-9]/gi, '');
-        work.release =
-          release.length >= 8 ? `${release.slice(0, 4)}-${release.slice(4, 6)}-${release.slice(6, 8)}` : '';
-
-        // 系列
-        const seriesElement = workOutline
-          .children('tbody')
-          .children('tr')
-          .children('th')
-          .filter(function () {
-            return $(this).text() === dlsiteLanguage.seriesLabel;
-          })
-          .parent()
-          .children('td')
-          .children('a');
-        if (seriesElement.length) {
-          const seriesUrl = seriesElement.attr('href');
-          if (seriesUrl.match(/SRI(\d{10})/)) {
-            work.series = {
-              id: parseInt(seriesUrl.match(/SRI(\d{10})/)[1]),
-              name: seriesElement.text(),
-            };
-          }
-        }
-
-        // 标签
-        workOutline
-          .children('tbody')
-          .children('tr')
-          .children('th')
-          .filter(function () {
-            return $(this).text() === dlsiteLanguage.genreLabel;
-          })
-          .parent()
-          .children('td')
-          .children('div')
-          .children('a')
-          .each(function () {
-            const tagUrl = $(this).attr('href');
-            const tagName = $(this).text();
-            if (tagUrl.match(/genre\/(\d{3})/)) {
-              work.tags.push({
-                id: parseInt(tagUrl.match(/genre\/(\d{3})/)[1]),
-                name: tagName,
-              });
-            }
-          });
-
-        // 声优
-        workOutline
-          .children('tbody')
-          .children('tr')
-          .children('th')
-          .filter(function () {
-            return $(this).text() === dlsiteLanguage.voiceActorLabel;
-          })
-          .parent()
-          .children('td')
-          .children('a')
-          .each(function () {
-            const vaName = $(this).text().trim();
-            work.vas.push({
-              id: nameToUUID(vaName),
-              name: vaName,
-            });
-          });
+        work = parseStaticWorkMetadataHtml({
+          html: data,
+          id,
+          url,
+          languageConfig: dlsiteLanguage,
+          nameToUUID,
+        });
 
         if (work.tags.length === 0 && work.vas.length === 0) {
           reject(new Error("Couldn't parse data from DLsite work page."));
