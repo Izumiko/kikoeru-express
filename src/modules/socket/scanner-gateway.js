@@ -1,31 +1,21 @@
 const { SOCKET_EVENTS } = require('./events');
+const { createScannerProcessController } = require('./scanner-process-controller');
 
-const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScriptPath, config, consoleLogger = console }) => {
-  let scanner = null;
-
-  const forwardScannerEvents = () => {
-    scanner.on('exit', code => {
-      scanner = null;
-      if (code) {
-        io.emit(SOCKET_EVENTS.SCAN_ERROR);
-      }
-    });
-
-    scanner.on('message', message => {
-      if (message.event) {
-        io.emit(message.event, message.payload);
-      }
-    });
-  };
-
-  const startScannerProcess = (scriptPath, args = []) => {
-    if (scanner) {
-      return;
-    }
-
-    scanner = fork(scriptPath, args, { silent: false }); // 子进程
-    forwardScannerEvents();
-  };
+const createScannerSocketGateway = ({
+  io,
+  fork,
+  scannerScriptPath,
+  updaterScriptPath,
+  config,
+  scannerController =
+    createScannerProcessController({
+      fork,
+      scannerScriptPath,
+      updaterScriptPath,
+      emit: (event, payload) => io.emit(event, payload),
+    }),
+  consoleLogger = console,
+}) => {
 
   const bindSocket = socket => {
     socket.emit(SOCKET_EVENTS.SUCCESS, {
@@ -35,26 +25,20 @@ const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScript
     });
 
     socket.on(SOCKET_EVENTS.ON_SCANNER_PAGE, () => {
-      if (scanner) {
-        // 防止用户在扫描过程中刷新页面
-        scanner.send({
-          emit: SOCKET_EVENTS.SCAN_INIT_STATE,
-        });
-      }
+      // 防止用户在扫描过程中刷新页面
+      scannerController.requestInitState();
     });
 
     socket.on(SOCKET_EVENTS.PERFORM_SCAN, () => {
-      startScannerProcess(scannerScriptPath);
+      scannerController.startScan();
     });
 
     socket.on(SOCKET_EVENTS.PERFORM_UPDATE, () => {
-      startScannerProcess(updaterScriptPath, ['--refreshAll']);
+      scannerController.startUpdate();
     });
 
     socket.on(SOCKET_EVENTS.KILL_SCAN_PROCESS, () => {
-      scanner.send({
-        exit: 1,
-      });
+      scannerController.kill();
     });
 
     // 发生错误时触发
@@ -71,7 +55,6 @@ const createScannerSocketGateway = ({ io, fork, scannerScriptPath, updaterScript
   return {
     bind,
     bindSocket,
-    startScannerProcess,
   };
 };
 
