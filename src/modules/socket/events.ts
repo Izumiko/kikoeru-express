@@ -1,4 +1,3 @@
-// @ts-nocheck
 const SOCKET_EVENTS = {
   KILL_SCAN_PROCESS: 'KILL_SCAN_PROCESS',
   ON_SCANNER_PAGE: 'ON_SCANNER_PAGE',
@@ -12,8 +11,11 @@ const SOCKET_EVENTS = {
   SCAN_RESULTS: 'SCAN_RESULTS',
   SCAN_TASKS: 'SCAN_TASKS',
   SUCCESS: 'success',
-};
+} as const;
+
+type SocketEventName = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];
 
 export {
   SOCKET_EVENTS,
 };
+export type { SocketEventName };

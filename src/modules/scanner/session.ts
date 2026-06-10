@@ -1,8 +1,46 @@
-// @ts-nocheck
 import { SOCKET_EVENTS } from '../socket/events.js';
+import type { SocketEventName } from '../socket/events.js';
+import type { ScanResult } from './counters.js';
+
+type ScannerLog = {
+  level: string;
+  message: string;
+};
+
+type ScanTask = {
+  rjcode: string | number;
+  result: ScanResult | null;
+  logs: ScannerLog[];
+};
+
+type ScanResultRecord = {
+  rjcode: string | number;
+  result: ScanResult;
+  count: number;
+};
+
+type ScanSessionSnapshot = {
+  tasks: ScanTask[];
+  failedTasks: ScanTask[];
+  mainLogs: ScannerLog[];
+  results: ScanResultRecord[];
+};
+
+type ScannerEvent = {
+  event: SocketEventName;
+  payload: unknown;
+};
+
+type ScannerEventSender = (event: ScannerEvent) => void;
 
 class ScanSession {
-  constructor(send = function noop() {}) {
+  send: ScannerEventSender;
+  tasks: ScanTask[];
+  failedTasks: ScanTask[];
+  mainLogs: ScannerLog[];
+  results: ScanResultRecord[];
+
+  constructor(send: ScannerEventSender = function noop() {}) {
     this.send = send;
     this.tasks = [];
     this.failedTasks = [];
@@ -10,7 +48,7 @@ class ScanSession {
     this.results = [];
   }
 
-  snapshot() {
+  snapshot(): ScanSessionSnapshot {
     return {
       tasks: this.tasks,
       failedTasks: this.failedTasks,
@@ -19,15 +57,15 @@ class ScanSession {
     };
   }
 
-  emit(event, payload) {
+  emit(event: SocketEventName, payload: unknown): void {
     this.send({ event, payload });
   }
 
-  emitInitState() {
+  emitInitState(): void {
     this.emit(SOCKET_EVENTS.SCAN_INIT_STATE, this.snapshot());
   }
 
-  addTask(rjcode) {
+  addTask(rjcode: string | number): void {
     this.tasks.push({
       rjcode,
       result: null,
@@ -35,7 +73,7 @@ class ScanSession {
     });
   }
 
-  removeTask(rjcode) {
+  removeTask(rjcode: string | number): void {
     const index = this.tasks.findIndex(task => task.rjcode === rjcode);
     const task = this.tasks[index];
     this.tasks.splice(index, 1);
@@ -51,14 +89,14 @@ class ScanSession {
     }
   }
 
-  addLogForTask(rjcode, log) {
-    this.tasks.find(task => task.rjcode === rjcode).logs.push(log);
+  addLogForTask(rjcode: string | number, log: ScannerLog): void {
+    this.tasks.find(task => task.rjcode === rjcode)?.logs.push(log);
     this.emit(SOCKET_EVENTS.SCAN_TASKS, {
       tasks: this.tasks,
     });
   }
 
-  addResult(rjcode, result, count) {
+  addResult(rjcode: string | number, result: ScanResult, count: number): void {
     this.results.push({
       rjcode,
       result,
@@ -69,7 +107,7 @@ class ScanSession {
     });
   }
 
-  addMainLog(log) {
+  addMainLog(log: ScannerLog): void {
     this.mainLogs.push(log);
     this.emit(SOCKET_EVENTS.SCAN_MAIN_LOGS, {
       mainLogs: this.mainLogs,
@@ -78,3 +116,4 @@ class ScanSession {
 }
 
 export { ScanSession };
+export type { ScannerEvent, ScannerEventSender, ScannerLog, ScanResultRecord, ScanSessionSnapshot, ScanTask };
