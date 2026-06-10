@@ -3,6 +3,7 @@ const { httpsOverHttp, httpOverHttp } = require('tunnel-agent');
 
 const { config } = require('../config');
 const { applyRetryConfig } = require('../src/modules/scraper/retry-config');
+const { createRetryGet } = require('../src/modules/scraper/retry-client');
 const Config = config;
 
 const axios = originAxios.create();
@@ -66,38 +67,12 @@ axios.interceptors.request.use(function (config) {
 //   });
 // });
 
-const retryGet = async (url, config) => {
-  applyRetryConfig(url, config, Config);
-
-  const abort = originAxios.CancelToken.source();
-  const timeoutId = setTimeout(() => abort.cancel(`Timeout of ${config.retry.timeout}ms.`), config.retry.timeout);
-  config.cancelToken = abort.token;
-
-  try {
-    const response = await axios.get(url, config);
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    const backoff = new Promise(resolve => {
-      setTimeout(() => resolve(), config.retry.retryDelay);
-    });
-
-    if (config.retry.retryCount < config.retry.limit && !error.response) {
-      config.retry.retryCount += 1;
-      await backoff;
-      console.log(`${url} 第 ${config.retry.retryCount} 次重试请求`);
-      // error.request._currentRequest.path 目的是请求转发的地址
-      return retryGet(
-        error.request && error.request._currentRequest && error.request._currentRequest.path
-          ? error.request._currentRequest.path
-          : url,
-        config
-      );
-    } else {
-      throw error;
-    }
-  }
-};
+const retryGet = createRetryGet({
+  httpGet: (url, requestConfig) => axios.get(url, requestConfig),
+  cancelTokenSource: () => originAxios.CancelToken.source(),
+  applyRetryConfig,
+  appConfig: Config,
+});
 axios.retryGet = retryGet;
 
 /**
