@@ -15,7 +15,7 @@ describe('scraper retry client', () => {
     };
   });
 
-  const createClient = httpGet =>
+  const createClient = (httpGet) =>
     createRetryGet({
       httpGet: (url, config) => {
         calls.httpGets.push({ url, config });
@@ -23,7 +23,7 @@ describe('scraper retry client', () => {
       },
       cancelTokenSource: () => ({
         token: `token-${calls.timeouts.length}`,
-        cancel: message => calls.cancels.push(message),
+        cancel: (message) => calls.cancels.push(message),
       }),
       applyRetryConfig: (url, config) => {
         config.retry = config.retry || {
@@ -34,7 +34,7 @@ describe('scraper retry client', () => {
         };
       },
       appConfig: {},
-      delay: ms => {
+      delay: (ms) => {
         calls.delays.push(ms);
         return Promise.resolve();
       },
@@ -42,9 +42,9 @@ describe('scraper retry client', () => {
         calls.timeouts.push({ fn, ms });
         return `timeout-${calls.timeouts.length}`;
       },
-      clearTimeoutFn: id => calls.clearedTimeouts.push(id),
+      clearTimeoutFn: (id) => calls.clearedTimeouts.push(id),
       consoleLogger: {
-        log: message => calls.logs.push(message),
+        log: (message) => calls.logs.push(message),
       },
     });
 
@@ -61,7 +61,7 @@ describe('scraper retry client', () => {
 
   it('retries network errors and reuses redirected request path when present', async () => {
     let attempts = 0;
-    const retryGet = createClient(url => {
+    const retryGet = createClient((url) => {
       attempts += 1;
       if (attempts === 1) {
         return Promise.reject({
@@ -80,7 +80,7 @@ describe('scraper retry client', () => {
     expect(response).to.deep.equal({ data: 'https://forwarded.example.com/work' });
     expect(calls.delays).to.deep.equal([5]);
     expect(calls.logs).to.deep.equal(['https://example.com/work 第 1 次重试请求']);
-    expect(calls.httpGets.map(call => call.url)).to.deep.equal([
+    expect(calls.httpGets.map((call) => call.url)).to.deep.equal([
       'https://example.com/work',
       'https://forwarded.example.com/work',
     ]);

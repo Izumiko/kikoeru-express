@@ -7,7 +7,7 @@ const createFakeProcess = () => {
 
   return {
     sent,
-    send: message => sent.push(message),
+    send: (message) => sent.push(message),
     on: (event, handler) => {
       handlers[event] = handler;
     },

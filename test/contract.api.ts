@@ -1,11 +1,10 @@
-
 import { expect } from 'vitest';
 
 import { createApp } from '../src/app/factory.js';
 import { request } from './helpers/http.js';
 import { config } from '../config.js';
 import db from '../src/database.js';
-const createWorkRecord = values => ({
+const createWorkRecord = (values) => ({
   id: 1,
   title: 'work',
   nsfw: false,
@@ -166,7 +165,7 @@ describe('API contract', function () {
 
   it('GET /api/circles keeps the legacy metadata label route', async function () {
     const getLabels = db.getLabels;
-    db.getLabels = field => ({
+    db.getLabels = (field) => ({
       orderBy: () => Promise.resolve([{ id: 1, name: `${field}-label` }]),
     });
 
@@ -182,7 +181,7 @@ describe('API contract', function () {
 
   it('GET /api/circles/:id keeps the legacy metadata lookup route', async function () {
     const getMetadata = db.getMetadata;
-    db.getMetadata = options => Promise.resolve([{ id: options.ids[0], name: `${options.field}-metadata` }]);
+    db.getMetadata = (options) => Promise.resolve([{ id: options.ids[0], name: `${options.field}-metadata` }]);
 
     try {
       const res = await request(app, { path: '/api/circles/1' });
@@ -196,7 +195,8 @@ describe('API contract', function () {
 
   it('GET /api/circles/:id/works keeps the legacy metadata works route', async function () {
     const getWorksBy = db.getWorksBy;
-    db.getWorksBy = options => Promise.resolve([createWorkRecord({ id: options.id[0], title: `${options.field}-work` })]);
+    db.getWorksBy = (options) =>
+      Promise.resolve([createWorkRecord({ id: options.id[0], title: `${options.field}-work` })]);
 
     try {
       const res = await request(app, { path: '/api/circles/1/works' });
@@ -211,7 +211,7 @@ describe('API contract', function () {
 
   it('GET /api/search keeps the legacy optional keyword route', async function () {
     const getWorksByKeyWord = db.getWorksByKeyWord;
-    db.getWorksByKeyWord = options => Promise.resolve([createWorkRecord({ title: `keyword:${options.keyword}` })]);
+    db.getWorksByKeyWord = (options) => Promise.resolve([createWorkRecord({ title: `keyword:${options.keyword}` })]);
 
     try {
       const res = await request(app, { path: '/api/search' });

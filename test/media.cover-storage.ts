@@ -32,13 +32,13 @@ describe('media cover storage', () => {
 
   it('deletes all generated cover variants for a work', async () => {
     const types = ['main', 'sam', '240x240', '360x360'];
-    types.forEach(type => {
+    types.forEach((type) => {
       fs.writeFileSync(path.join(tempDir, `RJ000123_img_${type}.jpg`), type);
     });
 
     await deleteCoverImageFromDisk('000123');
 
-    types.forEach(type => {
+    types.forEach((type) => {
       expect(fs.existsSync(path.join(tempDir, `RJ000123_img_${type}.jpg`))).to.equal(false);
     });
   });

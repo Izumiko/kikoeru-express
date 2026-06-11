@@ -6,7 +6,7 @@ import { config } from '../../../config.js';
 const deleteCoverImageFromDisk = (rjcode: number | string): Promise<void> =>
   new Promise((resolve, reject) => {
     const types = ['main', 'sam', '240x240', '360x360'];
-    types.forEach(type => {
+    types.forEach((type) => {
       try {
         fs.unlinkSync(path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`));
       } catch (err) {
@@ -30,7 +30,4 @@ const saveCoverImageToDisk = (stream: Readable, rjcode: number | string, type: s
     }
   });
 
-export {
-  deleteCoverImageFromDisk,
-  saveCoverImageToDisk,
-};
+export { deleteCoverImageFromDisk, saveCoverImageToDisk };

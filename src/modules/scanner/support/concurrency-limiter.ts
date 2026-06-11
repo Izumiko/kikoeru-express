@@ -13,7 +13,10 @@ type ConcurrencyLimiterOptions = {
   LimitPromiseImpl?: LimitPromiseConstructor;
 };
 
-const createConcurrencyLimiter = ({ max, LimitPromiseImpl = LimitPromise as LimitPromiseConstructor }: ConcurrencyLimiterOptions) => {
+const createConcurrencyLimiter = ({
+  max,
+  LimitPromiseImpl = LimitPromise as LimitPromiseConstructor,
+}: ConcurrencyLimiterOptions) => {
   const limitP = new LimitPromiseImpl(max); // 核心控制器
 
   /**
@@ -30,6 +33,4 @@ const createConcurrencyLimiter = ({ max, LimitPromiseImpl = LimitPromise as Limi
   };
 };
 
-export {
-  createConcurrencyLimiter,
-};
+export { createConcurrencyLimiter };

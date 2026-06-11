@@ -34,11 +34,11 @@ const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }: 
       consoleLogger.log(`[RJ${rjcode}] 从 HVDB 抓取元数据...`);
       httpClient
         .retryGet(url, { retry: {} })
-        .then(response => {
+        .then((response) => {
           consoleLogger.log('res HVDB');
           return response.data;
         })
-        .then(data => {
+        .then((data) => {
           const work = parseHvdbWorkMetadataHtml({ html: String(data), id, nameToUUID });
 
           if (work.tags.length === 0 && work.vas.length === 0) {
@@ -67,6 +67,4 @@ const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }: 
   };
 };
 
-export {
-  createHvdbScraper,
-};
+export { createHvdbScraper };

@@ -17,13 +17,13 @@ describe('createScanRunner', () => {
     };
   });
 
-  const createRunner = options =>
+  const createRunner = (options) =>
     createScanRunner({
       initializeScan: () => {
         calls.initialized += 1;
         return options.initializeError ? Promise.reject(options.initializeError) : Promise.resolve();
       },
-      runVoiceActorRepair: counts => {
+      runVoiceActorRepair: (counts) => {
         calls.repairs.push(counts);
         counts.increment('updated', options.repairedCount || 0);
         return Promise.resolve(Boolean(options.repairFailed));
@@ -45,11 +45,11 @@ describe('createScanRunner', () => {
       },
       processFolder: 'process-folder',
       finishScan: (message, exitCode) => calls.finishes.push({ message, exitCode }),
-      addMainLog: log => calls.mainLogs.push(log),
+      addMainLog: (log) => calls.mainLogs.push(log),
       consoleLogger: {
-        error: message => calls.consoleErrors.push(message),
+        error: (message) => calls.consoleErrors.push(message),
       },
-      exit: code => calls.exits.push(code),
+      exit: (code) => calls.exits.push(code),
     });
 
   it('runs scan stages and finishes with accumulated counts', async () => {

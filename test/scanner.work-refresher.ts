@@ -22,19 +22,19 @@ describe('createWorkRefresher', () => {
   const createRefresher = () =>
     createWorkRefresher({
       tasks,
-      addMainLog: log => calls.mainLogs.push(log),
-      emitMainLog: message => calls.emittedMainLogs.push(message),
-      removeTask: rjcode => calls.removedTasks.push(rjcode),
+      addMainLog: (log) => calls.mainLogs.push(log),
+      emitMainLog: (message) => calls.emittedMainLogs.push(message),
+      removeTask: (rjcode) => calls.removedTasks.push(rjcode),
       addResult: (rjcode, result, count) => calls.results.push({ rjcode, result, count }),
       consoleLogger: {
-        log: message => calls.consoleLogs.push(message),
+        log: (message) => calls.consoleLogs.push(message),
       },
     });
 
   it('refreshes works and records updated and failed results', async () => {
     const { refreshWorks } = createRefresher();
     const query = Promise.resolve([{ id: 123 }, { id: 456 }]);
-    const processor = id => Promise.resolve(id === 123 ? 'updated' : 'failed');
+    const processor = (id) => Promise.resolve(id === 123 ? 'updated' : 'failed');
 
     const counts = await refreshWorks(query, 'id', processor);
 
@@ -60,7 +60,7 @@ describe('createWorkRefresher', () => {
     const processedIds = [];
     const query = Promise.resolve([{ work_id: 123 }]);
 
-    await refreshWorks(query, 'work_id', id => {
+    await refreshWorks(query, 'work_id', (id) => {
       processedIds.push(id);
       return Promise.resolve('updated');
     });

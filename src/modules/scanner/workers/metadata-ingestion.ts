@@ -36,7 +36,7 @@ const createMetadataIngestion = ({
     });
 
     return scrapeWorkMetadataFromDLsite(id, tagLanguage)
-      .then(metadata => {
+      .then((metadata) => {
         consoleLogger.log(` -> [RJ${rjcode}] 元数据抓取成功，准备添加到数据库...`);
         addLogForTask(rjcode, {
           level: 'info',
@@ -83,7 +83,5 @@ const createMetadataIngestion = ({
   };
 };
 
-export {
-  createMetadataIngestion,
-};
+export { createMetadataIngestion };
 export type { WorkMetadata };

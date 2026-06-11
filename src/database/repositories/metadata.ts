@@ -40,8 +40,7 @@ type GetMetadataOptions = {
   ids?: Array<number | string>;
 };
 
-const reviewJoinKey = (username: string) =>
-  and(eq(reviews.workId, staticMetadata.id), eq(reviews.userName, username));
+const reviewJoinKey = (username: string) => and(eq(reviews.workId, staticMetadata.id), eq(reviews.userName, username));
 
 const workRowsWithRatings = (username: string, where: SQL | undefined = undefined) => {
   let query = db
@@ -68,7 +67,7 @@ const getWorkIdsForAllTags = async (tagIds: number[]): Promise<Array<number | nu
     .groupBy(tagWorks.workId)
     .having(eq(countDistinct(tagWorks.tagId), tagIds.length));
 
-  return rows.map(row => row.workId);
+  return rows.map((row) => row.workId);
 };
 
 const getWorkIdsByVoiceActor = async (voiceActorId: string): Promise<Array<number | null>> => {
@@ -77,7 +76,7 @@ const getWorkIdsByVoiceActor = async (voiceActorId: string): Promise<Array<numbe
     .from(voiceActorWorks)
     .where(eq(voiceActorWorks.vaId, voiceActorId));
 
-  return rows.map(row => row.workId);
+  return rows.map((row) => row.workId);
 };
 
 const inArrayOrNoMatch = (column: Parameters<typeof inArray>[0], values: Array<number | string | null>) =>
@@ -110,10 +109,16 @@ const getWorksBy = async ({ id = [], field, username = '' }: GetWorksByOptions =
       return workRowsWithRatings(username, eq(staticMetadata.circleId, Number(id[0])));
 
     case 'tag':
-      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsForAllTags(id.map(Number))));
+      return workRowsWithRatings(
+        username,
+        inArrayOrNoMatch(staticMetadata.id, await getWorkIdsForAllTags(id.map(Number)))
+      );
 
     case 'va':
-      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsByVoiceActor(String(id[0]))));
+      return workRowsWithRatings(
+        username,
+        inArrayOrNoMatch(staticMetadata.id, await getWorkIdsByVoiceActor(String(id[0])))
+      );
 
     default:
       return workRowsWithRatings(username);
@@ -127,7 +132,7 @@ const getWorkIdsByMatchingTags = async (keyword: string): Promise<Array<number |
     .innerJoin(tags, eq(tagWorks.tagId, tags.id))
     .where(like(tags.name, `%${keyword}%`));
 
-  return rows.map(row => row.workId);
+  return rows.map((row) => row.workId);
 };
 
 const getWorkIdsByMatchingVoiceActors = async (keyword: string): Promise<Array<number | null>> => {
@@ -137,7 +142,7 @@ const getWorkIdsByMatchingVoiceActors = async (keyword: string): Promise<Array<n
     .innerJoin(voiceActors, eq(voiceActorWorks.vaId, voiceActors.id))
     .where(like(voiceActors.name, `%${keyword}%`));
 
-  return rows.map(row => row.workId);
+  return rows.map((row) => row.workId);
 };
 
 /**
@@ -217,17 +222,11 @@ const getMetadata = ({ field = 'circle', ids = [] }: GetMetadataOptions = {}) =>
 
   const table = tableByField[field];
   return Promise.all(
-    ids.map(async id => {
+    ids.map(async (id) => {
       const rows = await db.select().from(table).where(eq(table.id, id)).limit(1);
       return rows[0];
     })
   );
 };
 
-export {
-  getLabels,
-  getMetadata,
-  getWorkMetadata,
-  getWorksBy,
-  getWorksByKeyWord,
-};
+export { getLabels, getMetadata, getWorkMetadata, getWorksBy, getWorksByKeyWord };

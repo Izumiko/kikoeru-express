@@ -3,12 +3,12 @@ import { expect } from 'vitest';
 import { createSocketServer, resolveScannerScriptPaths } from '../src/modules/socket/server.js';
 
 describe('createSocketServer', () => {
-  const createServerImpl = calls =>
+  const createServerImpl = (calls) =>
     class FakeServer {
       constructor(server) {
         calls.constructorArgs.push(server);
         this.engine = {
-          use: middleware => calls.engineMiddleware.push(middleware),
+          use: (middleware) => calls.engineMiddleware.push(middleware),
         };
       }
 

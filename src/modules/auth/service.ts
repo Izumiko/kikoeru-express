@@ -37,7 +37,9 @@ const signToken = (user: AuthUser): string => {
 };
 
 const hashLegacyPassword = (password: string): string =>
-  createHash('md5').update(password + config.md5secret).digest('hex');
+  createHash('md5')
+    .update(password + config.md5secret)
+    .digest('hex');
 
 const hashPassword = (password: string): string => bcrypt.hashSync(password, bcryptRounds);
 

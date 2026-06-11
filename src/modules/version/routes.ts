@@ -61,44 +61,42 @@ router.get('/', (req, res) => {
   const requestLatestRelease = axios.get<GitHubRelease[]>(urlLatestRelease);
 
   Promise.all([requestLatestStable, requestLatestRelease])
-    .then(
-      ([responseStable, responseLatest]) => {
-        if (
-          responseStable.data &&
-          responseLatest.data &&
-          responseStable.data.tag_name &&
-          responseLatest.data[0].tag_name
-        ) {
-          const current = pjson.version;
-          const latest_stable = responseStable.data.tag_name;
-          const latest_release = responseLatest.data[0].tag_name;
-          const newVerAvailable = () => {
-            if (config.checkBetaUpdate) {
-              return compareVersions.compare(latest_release, current, '>');
-            }
-            return compareVersions.compare(latest_stable, current, '>');
-          };
+    .then(([responseStable, responseLatest]) => {
+      if (
+        responseStable.data &&
+        responseLatest.data &&
+        responseStable.data.tag_name &&
+        responseLatest.data[0].tag_name
+      ) {
+        const current = pjson.version;
+        const latest_stable = responseStable.data.tag_name;
+        const latest_release = responseLatest.data[0].tag_name;
+        const newVerAvailable = () => {
+          if (config.checkBetaUpdate) {
+            return compareVersions.compare(latest_release, current, '>');
+          }
+          return compareVersions.compare(latest_stable, current, '>');
+        };
 
-          lastGitHubResponse = {
-            latest_stable: latest_stable,
-            latest_release: latest_release,
-            update_available: newVerAvailable(),
-          };
+        lastGitHubResponse = {
+          latest_stable: latest_stable,
+          latest_release: latest_release,
+          update_available: newVerAvailable(),
+        };
 
-          res.send({
-            current: current,
-            latest_stable: latest_stable,
-            latest_release: latest_release,
-            update_available: newVerAvailable(),
-            notifyUser: config.checkUpdate,
-            lockFileExists: updateLock.isLockFilePresent,
-            lockReason: updateLock.isLockFilePresent ? lockReason : null,
-          });
-        } else {
-          res.send(throttledResponse);
-        }
+        res.send({
+          current: current,
+          latest_stable: latest_stable,
+          latest_release: latest_release,
+          update_available: newVerAvailable(),
+          notifyUser: config.checkUpdate,
+          lockFileExists: updateLock.isLockFilePresent,
+          lockReason: updateLock.isLockFilePresent ? lockReason : null,
+        });
+      } else {
+        res.send(throttledResponse);
       }
-    )
+    })
     .catch(function () {
       res.send({ throttledResponse });
     });

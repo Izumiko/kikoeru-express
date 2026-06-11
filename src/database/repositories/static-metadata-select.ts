@@ -34,8 +34,4 @@ const workWithUserReviewFields = {
   ...userReviewFields,
 };
 
-export {
-  staticMetadataFields,
-  userReviewFields,
-  workWithUserReviewFields,
-};
+export { staticMetadataFields, userReviewFields, workWithUserReviewFields };

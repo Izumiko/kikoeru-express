@@ -23,16 +23,16 @@ describe('createFolderCollector', () => {
     };
   });
 
-  const createCollector = foldersByRoot =>
+  const createCollector = (foldersByRoot) =>
     createFolderCollector({
       rootFolders,
       getFolderList: (rootFolder, relativePath, depth, addMainLog) => {
         calls.folderRequests.push({ rootFolder, relativePath, depth, addMainLog });
         return toAsyncIterable(foldersByRoot[rootFolder.name] || []);
       },
-      addMainLog: log => calls.mainLogs.push(log),
+      addMainLog: (log) => calls.mainLogs.push(log),
       consoleLogger: {
-        log: message => calls.consoleLogs.push(message),
+        log: (message) => calls.consoleLogs.push(message),
       },
     });
 
@@ -44,9 +44,9 @@ describe('createFolderCollector', () => {
 
     const folders = await collectFolders();
 
-    expect(folders.map(folder => folder.id)).to.deep.equal([123, 456]);
-    expect(calls.folderRequests.map(call => call.rootFolder.name)).to.deep.equal(['RootA', 'RootB']);
-    expect(calls.folderRequests.map(call => [call.relativePath, call.depth])).to.deep.equal([
+    expect(folders.map((folder) => folder.id)).to.deep.equal([123, 456]);
+    expect(calls.folderRequests.map((call) => call.rootFolder.name)).to.deep.equal(['RootA', 'RootB']);
+    expect(calls.folderRequests.map((call) => [call.relativePath, call.depth])).to.deep.equal([
       ['', 0],
       ['', 0],
     ]);
@@ -65,7 +65,7 @@ describe('createFolderCollector', () => {
       { id: 456, rootFolderName: 'RootA', relativePath: 'RJ000456' },
     ]);
 
-    expect(result.uniqueFolderList.map(folder => folder.relativePath)).to.deep.equal(['RJ000123-new', 'RJ000456']);
+    expect(result.uniqueFolderList.map((folder) => folder.relativePath)).to.deep.equal(['RJ000123-new', 'RJ000456']);
     expect(result.duplicateNum).to.equal(1);
     expect(calls.consoleLogs).to.deep.equal([
       ' ! 发现 1 个重复的音声文件夹.',
@@ -101,7 +101,7 @@ describe('createFolderCollector', () => {
 
     const result = await collectUniqueFolders();
 
-    expect(result.uniqueFolderList.map(folder => folder.relativePath)).to.deep.equal(['RJ000123-new']);
+    expect(result.uniqueFolderList.map((folder) => folder.relativePath)).to.deep.equal(['RJ000123-new']);
     expect(result.duplicateNum).to.equal(1);
   });
 });

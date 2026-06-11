@@ -7,7 +7,7 @@ describe('ScanSession', () => {
 
   beforeEach(() => {
     events = [];
-    session = new ScanSession(event => events.push(JSON.parse(JSON.stringify(event))));
+    session = new ScanSession((event) => events.push(JSON.parse(JSON.stringify(event))));
   });
 
   it('returns the legacy initial state payload shape', () => {

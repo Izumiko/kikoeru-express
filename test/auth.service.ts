@@ -1,4 +1,3 @@
-
 import { expect } from 'vitest';
 import jwt from 'jsonwebtoken';
 import authService from '../src/modules/auth/service.js';

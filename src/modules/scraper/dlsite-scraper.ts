@@ -57,7 +57,7 @@ const createDlsiteScraper = ({
       // HVDB 只有一个声优时可能是 N/A，保留旧行为直接使用。
       work.vas = metadata.vas;
     } else {
-      metadata.vas.forEach(va => {
+      metadata.vas.forEach((va) => {
         // HVDB 有时会同时返回英文别名；旧逻辑会过滤掉英文声优名。
         if (va.name && !hasLetter(va.name)) {
           work.vas.push(va as WorkVoiceActor);
@@ -156,9 +156,12 @@ const createDlsiteScraper = ({
     }
   };
 
-  const scrapeWorkMetadataFromDLsite = (id: number, language: string): Promise<StaticWorkMetadata & DynamicWorkMetadata> =>
-    Promise.all([scrapeStaticWorkMetadataFromDLsite(id, language), scrapeDynamicWorkMetadataFromDLsite(id)]).then(res =>
-      Object.assign({}, res[0], res[1])
+  const scrapeWorkMetadataFromDLsite = (
+    id: number,
+    language: string
+  ): Promise<StaticWorkMetadata & DynamicWorkMetadata> =>
+    Promise.all([scrapeStaticWorkMetadataFromDLsite(id, language), scrapeDynamicWorkMetadataFromDLsite(id)]).then(
+      (res) => Object.assign({}, res[0], res[1])
     );
 
   return {

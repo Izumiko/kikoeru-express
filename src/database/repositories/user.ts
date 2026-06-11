@@ -18,7 +18,7 @@ type UserIdentity = {
  * @param {Object} user User object.
  */
 const createUser = (user: UserCredentials) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (existing[0]) {
       throw new Error(`用户 ${user.name} 已存在.`);
@@ -33,7 +33,7 @@ const createUser = (user: UserCredentials) =>
  * @param {String} newPassword new password
  */
 const updateUserPassword = (user: UserIdentity, newPassword: string) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (!existing[0]) {
       throw new Error('用户名或密码错误.');
@@ -47,7 +47,7 @@ const updateUserPassword = (user: UserIdentity, newPassword: string) =>
  * @param {Object} user User object.
  */
 const resetUserPassword = (user: UserIdentity) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (!existing[0]) {
       throw new Error('用户名错误.');
@@ -61,7 +61,14 @@ const resetUserPassword = (user: UserIdentity) =>
  * @param {Object[]} usersToDelete User objects.
  */
 const deleteUser = (usersToDelete: UserIdentity[]) =>
-  db.transaction(tx => tx.delete(users).where(inArray(users.name, usersToDelete.map(user => user.name))));
+  db.transaction((tx) =>
+    tx.delete(users).where(
+      inArray(
+        users.name,
+        usersToDelete.map((user) => user.name)
+      )
+    )
+  );
 
 /**
  * 按用户名查找用户
@@ -77,15 +84,5 @@ const getUserByName = async (name: string) => {
  */
 const getUsers = () => db.select({ name: users.name, group: users.group }).from(users);
 
-export {
-  createUser,
-  deleteUser,
-  getUserByName,
-  getUsers,
-  resetUserPassword,
-  updateUserPassword,
-};
-export type {
-  UserCredentials,
-  UserIdentity,
-};
+export { createUser, deleteUser, getUserByName, getUsers, resetUserPassword, updateUserPassword };
+export type { UserCredentials, UserIdentity };

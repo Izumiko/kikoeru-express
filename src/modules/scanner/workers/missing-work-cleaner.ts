@@ -20,8 +20,7 @@ type MissingWorkCleanerOptions = {
   consoleLogger?: Pick<Console, 'error'>;
 };
 
-const isNodeFsError = (err: unknown): err is NodeJS.ErrnoException =>
-  err instanceof Error && 'code' in err;
+const isNodeFsError = (err: unknown): err is NodeJS.ErrnoException => err instanceof Error && 'code' in err;
 
 const createMissingWorkCleaner = ({
   listWorkStorageLocations,
@@ -33,7 +32,7 @@ const createMissingWorkCleaner = ({
   consoleLogger = console,
 }: MissingWorkCleanerOptions) => {
   const findRootFolder = (work: WorkStorageLocation): RootFolderConfig | undefined =>
-    rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
+    rootFolders.find((rootFolder) => rootFolder.name === work.root_folder);
 
   const isWorkFolderPresent = (work: WorkStorageLocation): boolean => {
     const rootFolder = findRootFolder(work);
@@ -49,7 +48,7 @@ const createMissingWorkCleaner = ({
   };
 
   const removeMissingWork = (work: WorkStorageLocation): Promise<unknown> =>
-    removeWork(work.id).then(result => {
+    removeWork(work.id).then((result) => {
       const rjcode = formatRjCode(work.id);
       return deleteCoverImageFromDisk(rjcode)
         .catch((err: unknown) => {
@@ -63,7 +62,7 @@ const createMissingWorkCleaner = ({
     });
 
   const cleanupWorks = (works: WorkStorageLocation[]): Promise<unknown[]> =>
-    Promise.all(works.map(work => (isWorkFolderPresent(work) ? Promise.resolve() : removeMissingWork(work))));
+    Promise.all(works.map((work) => (isWorkFolderPresent(work) ? Promise.resolve() : removeMissingWork(work))));
 
   const performCleanup = async (): Promise<void> => {
     const works = await listWorkStorageLocations();

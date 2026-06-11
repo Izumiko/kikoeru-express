@@ -18,11 +18,11 @@ describe('scanner update CLI', () => {
 
     await runUpdateCli({
       argv: ['--includeVA'],
-      performUpdateFn: options => {
+      performUpdateFn: (options) => {
         calls.updates.push(options);
         return Promise.resolve();
       },
-      exit: code => calls.exits.push(code),
+      exit: (code) => calls.exits.push(code),
     });
 
     expect(calls).to.deep.equal({

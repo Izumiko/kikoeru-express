@@ -16,28 +16,28 @@ describe('createMissingWorkCleaner', () => {
     };
   });
 
-  const createCleaner = options =>
+  const createCleaner = (options) =>
     createMissingWorkCleaner({
       listWorkStorageLocations: () => Promise.resolve(options.works || []),
       rootFolders: [{ name: 'VoiceWork', path: '/library' }],
-      removeWork: id => {
+      removeWork: (id) => {
         calls.removed.push({ id });
         return Promise.resolve(`removed-${id}`);
       },
-      deleteCoverImageFromDisk: rjcode => {
+      deleteCoverImageFromDisk: (rjcode) => {
         calls.deletedCovers.push(rjcode);
         return options.deleteCoverImageFromDisk
           ? options.deleteCoverImageFromDisk(rjcode)
           : Promise.resolve(`deleted-${rjcode}`);
       },
-      addMainLog: log => calls.mainLogs.push(log),
+      addMainLog: (log) => calls.mainLogs.push(log),
       fileSystem: {
-        existsSync: filePath => options.existingPaths.includes(filePath),
+        existsSync: (filePath) => options.existingPaths.includes(filePath),
       },
       consoleLogger: {
-        error: message => calls.consoleErrors.push(message),
+        error: (message) => calls.consoleErrors.push(message),
       },
-  });
+    });
 
   it('keeps works whose local folder still exists', async () => {
     const { cleanupWorks } = createCleaner({ existingPaths: [existingWorkPath] });

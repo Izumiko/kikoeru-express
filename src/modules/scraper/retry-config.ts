@@ -21,11 +21,11 @@ type RetryAppConfig = Pick<AppConfig, 'dlsiteTimeout' | 'hvdbTimeout' | 'retry' 
 
 const getDefaultTimeout = (url: string, config: Partial<RetryAppConfig>): number => {
   if (url.indexOf('dlsite') !== -1) {
-    return config.dlsiteTimeout || (config.retry || 5);
+    return config.dlsiteTimeout || config.retry || 5;
   }
 
   if (url.indexOf('hvdb') !== -1) {
-    return config.hvdbTimeout || (config.retry || 5);
+    return config.hvdbTimeout || config.retry || 5;
   }
 
   return 10000;
@@ -62,8 +62,4 @@ const applyRetryConfig = (
   return requestConfig;
 };
 
-export {
-  applyRetryConfig,
-  buildRetryConfig,
-  getDefaultTimeout,
-};
+export { applyRetryConfig, buildRetryConfig, getDefaultTimeout };

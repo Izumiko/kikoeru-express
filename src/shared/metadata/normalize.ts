@@ -19,7 +19,7 @@ type NormalizeOptions = {
 };
 
 const normalize = <T extends StaticMetadataRecord>(works: T[], options: NormalizeOptions = {}): T[] => {
-  works.map(record => {
+  works.map((record) => {
     record.nsfw = Boolean(record.nsfw);
     record.circle = JSON.parse(record.circleObj as string);
     record.rate_count_detail = JSON.parse(record.rate_count_detail as string);

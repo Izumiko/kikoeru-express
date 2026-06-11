@@ -74,7 +74,7 @@ class ScanSession {
   }
 
   removeTask(rjcode: string | number): void {
-    const index = this.tasks.findIndex(task => task.rjcode === rjcode);
+    const index = this.tasks.findIndex((task) => task.rjcode === rjcode);
     const task = this.tasks[index];
     this.tasks.splice(index, 1);
     this.emit(SOCKET_EVENTS.SCAN_TASKS, {
@@ -90,7 +90,7 @@ class ScanSession {
   }
 
   addLogForTask(rjcode: string | number, log: ScannerLog): void {
-    this.tasks.find(task => task.rjcode === rjcode)?.logs.push(log);
+    this.tasks.find((task) => task.rjcode === rjcode)?.logs.push(log);
     this.emit(SOCKET_EVENTS.SCAN_TASKS, {
       tasks: this.tasks,
     });

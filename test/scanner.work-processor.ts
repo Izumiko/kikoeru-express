@@ -25,7 +25,7 @@ describe('createWorkProcessor', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  const createProcessor = options =>
+  const createProcessor = (options) =>
     createWorkProcessor({
       workExists: () => Promise.resolve(Boolean(options.exists)),
       coverFolderDir: tempDir,
@@ -38,15 +38,15 @@ describe('createWorkProcessor', () => {
         calls.covers.push(args);
         return Promise.resolve(options.coverResult || 'added');
       },
-      addTask: rjcode => calls.tasks.push(rjcode),
+      addTask: (rjcode) => calls.tasks.push(rjcode),
       addLogForTask: (rjcode, log) => calls.taskLogs.push({ rjcode, log }),
       consoleLogger: {
-        log: message => calls.logs.push(message),
+        log: (message) => calls.logs.push(message),
       },
     });
 
   it('skips existing works when all cover files exist', async () => {
-    ['main', 'sam', '240x240'].forEach(type => {
+    ['main', 'sam', '240x240'].forEach((type) => {
       fs.writeFileSync(path.join(tempDir, `RJ000123_img_${type}.jpg`), type);
     });
     const { processFolder } = createProcessor({ exists: true });

@@ -7,7 +7,7 @@ import { formatRjCode, getFolderList, getTrackList, toTree } from '../src/module
 
 const makeTempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kikoeru-media-test-'));
 
-const writeFile = filePath => {
+const writeFile = (filePath) => {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, 'test');
 };

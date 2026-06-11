@@ -9,7 +9,11 @@ import { createRetryGet } from './retry-client.js';
 import type { RetryHttpGet } from './retry-client.js';
 const Config = config;
 
-const applyRetryConfigTyped = applyRetryConfig as (url: string, requestConfig: RetryRequestConfig, appConfig: unknown) => RetryRequestConfig;
+const applyRetryConfigTyped = applyRetryConfig as (
+  url: string,
+  requestConfig: RetryRequestConfig,
+  appConfig: unknown
+) => RetryRequestConfig;
 
 type RetryAxiosInstance = AxiosInstance & {
   retryGet: (url: string, requestConfig: RetryRequestConfig) => Promise<AxiosResponse>;

@@ -4,13 +4,7 @@ import { check, validationResult } from 'express-validator'; // 后端校验
 import { expressjwt as expressJwt } from 'express-jwt'; // 把 JWT 的 payload 部分赋值于 req.auth
 
 import db from '../../database.js';
-import {
-  getRouteJwtOptions,
-  hashPassword,
-  shouldUpgradePasswordHash,
-  signToken,
-  verifyPassword,
-} from './service.js';
+import { getRouteJwtOptions, hashPassword, shouldUpgradePasswordHash, signToken, verifyPassword } from './service.js';
 
 import { config } from '../../../config.js';
 import type { AuthUser } from './service.js';
@@ -39,19 +33,19 @@ router.post(
     const password = req.body.password;
 
     db.getUserByName(name)
-      .then(user => {
+      .then((user) => {
         if (!user || !verifyPassword(password, user.password)) {
           res.set('WWW-Authenticate', 'Bearer realm="Authorization Required"');
           res.status(401).send({ error: '用户名或密码错误.' });
         } else {
           const token = signToken(user);
           if (shouldUpgradePasswordHash(user.password)) {
-            db.updateUserPassword(user, hashPassword(password)).catch(err => console.error(err));
+            db.updateUserPassword(user, hashPassword(password)).catch((err) => console.error(err));
           }
           res.send({ token });
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         res.status(500).send({ error: '服务器错误' });
         // next(err);
@@ -64,7 +58,7 @@ if (config.auth) {
 }
 
 // 获取用户信息
- 
+
 router.get('/me', (req: AuthenticatedRequest, res: Response, _next) => {
   // 同时告诉客户端，服务器是否启用用户验证
   const auth = config.auth;

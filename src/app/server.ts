@@ -103,8 +103,8 @@ const logServerAddresses = ({
         internal: false,
       },
     ],
-  ].forEach(ifaces => {
-    (ifaces || []).forEach(iface => {
+  ].forEach((ifaces) => {
+    (ifaces || []).forEach((iface) => {
       if (iface.family === 'IPv4' && !iface.internal) {
         console.log(' - %s://%s:%s', protocol, iface.address, address.port);
       }
@@ -132,7 +132,7 @@ const startServer = ({
   // Initialize database if not exists
   // Init or migrate database and config
   // Note: non-blocking
-  initAppFn().catch(err => console.error(err));
+  initAppFn().catch((err) => console.error(err));
 
   const { server, httpsServer, httpsSuccess } = createServers({ app, appConfig });
 
@@ -187,9 +187,4 @@ const startServer = ({
   };
 };
 
-export {
-  configureUnhandledRejectionCrash,
-  createServers,
-  logServerAddresses,
-  startServer,
-};
+export { configureUnhandledRejectionCrash, createServers, logServerAddresses, startServer };

@@ -43,7 +43,7 @@ const createMetadataUpdater = ({
     addTask(rjcode);
 
     return scrapeProcessor()
-      .then(metadata => {
+      .then((metadata) => {
         emitTaskLog(` -> [RJ${rjcode}] 元数据抓取成功，准备更新元数据...`, rjcode);
         metadata.id = id;
         return updateWorkMetadata(metadata, normalizedOptions).then(() => {
@@ -51,7 +51,7 @@ const createMetadataUpdater = ({
           return 'updated' as const;
         });
       })
-      .catch(err => {
+      .catch((err) => {
         emitTaskLog(`  ! [RJ${rjcode}] 在抓取元数据过程中出错: ${err}`, rjcode, 'error');
         return 'failed' as const;
       });
@@ -60,8 +60,5 @@ const createMetadataUpdater = ({
   return { updateMetadata };
 };
 
-export {
-  createMetadataUpdater,
-  shouldScrapeStaticMetadata,
-};
+export { createMetadataUpdater, shouldScrapeStaticMetadata };
 export type { MetadataUpdateOptions };

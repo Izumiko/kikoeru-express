@@ -28,13 +28,13 @@ describe('socket auth middleware', () => {
     const nextCalls = [];
     const middleware = createSocketAuthMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: {
         verify: () => ({ name: 'admin', group: 'administrator' }),
       },
     });
 
-    middleware(socket, err => nextCalls.push(err));
+    middleware(socket, (err) => nextCalls.push(err));
 
     expect(nextCalls).to.deep.equal([undefined]);
     expect(socket.request.user).to.deep.equal({
@@ -47,16 +47,16 @@ describe('socket auth middleware', () => {
     const missingTokenErrors = [];
     createSocketAuthMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: { verify: () => ({ name: 'admin' }) },
-    })({ handshake: {}, request: {} }, err => missingTokenErrors.push(err.message));
+    })({ handshake: {}, request: {} }, (err) => missingTokenErrors.push(err.message));
 
     const nonAdminErrors = [];
     createSocketAuthMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: { verify: () => ({ name: 'user' }) },
-    })({ handshake: { auth: { token: 'token' } }, request: {} }, err => nonAdminErrors.push(err.message));
+    })({ handshake: { auth: { token: 'token' } }, request: {} }, (err) => nonAdminErrors.push(err.message));
 
     expect(missingTokenErrors).to.deep.equal(['Authentication error']);
     expect(nonAdminErrors).to.deep.equal(['只有 admin 账号能登录管理后台.']);
@@ -72,13 +72,13 @@ describe('socket auth middleware', () => {
     const nextCalls = [];
     const middleware = createSocketJwtEngineMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: {
         verify: () => ({ name: 'admin', group: 'administrator' }),
       },
     });
 
-    middleware(request, {}, err => nextCalls.push(err));
+    middleware(request, {}, (err) => nextCalls.push(err));
 
     expect(nextCalls).to.deep.equal([undefined]);
     expect(request.user).to.deep.equal({
@@ -91,24 +91,24 @@ describe('socket auth middleware', () => {
     const engineCalls = [];
     createSocketJwtEngineMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: {
         verify: () => {
           throw new Error('should not verify non-handshake requests');
         },
       },
-    })({ _query: { sid: 'existing-session' }, headers: {} }, {}, err => engineCalls.push(err));
+    })({ _query: { sid: 'existing-session' }, headers: {} }, {}, (err) => engineCalls.push(err));
 
     const socketCalls = [];
     createSocketAuthMiddleware({
       jwtSecret: 'secret',
-      toSocketAdminUser: payload => payload,
+      toSocketAdminUser: (payload) => payload,
       jwtImpl: {
         verify: () => {
           throw new Error('should not verify already-authenticated sockets');
         },
       },
-    })({ request: { user: { name: 'admin' } }, handshake: {} }, err => socketCalls.push(err));
+    })({ request: { user: { name: 'admin' } }, handshake: {} }, (err) => socketCalls.push(err));
 
     expect(engineCalls).to.deep.equal([undefined]);
     expect(socketCalls).to.deep.equal([undefined]);

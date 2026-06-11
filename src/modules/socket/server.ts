@@ -83,15 +83,5 @@ const initSocket = (server: unknown) =>
     server,
   });
 
-export {
-  createSocketServer,
-  getDefaultCliRootDir,
-  initSocket,
-  resolveScannerScriptPaths,
-};
-export type {
-  SocketServerConfig,
-  SocketServerConstructor,
-  SocketServerLike,
-  SocketServerOptions,
-};
+export { createSocketServer, getDefaultCliRootDir, initSocket, resolveScannerScriptPaths };
+export type { SocketServerConfig, SocketServerConstructor, SocketServerLike, SocketServerOptions };

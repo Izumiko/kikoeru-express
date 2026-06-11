@@ -13,7 +13,11 @@ type FatalLoggerOptions = {
 
 const getErrorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
-const createFatalLogger = ({ addMainLog, consoleLogger = console, exit = code => process.exit(code) }: FatalLoggerOptions) => {
+const createFatalLogger = ({
+  addMainLog,
+  consoleLogger = console,
+  exit = (code) => process.exit(code),
+}: FatalLoggerOptions) => {
   const fatal = (message: string, err: unknown): FatalResult => {
     const errorMessage = getErrorMessage(err);
     consoleLogger.error(` ! ${message}: ${errorMessage}`);
@@ -57,7 +61,7 @@ const createScanRunner = ({
   finishScan,
   addMainLog,
   consoleLogger = console,
-  exit = code => process.exit(code),
+  exit = (code) => process.exit(code),
 }: ScanRunnerOptions) => {
   const { fatal } = createFatalLogger({ addMainLog, consoleLogger, exit });
 
@@ -105,7 +109,4 @@ const createScanRunner = ({
   };
 };
 
-export {
-  createFatalLogger,
-  createScanRunner,
-};
+export { createFatalLogger, createScanRunner };

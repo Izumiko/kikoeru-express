@@ -51,16 +51,14 @@ const createScannerSocketGateway = ({
   scannerScriptPath,
   updaterScriptPath,
   config,
-  scannerController =
-    createScannerProcessController({
-      fork,
-      scannerScriptPath,
-      updaterScriptPath,
-      emit: (event, payload) => io.emit(event, payload),
-    }),
+  scannerController = createScannerProcessController({
+    fork,
+    scannerScriptPath,
+    updaterScriptPath,
+    emit: (event, payload) => io.emit(event, payload),
+  }),
   consoleLogger = console,
 }: ScannerSocketGatewayOptions) => {
-
   const bindSocket = (socket: ScannerGatewaySocket) => {
     socket.emit(SOCKET_EVENTS.SUCCESS, {
       message: '成功登录管理后台.',
@@ -86,7 +84,7 @@ const createScannerSocketGateway = ({
     });
 
     // 发生错误时触发
-    socket.on('error', err => {
+    socket.on('error', (err) => {
       consoleLogger.error(err);
     });
   };
@@ -102,9 +100,7 @@ const createScannerSocketGateway = ({
   };
 };
 
-export {
-  createScannerSocketGateway,
-};
+export { createScannerSocketGateway };
 export type {
   ScannerController,
   ScannerGatewayConfig,

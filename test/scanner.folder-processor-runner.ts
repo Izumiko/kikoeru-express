@@ -24,11 +24,11 @@ describe('createFolderProcessorRunner', () => {
     createFolderProcessorRunner({
       tasks,
       addLogForTask: (rjcode, log) => calls.taskLogs.push({ rjcode, log }),
-      removeTask: rjcode => calls.removedTasks.push(rjcode),
+      removeTask: (rjcode) => calls.removedTasks.push(rjcode),
       addResult: (rjcode, result, count) => calls.results.push({ rjcode, result, count }),
       consoleLogger: {
-        log: message => calls.consoleLogs.push(message),
-        error: message => calls.consoleErrors.push(message),
+        log: (message) => calls.consoleLogs.push(message),
+        error: (message) => calls.consoleErrors.push(message),
       },
     });
 
@@ -101,7 +101,7 @@ describe('createFolderProcessorRunner', () => {
 
     await processFolders(
       [{ id: 123 }, { id: 456 }],
-      folder => {
+      (folder) => {
         processed.push(folder.id);
         return Promise.resolve(folder.id === 123 ? 'added' : 'failed');
       },

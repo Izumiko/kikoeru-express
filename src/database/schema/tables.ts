@@ -26,7 +26,7 @@ const works = sqliteTable(
     rateCountDetail: text('rate_count_detail'),
     rank: text('rank'),
   },
-  table => ({
+  (table) => ({
     workIndex: index('t_work_index').on(
       table.circleId,
       table.release,
@@ -54,7 +54,7 @@ const tagWorks = sqliteTable(
     tagId: integer('tag_id').references(() => tags.id),
     workId: integer('work_id').references(() => works.id),
   },
-  table => ({
+  (table) => ({
     pk: primaryKey({ columns: [table.tagId, table.workId] }),
   })
 );
@@ -65,7 +65,7 @@ const voiceActorWorks = sqliteTable(
     vaId: text('va_id').references(() => voiceActors.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     workId: integer('work_id').references(() => works.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
   },
-  table => ({
+  (table) => ({
     pk: primaryKey({ columns: [table.vaId, table.workId] }),
   })
 );
@@ -91,7 +91,7 @@ const reviews = sqliteTable(
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
     progress: text('progress'),
   },
-  table => ({
+  (table) => ({
     pk: primaryKey({ columns: [table.userName, table.workId] }),
   })
 );
@@ -146,17 +146,7 @@ const staticMetadata = sqliteView('staticMetadata', {
   GROUP BY baseQueryWithVA.id
 `);
 
-export {
-  circles,
-  reviews,
-  staticMetadata,
-  tagWorks,
-  tags,
-  users,
-  voiceActors,
-  voiceActorWorks,
-  works,
-};
+export { circles, reviews, staticMetadata, tagWorks, tags, users, voiceActors, voiceActorWorks, works };
 
 export default {
   circles,

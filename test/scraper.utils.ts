@@ -13,5 +13,4 @@ describe('scraper utils', () => {
     expect(hasLetter('声优乙')).to.equal(false);
     expect(hasLetter('かな')).to.equal(false);
   });
-
 });

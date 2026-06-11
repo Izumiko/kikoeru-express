@@ -1,4 +1,4 @@
-import type { ScanCounters} from '../support/counters.js';
+import type { ScanCounters } from '../support/counters.js';
 import { createUpdateFinishedMessage } from '../support/counters.js';
 import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 

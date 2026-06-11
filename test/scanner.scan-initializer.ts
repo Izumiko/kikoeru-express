@@ -15,19 +15,19 @@ describe('createScanInitializer', () => {
     };
   });
 
-  const createInitializer = options =>
+  const createInitializer = (options) =>
     createScanInitializer({
       coverFolderDir: '/covers',
       createSchema: () => {
         calls.schemas += 1;
         return options.schemaError ? Promise.reject(options.schemaError) : Promise.resolve();
       },
-      createUser: user => {
+      createUser: (user) => {
         calls.users.push(user);
         return options.userError ? Promise.reject(options.userError) : Promise.resolve();
       },
-      hashPassword: password => `hashed-${password}`,
-      addMainLog: log => calls.mainLogs.push(log),
+      hashPassword: (password) => `hashed-${password}`,
+      addMainLog: (log) => calls.mainLogs.push(log),
       fileSystem: {
         existsSync: () => options.coverExists,
         mkdirSync: (folder, mkdirOptions) => {
@@ -38,9 +38,9 @@ describe('createScanInitializer', () => {
         },
       },
       consoleLogger: {
-        error: message => calls.consoleErrors.push(message),
+        error: (message) => calls.consoleErrors.push(message),
       },
-      exit: code => calls.exits.push(code),
+      exit: (code) => calls.exits.push(code),
     });
 
   it('does not create the cover folder when it already exists', () => {

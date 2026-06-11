@@ -22,7 +22,7 @@ const createFakeProcess = () => {
 
   return {
     sent,
-    send: message => sent.push(message),
+    send: (message) => sent.push(message),
     on: (event, handler) => {
       handlers[event] = handler;
     },
@@ -62,7 +62,7 @@ describe('createScannerSocketGateway', () => {
       updaterScriptPath: 'updater.js',
       config: { auth: true },
       consoleLogger: {
-        error: err => calls.errors.push(err),
+        error: (err) => calls.errors.push(err),
       },
     });
 

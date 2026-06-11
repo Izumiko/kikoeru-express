@@ -117,7 +117,7 @@ describe('dlsite metadata helpers', () => {
         id: 123,
         url: buildDlsiteWorkUrl(123),
         languageConfig: getDlsiteLanguageConfig('zh-cn'),
-        nameToUUID: name => `uuid-${name}`,
+        nameToUUID: (name) => `uuid-${name}`,
       })
     ).to.deep.equal({
       id: 123,
@@ -159,7 +159,7 @@ describe('dlsite metadata helpers', () => {
       id: 123,
       url,
       languageConfig: getDlsiteLanguageConfig('zh-cn'),
-      nameToUUID: name => name,
+      nameToUUID: (name) => name,
     });
 
     expect(metadata.title).to.equal('备用标题');

@@ -3,15 +3,7 @@ import type { SQL } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
 import { db } from '../client.js';
-import {
-  circles,
-  reviews,
-  tagWorks,
-  tags,
-  voiceActorWorks,
-  voiceActors,
-  works,
-} from '../schema/tables.js';
+import { circles, reviews, tagWorks, tags, voiceActorWorks, voiceActors, works } from '../schema/tables.js';
 
 type WorkRelationship = {
   id: number | string;
@@ -81,7 +73,11 @@ const toDynamicWorkRow = (work: WorkMetadata) => ({
 
 type TransactionType = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-const insertWorkRelationships = async (tx: TransactionType, work: WorkMetadata, options: WorkRelationshipOptions = {}) => {
+const insertWorkRelationships = async (
+  tx: TransactionType,
+  work: WorkMetadata,
+  options: WorkRelationshipOptions = {}
+) => {
   if (options.includeTags) {
     if (options.purgeTags) {
       await tx.delete(tagWorks).where(eq(tagWorks.workId, work.id));
@@ -110,7 +106,7 @@ const insertWorkRelationships = async (tx: TransactionType, work: WorkMetadata, 
  * @param {Object} work Work object.
  */
 const insertWorkMetadata = (work: WorkMetadata) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     await tx.insert(circles).values({ id: work.circle.id, name: work.circle.name }).onConflictDoNothing();
     await tx.insert(works).values(toWorkRow(work));
     await insertWorkRelationships(tx, work, {
@@ -124,7 +120,7 @@ const insertWorkMetadata = (work: WorkMetadata) =>
  * @param {Object} work Work object.
  */
 const updateWorkMetadata = (work: WorkMetadata, options: UpdateWorkMetadataOptions = {}) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     await tx.update(works).set(toDynamicWorkRow(work)).where(eq(works.id, work.id));
 
     await insertWorkRelationships(tx, work, {
@@ -148,16 +144,14 @@ const updateWorkMetadata = (work: WorkMetadata, options: UpdateWorkMetadataOptio
   });
 
 const countRows = async (tx: TransactionType, table: SQLiteTable, where: SQL | undefined) => {
-  const rows = await tx.select({ count: sql`COUNT(*)` }).from(table).where(where);
+  const rows = await tx
+    .select({ count: sql`COUNT(*)` })
+    .from(table)
+    .where(where);
   return rows[0].count;
 };
 
-const cleanupOrphans = async (
-  tx: TransactionType,
-  circleId: number,
-  tagIds: number[],
-  vaIds: string[]
-) => {
+const cleanupOrphans = async (tx: TransactionType, circleId: number, tagIds: number[], vaIds: string[]) => {
   if ((await countRows(tx, works, eq(works.circleId, circleId))) === 0) {
     await tx.delete(circles).where(eq(circles.id, circleId));
   }
@@ -180,7 +174,7 @@ const cleanupOrphans = async (
  * @param {Integer} id Work id.
  */
 const removeWork = (id: number) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     const [work] = await tx.select({ circleId: works.circleId }).from(works).where(eq(works.id, id)).limit(1);
     if (!work) return;
 
@@ -197,8 +191,8 @@ const removeWork = (id: number) =>
     await cleanupOrphans(
       tx,
       work.circleId,
-      workTags.map(tag => tag.tagId).filter((id): id is number => id !== null),
-      workVas.map(va => va.vaId).filter((id): id is string => id !== null)
+      workTags.map((tag) => tag.tagId).filter((id): id is number => id !== null),
+      workVas.map((va) => va.vaId).filter((id): id is string => id !== null)
     );
   });
 
@@ -286,9 +280,4 @@ export {
   updateWorkMetadata,
   workExists,
 };
-export type {
-  UpdateWorkMetadataOptions,
-  WorkMetadata,
-  WorkRelationship,
-  WorkRelationshipOptions,
-};
+export type { UpdateWorkMetadataOptions, WorkMetadata, WorkRelationship, WorkRelationshipOptions };

@@ -13,7 +13,7 @@ const createCleanupRunner = ({
   performCleanup,
   addMainLog,
   consoleLogger = console,
-  exit = code => process.exit(code),
+  exit = (code) => process.exit(code),
 }: CleanupRunnerOptions) => {
   const runCleanup = async (): Promise<void> => {
     if (skipCleanup) {

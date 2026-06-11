@@ -76,19 +76,25 @@ const updateUserReview = async (
   starOnly = true,
   progressOnly = false
 ) =>
-  db.transaction(async tx => {
+  db.transaction(async (tx) => {
     if (starOnly) {
       await tx
         .update(reviews)
         .set({ rating, updatedAt: sql`CURRENT_TIMESTAMP` })
         .where(reviewKey(username, workid));
-      await tx.insert(reviews).values(reviewValues(username, workid, { rating })).onConflictDoNothing();
+      await tx
+        .insert(reviews)
+        .values(reviewValues(username, workid, { rating }))
+        .onConflictDoNothing();
     } else if (progressOnly) {
       await tx
         .update(reviews)
         .set({ progress, updatedAt: sql`CURRENT_TIMESTAMP` })
         .where(reviewKey(username, workid));
-      await tx.insert(reviews).values(reviewValues(username, workid, { progress })).onConflictDoNothing();
+      await tx
+        .insert(reviews)
+        .values(reviewValues(username, workid, { progress }))
+        .onConflictDoNothing();
     } else {
       await tx
         .update(reviews)
@@ -103,7 +109,7 @@ const updateUserReview = async (
 
 // 删除星标、评语及进度
 const deleteUserReview = (username: string, workid: number | string) =>
-  db.transaction(tx => tx.delete(reviews).where(reviewKey(username, workid)));
+  db.transaction((tx) => tx.delete(reviews).where(reviewKey(username, workid)));
 
 // 读取星标及评语 + 作品元数据
 const getWorksWithReviews = async ({
@@ -137,8 +143,4 @@ const getWorksWithReviews = async ({
   return { works, totalCount };
 };
 
-export {
-  deleteUserReview,
-  getWorksWithReviews,
-  updateUserReview,
-};
+export { deleteUserReview, getWorksWithReviews, updateUserReview };

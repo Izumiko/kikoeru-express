@@ -14,13 +14,13 @@ describe('ScannerLifecycle', () => {
     exitCodes = [];
     logs = [];
     lifecycle = new ScannerLifecycle({
-      send: event => events.push(event),
+      send: (event) => events.push(event),
       destroyDatabase: () => {
         destroyed = true;
       },
-      exit: code => exitCodes.push(code),
+      exit: (code) => exitCodes.push(code),
       consoleLogger: {
-        log: message => logs.push(message),
+        log: (message) => logs.push(message),
       },
     });
   });

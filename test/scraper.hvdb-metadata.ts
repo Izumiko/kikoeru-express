@@ -19,7 +19,7 @@ describe('hvdb metadata helpers', () => {
       parseHvdbWorkMetadataHtml({
         html,
         id: 123,
-        nameToUUID: name => `uuid-${name}`,
+        nameToUUID: (name) => `uuid-${name}`,
       })
     ).to.deep.equal({
       id: 123,
@@ -50,7 +50,7 @@ describe('hvdb metadata helpers', () => {
     const metadata = parseHvdbWorkMetadataHtml({
       html,
       id: 123,
-      nameToUUID: name => name,
+      nameToUUID: (name) => name,
     });
 
     expect(metadata.nsfw).to.equal(false);

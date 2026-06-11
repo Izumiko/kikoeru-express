@@ -21,7 +21,7 @@ const createFolderProcessorRunner = ({
   consoleLogger = console,
 }: FolderProcessorRunnerOptions) => {
   const markTaskResult = (rjcode: string, result: FolderProcessResult): void => {
-    const task = tasks.find(task => task.rjcode === rjcode);
+    const task = tasks.find((task) => task.rjcode === rjcode);
     if (task) task.result = result;
     removeTask(rjcode);
   };
@@ -63,8 +63,8 @@ const createFolderProcessorRunner = ({
     counts: ScanCounters
   ): Promise<void[]> =>
     Promise.all(
-      folders.map(folder =>
-        processor(folder).then(result => {
+      folders.map((folder) =>
+        processor(folder).then((result) => {
           processFolderResult(folder, result, counts);
         })
       )

@@ -61,18 +61,14 @@ const parseUpdateOptions = (argv: string[]): MetadataUpdateOptions =>
 const runUpdateCli = ({
   argv = hideBin(process.argv),
   performUpdateFn = undefined,
-  exit = code => process.exit(code),
+  exit = (code) => process.exit(code),
 }: RunUpdateCliOptions = {}) =>
   (performUpdateFn ?? performUpdate)(parseUpdateOptions(argv))
     .then(() => {
       exit(0);
     })
-    .catch(err => {
+    .catch((err) => {
       throw err;
     });
 
-export {
-  buildUpdateOptions,
-  parseUpdateOptions,
-  runUpdateCli,
-};
+export { buildUpdateOptions, parseUpdateOptions, runUpdateCli };

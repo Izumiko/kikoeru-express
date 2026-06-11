@@ -88,47 +88,47 @@ const verifyAdminToken = ({ token, jwtSecret, toSocketAdminUser, jwtImpl }: Veri
 const createSocketAuthMiddleware =
   ({ jwtSecret, toSocketAdminUser, jwtImpl = jwt }: SocketAuthMiddlewareOptions) =>
   (socket: SocketLike, next: NextCallback): void => {
-  if (socket.request && socket.request.user) {
-    next();
-    return;
-  }
+    if (socket.request && socket.request.user) {
+      next();
+      return;
+    }
 
-  try {
-    const user = verifyAdminToken({
-      token: extractSocketToken(socket),
-      jwtSecret,
-      toSocketAdminUser,
-      jwtImpl,
-    });
-    socket.request = socket.request || {};
-    socket.request.user = user;
-    next();
-  } catch (err: unknown) {
-    next(err instanceof Error ? err : new Error(String(err)));
-  }
-};
+    try {
+      const user = verifyAdminToken({
+        token: extractSocketToken(socket),
+        jwtSecret,
+        toSocketAdminUser,
+        jwtImpl,
+      });
+      socket.request = socket.request || {};
+      socket.request.user = user;
+      next();
+    } catch (err: unknown) {
+      next(err instanceof Error ? err : new Error(String(err)));
+    }
+  };
 
 const createSocketJwtEngineMiddleware =
   ({ jwtSecret, toSocketAdminUser, jwtImpl = jwt }: SocketAuthMiddlewareOptions) =>
   (req: EngineRequestLike, res: unknown, next: NextCallback): void => {
-  const isHandshake = req._query && req._query.sid === undefined;
-  if (!isHandshake) {
-    next();
-    return;
-  }
+    const isHandshake = req._query && req._query.sid === undefined;
+    if (!isHandshake) {
+      next();
+      return;
+    }
 
-  try {
-    req.user = verifyAdminToken({
-      token: extractBearerToken(req.headers && req.headers.authorization),
-      jwtSecret,
-      toSocketAdminUser,
-      jwtImpl,
-    });
-    next();
-  } catch (err: unknown) {
-    next(err instanceof Error ? err : new Error(String(err)));
-  }
-};
+    try {
+      req.user = verifyAdminToken({
+        token: extractBearerToken(req.headers && req.headers.authorization),
+        jwtSecret,
+        toSocketAdminUser,
+        jwtImpl,
+      });
+      next();
+    } catch (err: unknown) {
+      next(err instanceof Error ? err : new Error(String(err)));
+    }
+  };
 
 export {
   createSocketJwtEngineMiddleware,

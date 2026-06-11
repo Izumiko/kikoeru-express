@@ -1,4 +1,3 @@
-
 import { expect } from 'vitest';
 
 import { libsql } from '../src/database/client.js';
@@ -6,12 +5,12 @@ import repositories from '../src/database/repositories.js';
 import { createSchema } from '../src/database/schema.js';
 import { dropDatabase } from './teardown/teardown-0.6.0';
 
-const selectRows = async sql => {
+const selectRows = async (sql) => {
   const result = await libsql.execute(sql);
-  return result.rows.map(row => ({ ...row }));
+  return result.rows.map((row) => ({ ...row }));
 };
 
-const baseWork = values => ({
+const baseWork = (values) => ({
   id: 100,
   rootFolderName: 'VoiceWork',
   dir: 'RJ000100',
@@ -107,11 +106,11 @@ describe('Database repository parity baseline', function () {
     const byKeyword = await repositories.getWorksByKeyWord({ keyword: 'Beta', username: 'listener' });
     const byRj = await repositories.getWorksByKeyWord({ keyword: 'RJ000100', username: 'listener' });
 
-    expect(byCircle.map(work => work.id)).to.deep.equal([100]);
-    expect(byTag.map(work => work.id)).to.deep.equal([100]);
-    expect(byVa.map(work => work.id)).to.deep.equal([101]);
-    expect(byKeyword.map(work => work.id)).to.deep.equal([101]);
-    expect(byRj.map(work => work.id)).to.deep.equal([100]);
+    expect(byCircle.map((work) => work.id)).to.deep.equal([100]);
+    expect(byTag.map((work) => work.id)).to.deep.equal([100]);
+    expect(byVa.map((work) => work.id)).to.deep.equal([101]);
+    expect(byKeyword.map((work) => work.id)).to.deep.equal([101]);
+    expect(byRj.map((work) => work.id)).to.deep.equal([100]);
   });
 
   it('returns labels and metadata in the legacy shapes', async function () {
@@ -144,14 +143,14 @@ describe('Database repository parity baseline', function () {
       filter: 'replay',
     });
 
-    expect(reviewed.works.map(work => work.id)).to.deep.equal([100, 101]);
+    expect(reviewed.works.map((work) => work.id)).to.deep.equal([100, 101]);
     expect(reviewed.totalCount[0].count).to.equal(2);
-    expect(replay.works.map(work => work.id)).to.deep.equal([101]);
+    expect(replay.works.map((work) => work.id)).to.deep.equal([101]);
 
     await repositories.deleteUserReview('listener', 101);
     const afterDelete = await repositories.getWorksWithReviews({ username: 'listener' });
 
-    expect(afterDelete.works.map(work => work.id)).to.deep.equal([100]);
+    expect(afterDelete.works.map((work) => work.id)).to.deep.equal([100]);
     expect(afterDelete.totalCount[0].count).to.equal(1);
   });
 

@@ -30,18 +30,23 @@ type ScannerProcessControllerOptions = {
   emit: (event: SocketEventName, payload?: unknown) => void;
 };
 
-const createScannerProcessController = ({ fork, scannerScriptPath, updaterScriptPath, emit }: ScannerProcessControllerOptions) => {
+const createScannerProcessController = ({
+  fork,
+  scannerScriptPath,
+  updaterScriptPath,
+  emit,
+}: ScannerProcessControllerOptions) => {
   let scanner: ScannerChildProcess | null = null;
 
   const bindScannerEvents = () => {
-    scanner!.on('exit', code => {
+    scanner!.on('exit', (code) => {
       scanner = null;
       if (code) {
         emit(SOCKET_EVENTS.SCAN_ERROR);
       }
     });
 
-    scanner!.on('message', message => {
+    scanner!.on('message', (message) => {
       if (message.event) {
         emit(message.event, message.payload);
       }
@@ -83,11 +88,5 @@ const createScannerProcessController = ({ fork, scannerScriptPath, updaterScript
   };
 };
 
-export {
-  createScannerProcessController,
-};
-export type {
-  ForkScannerProcess,
-  ScannerChildProcess,
-  ScannerProcessControllerOptions,
-};
+export { createScannerProcessController };
+export type { ForkScannerProcess, ScannerChildProcess, ScannerProcessControllerOptions };

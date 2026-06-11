@@ -12,15 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": [
-    "*.ts",
-    "scripts/**/*.ts",
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "build",
-    "node_modules",
-    "dist",
-    "package"
-  ]
+  "include": ["*.ts", "scripts/**/*.ts", "src/**/*.ts"],
+  "exclude": ["build", "node_modules", "dist", "package"]
 }

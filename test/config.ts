@@ -18,7 +18,7 @@ describe('Config store', function () {
     oldIsDocker = process.env.IS_DOCKER;
     delete process.env.FREEZE_CONFIG_FILE;
     delete process.env.IS_DOCKER;
-        tempRoots = [];
+    tempRoots = [];
   });
 
   afterEach(function () {
@@ -40,12 +40,12 @@ describe('Config store', function () {
       process.env.IS_DOCKER = oldIsDocker;
     }
 
-    tempRoots.forEach(root => {
+    tempRoots.forEach((root) => {
       fs.rmSync(root, { recursive: true, force: true });
     });
   });
 
-  const createStore = version => {
+  const createStore = (version) => {
     const projectRoot = createTempProjectRoot();
     tempRoots.push(projectRoot);
     return createConfigStore({ projectRoot, version: version || '0.7.1' });

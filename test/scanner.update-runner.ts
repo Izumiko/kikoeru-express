@@ -17,14 +17,14 @@ describe('createUpdateRunner', () => {
     };
   });
 
-  const createRunner = refreshCounts =>
+  const createRunner = (refreshCounts) =>
     createUpdateRunner({
       listWorkIds: () => {
         const works = Promise.resolve([{ id: 123 }]);
         calls.listedWorkIds.push(works);
         return works;
       },
-      listWorkIdsByVoiceActorIds: voiceActorIds => {
+      listWorkIdsByVoiceActorIds: (voiceActorIds) => {
         const works = Promise.resolve([{ work_id: 456 }]);
         calls.listedVoiceActorIds.push(voiceActorIds);
         return works;
@@ -37,12 +37,12 @@ describe('createUpdateRunner', () => {
         calls.metadataUpdates.push({ id, options });
         return Promise.resolve('updated');
       },
-      updateVoiceActor: id => {
+      updateVoiceActor: (id) => {
         calls.voiceActorUpdates.push(id);
         return Promise.resolve('updated');
       },
       finishUpdate: (message, exitCode) => calls.finishes.push({ message, exitCode }),
-      nameToUUID: name => {
+      nameToUUID: (name) => {
         calls.uuids.push(name);
         return `uuid-${name}`;
       },

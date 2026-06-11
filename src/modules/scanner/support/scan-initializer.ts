@@ -28,7 +28,7 @@ const createScanInitializer = ({
   addMainLog,
   fileSystem = fs,
   consoleLogger = console,
-  exit = code => process.exit(code),
+  exit = (code) => process.exit(code),
 }: ScanInitializerOptions) => {
   const ensureCoverFolder = (): void => {
     if (fileSystem.existsSync(coverFolderDir)) {

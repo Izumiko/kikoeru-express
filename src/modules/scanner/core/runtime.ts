@@ -45,19 +45,21 @@ const sendProcessMessage = (event: unknown): void => {
   }
 };
 
-const scanSession = new ScanSession(event => sendProcessMessage(event));
+const scanSession = new ScanSession((event) => sendProcessMessage(event));
 const scannerLogger = new ScannerLogger(scanSession);
 const scannerLifecycle = new ScannerLifecycle({
-  send: event => sendProcessMessage(event),
+  send: (event) => sendProcessMessage(event),
   destroyDatabase: closeDatabaseConnection,
-  exit: code => process.exit(code),
+  exit: (code) => process.exit(code),
 });
 const tasks = scanSession.tasks;
 
 const addTask = (rjcode: string | number) => scanSession.addTask(rjcode);
 const removeTask = (rjcode: string | number) => scanSession.removeTask(rjcode);
-const addLogForTask = (rjcode: string | number, log: { level: string; message: string }) => scanSession.addLogForTask(rjcode, log);
-const addResult = (rjcode: string | number, result: 'updated' | 'failed', count: number) => scanSession.addResult(rjcode, result, count);
+const addLogForTask = (rjcode: string | number, log: { level: string; message: string }) =>
+  scanSession.addLogForTask(rjcode, log);
+const addResult = (rjcode: string | number, result: 'updated' | 'failed', count: number) =>
+  scanSession.addResult(rjcode, result, count);
 const addMainLog = (log: { level: string; message: string }) => scanSession.addMainLog(log);
 const { getCoverImage } = createCoverDownloader({
   axios: httpClient,
@@ -65,7 +67,8 @@ const { getCoverImage } = createCoverDownloader({
   addLogForTask,
 });
 
-const emitMainLog = (message: string, level = 'info', truncate = 3) => scannerLogger.emitMainLog(message, level, truncate);
+const emitMainLog = (message: string, level = 'info', truncate = 3) =>
+  scannerLogger.emitMainLog(message, level, truncate);
 const emitTaskLog = (message: string, rjcode: string | number, level = 'info', truncate = 15) =>
   scannerLogger.emitTaskLog(message, String(rjcode), level, truncate);
 
@@ -86,7 +89,9 @@ process.on('message', (m: unknown) => {
 
 const { getMetadata } = createMetadataIngestion({
   scrapeWorkMetadataFromDLsite,
-  insertWorkMetadata: db.insertWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string }) => Promise<unknown>,
+  insertWorkMetadata: db.insertWorkMetadata as (
+    metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string }
+  ) => Promise<unknown>,
   addLogForTask: addLogForTask as (rjcode: string, log: { level: string; message: string }) => void,
 });
 const { processFolder } = createWorkProcessor({
@@ -109,7 +114,10 @@ const { updateMetadata } = createMetadataUpdater({
   tagLanguage: config.tagLanguage,
   scrapeWorkMetadataFromDLsite,
   scrapeDynamicWorkMetadataFromDLsite,
-  updateWorkMetadata: db.updateWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string; id?: number }, options: MetadataUpdateOptions) => Promise<unknown>,
+  updateWorkMetadata: db.updateWorkMetadata as (
+    metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string; id?: number },
+    options: MetadataUpdateOptions
+  ) => Promise<unknown>,
   addTask: addTask as (rjcode: string) => void,
   emitTaskLog,
 });
@@ -170,13 +178,20 @@ const { runScan } = createScanRunner({
  */
 const performScan = () => runScan();
 
-const updateMetadataLimited = limit((id: number, options: MetadataUpdateOptions | null = null) => updateMetadata(id, options));
+const updateMetadataLimited = limit((id: number, options: MetadataUpdateOptions | null = null) =>
+  updateMetadata(id, options)
+);
 const updateVoiceActorLimited = limit((id: number) => updateMetadata(id, { includeVA: true }));
 const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
   listWorkIds: db.listWorkIds,
-  listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds as (voiceActorIds: string[]) => Promise<{ work_id: number }[]>,
+  listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds as (
+    voiceActorIds: string[]
+  ) => Promise<{ work_id: number }[]>,
   refreshWorks,
-  updateMetadata: updateMetadataLimited as (id: number, options: MetadataUpdateOptions | null) => Promise<'updated' | 'failed'>,
+  updateMetadata: updateMetadataLimited as (
+    id: number,
+    options: MetadataUpdateOptions | null
+  ) => Promise<'updated' | 'failed'>,
   updateVoiceActor: updateVoiceActorLimited as (id: number) => Promise<'updated' | 'failed'>,
   finishUpdate: (message, exitCode) => scannerLifecycle.finish(message, exitCode),
   nameToUUID,

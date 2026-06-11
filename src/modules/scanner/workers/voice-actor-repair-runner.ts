@@ -25,8 +25,13 @@ const getUpdatedCount = (result: UpdateLikeResult): number => {
   return result && typeof result.updated === 'number' ? result.updated : 0;
 };
 
-const createVoiceActorRepairRunner = ({ updateLock, repairVoiceActors, emitMainLog }: VoiceActorRepairRunnerOptions) => {
-  const shouldRepairVoiceActors = (): boolean => Boolean(updateLock.isLockFilePresent && updateLock.lockFileConfig.fixVA);
+const createVoiceActorRepairRunner = ({
+  updateLock,
+  repairVoiceActors,
+  emitMainLog,
+}: VoiceActorRepairRunnerOptions) => {
+  const shouldRepairVoiceActors = (): boolean =>
+    Boolean(updateLock.isLockFilePresent && updateLock.lockFileConfig.fixVA);
 
   const runVoiceActorRepair = async (counts: ScanCounters): Promise<boolean> => {
     if (!shouldRepairVoiceActors()) {
@@ -54,7 +59,4 @@ const createVoiceActorRepairRunner = ({ updateLock, repairVoiceActors, emitMainL
   };
 };
 
-export {
-  createVoiceActorRepairRunner,
-  getUpdatedCount,
-};
+export { createVoiceActorRepairRunner, getUpdatedCount };

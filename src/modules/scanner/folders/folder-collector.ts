@@ -40,8 +40,8 @@ const createFolderCollector = ({
   };
 
   const logDuplicateFolders = (uniqueFolderList: WorkFolder[], duplicate: Record<string, WorkFolder[]>): void => {
-    Object.keys(duplicate).forEach(key => {
-      const addedFolder = uniqueFolderList.find(folder => folder.id === parseInt(key));
+    Object.keys(duplicate).forEach((key) => {
+      const addedFolder = uniqueFolderList.find((folder) => folder.id === parseInt(key));
       if (!addedFolder) return;
       duplicate[key].push(addedFolder);
 
@@ -52,8 +52,8 @@ const createFolderCollector = ({
         message: `[RJ${rjcode}] 存在多个文件夹:`,
       });
 
-      duplicate[key].forEach(folder => {
-        const rootFolder = rootFolders.find(rootFolder => rootFolder.name === folder.rootFolderName);
+      duplicate[key].forEach((folder) => {
+        const rootFolder = rootFolders.find((rootFolder) => rootFolder.name === folder.rootFolderName);
         if (!rootFolder) return;
         const absolutePath = path.join(rootFolder.path, folder.relativePath);
         consoleLogger.log(`   "${absolutePath}"`);

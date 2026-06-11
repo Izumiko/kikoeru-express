@@ -38,9 +38,5 @@ const createScanFinishedMessage = (counts: ScanCounts): string =>
 const createUpdateFinishedMessage = (counts: ScanCounts): string =>
   `扫描完成: 更新 ${counts.updated} 个，失败 ${counts.failed} 个.`;
 
-export {
-  ScanCounters,
-  createScanFinishedMessage,
-  createUpdateFinishedMessage,
-};
+export { ScanCounters, createScanFinishedMessage, createUpdateFinishedMessage };
 export type { ScanCounts, ScanResult };

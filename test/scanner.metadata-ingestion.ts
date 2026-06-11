@@ -14,22 +14,20 @@ describe('createMetadataIngestion', () => {
     };
   });
 
-  const createIngestion = options =>
+  const createIngestion = (options) =>
     createMetadataIngestion({
       scrapeWorkMetadataFromDLsite: (id, tagLanguage) => {
         calls.scrapes.push({ id, tagLanguage });
-        return options.scrapeError
-          ? Promise.reject(options.scrapeError)
-          : Promise.resolve({ id, title: 'work title' });
+        return options.scrapeError ? Promise.reject(options.scrapeError) : Promise.resolve({ id, title: 'work title' });
       },
-      insertWorkMetadata: metadata => {
+      insertWorkMetadata: (metadata) => {
         calls.inserts.push(metadata);
         return options.insertError ? Promise.reject(options.insertError) : Promise.resolve();
       },
       addLogForTask: (rjcode, log) => calls.taskLogs.push({ rjcode, log }),
       consoleLogger: {
-        log: message => calls.logs.push(message),
-        error: message => calls.errors.push(message),
+        log: (message) => calls.logs.push(message),
+        error: (message) => calls.errors.push(message),
       },
     });
 

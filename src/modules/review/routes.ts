@@ -21,7 +21,7 @@ router.get(
   query('sort').optional({ nullable: true }).isIn(['desc', 'asc']),
   query('seed').optional({ nullable: true }).isInt(),
   query('filter').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']),
-   
+
   async (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
@@ -69,7 +69,7 @@ router.put(
   body('progress').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']),
   body('starOnly').optional({ nullable: true }).isBoolean(),
   body('progressOnly').optional({ nullable: true }).isBoolean(),
-   
+
   (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
@@ -99,7 +99,7 @@ router.put(
           res.send({ message: '评价成功' });
         }
       })
-      .catch(err => {
+      .catch((err) => {
         res.status(500).send({ error: '评价失败，服务器错误' });
         console.error(err);
       });
@@ -115,7 +115,7 @@ router.delete('/', query('work_id').isInt(), (req: Request, res: Response, next:
     .then(() => {
       res.send({ message: '删除标记成功' });
     })
-    .catch(err => next(err));
+    .catch((err) => next(err));
 });
 
 export default router;

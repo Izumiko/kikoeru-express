@@ -11,9 +11,9 @@ describe('ScannerLogger', () => {
   beforeEach(() => {
     events = [];
     consoleOutput = [];
-    session = new ScanSession(event => events.push(JSON.parse(JSON.stringify(event))));
+    session = new ScanSession((event) => events.push(JSON.parse(JSON.stringify(event))));
     logger = new ScannerLogger(session, {
-      log: message => consoleOutput.push(message),
+      log: (message) => consoleOutput.push(message),
     });
   });
 

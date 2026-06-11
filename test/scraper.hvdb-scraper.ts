@@ -11,7 +11,7 @@ describe('createHvdbScraper', () => {
     };
   });
 
-  const createScraper = handlers =>
+  const createScraper = (handlers) =>
     createHvdbScraper({
       httpClient: {
         retryGet: (url, config) => {
@@ -19,7 +19,7 @@ describe('createHvdbScraper', () => {
           return handlers.retryGet(url, config);
         },
       },
-      nameToUUID: name => `uuid-${name}`,
+      nameToUUID: (name) => `uuid-${name}`,
       consoleLogger: {
         log: (...args) => calls.logs.push(args),
       },

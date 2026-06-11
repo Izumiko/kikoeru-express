@@ -25,12 +25,12 @@ const request = (app, options = {}) =>
           method: options.method || 'GET',
           headers,
         },
-        res => {
+        (res) => {
           const chunks = [];
 
-          res.on('data', chunk => chunks.push(chunk));
+          res.on('data', (chunk) => chunks.push(chunk));
           res.on('end', () => {
-            server.close(closeErr => {
+            server.close((closeErr) => {
               if (closeErr) {
                 reject(closeErr);
                 return;
@@ -56,7 +56,7 @@ const request = (app, options = {}) =>
         }
       );
 
-      req.on('error', err => {
+      req.on('error', (err) => {
         server.close(() => reject(err));
       });
 

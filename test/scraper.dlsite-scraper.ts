@@ -50,7 +50,7 @@ describe('createDlsiteScraper', () => {
     };
   });
 
-  const createScraper = handlers =>
+  const createScraper = (handlers) =>
     createDlsiteScraper({
       httpClient: {
         retryGet: (url, config) => {
@@ -58,7 +58,7 @@ describe('createDlsiteScraper', () => {
           return handlers.retryGet(url, config);
         },
       },
-      scrapeWorkMetadataFromHVDB: id => {
+      scrapeWorkMetadataFromHVDB: (id) => {
         calls.hvdb.push(id);
         return handlers.hvdb
           ? handlers.hvdb(id)
@@ -66,10 +66,10 @@ describe('createDlsiteScraper', () => {
               vas: [{ id: 'hvdb-va', name: '声优B' }],
             });
       },
-      nameToUUID: name => `uuid-${name}`,
-      hasLetter: value => /[a-z]/i.test(value),
+      nameToUUID: (name) => `uuid-${name}`,
+      hasLetter: (value) => /[a-z]/i.test(value),
       consoleLogger: {
-        log: message => calls.logs.push(message),
+        log: (message) => calls.logs.push(message),
       },
     });
 
@@ -98,7 +98,7 @@ describe('createDlsiteScraper', () => {
     const metadata = await scrapeStaticWorkMetadataFromDLsite(123, 'zh-cn');
 
     expect(metadata.title).to.equal('繁中标题');
-    expect(calls.requests.map(call => call.config.headers.cookie)).to.deep.equal(['locale=zh-cn', 'locale=zh-tw']);
+    expect(calls.requests.map((call) => call.config.headers.cookie)).to.deep.equal(['locale=zh-cn', 'locale=zh-tw']);
   });
 
   it('fills missing voice actors from HVDB and filters English aliases', async () => {
@@ -145,7 +145,7 @@ describe('createDlsiteScraper', () => {
 
   it('combines static and dynamic metadata', async () => {
     const { scrapeWorkMetadataFromDLsite } = createScraper({
-      retryGet: url => {
+      retryGet: (url) => {
         if (url.includes('ajax')) {
           return Promise.resolve({
             data: {

@@ -14,8 +14,4 @@ const hasLetter = (str: string): boolean => {
   return false;
 };
 
-export {
-  NAME_UUID_NAMESPACE,
-  hasLetter,
-  nameToUUID,
-};
+export { NAME_UUID_NAMESPACE, hasLetter, nameToUUID };

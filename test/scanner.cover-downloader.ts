@@ -21,8 +21,8 @@ const createDownloader = ({ responses, saveCoverImageToDisk = () => Promise.reso
     saveCoverImageToDisk,
     addLogForTask: (rjcode, log) => taskLogs.push({ rjcode, log }),
     consoleLogger: {
-      log: message => logs.push(['log', message]),
-      error: message => logs.push(['error', message]),
+      log: (message) => logs.push(['log', message]),
+      error: (message) => logs.push(['error', message]),
     },
   });
 
@@ -48,9 +48,7 @@ describe('createCoverDownloader', () => {
     const result = await downloader.getCoverImage(123, ['main']);
 
     expect(result).to.equal('added');
-    expect(requests[0].url).to.equal(
-      'https://img.dlsite.jp/modpub/images2/work/doujin/RJ001000/RJ000123_img_main.jpg'
-    );
+    expect(requests[0].url).to.equal('https://img.dlsite.jp/modpub/images2/work/doujin/RJ001000/RJ000123_img_main.jpg');
     expect(saved).to.deep.equal([{ stream: 'image-stream', rjcode: '000123', type: 'main' }]);
     expect(taskLogs).to.deep.equal([
       { rjcode: '000123', log: { level: 'info', message: '从 DLsite 下载封面...' } },

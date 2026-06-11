@@ -16,7 +16,7 @@ describe('createVoiceActorRepairRunner', () => {
     };
   });
 
-  const createRunner = options =>
+  const createRunner = (options) =>
     createVoiceActorRepairRunner({
       updateLock: {
         isLockFilePresent: options.isLockFilePresent,

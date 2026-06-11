@@ -29,7 +29,10 @@ const closeDatabaseConnection = async (): Promise<void> => {
   await libsql.close();
 };
 
-if (process.env.NODE_ENV === 'test' && typeof (globalThis as typeof globalThis & { after?: (fn: () => Promise<void>) => void }).after === 'function') {
+if (
+  process.env.NODE_ENV === 'test' &&
+  typeof (globalThis as typeof globalThis & { after?: (fn: () => Promise<void>) => void }).after === 'function'
+) {
   (globalThis as typeof globalThis & { after?: (fn: () => Promise<void>) => void }).after!(async () => {
     await closeDatabaseConnection();
   });
@@ -37,11 +40,4 @@ if (process.env.NODE_ENV === 'test' && typeof (globalThis as typeof globalThis &
 
 initializeDatabaseConnection();
 
-export {
-  closeDatabaseConnection,
-  databaseExist,
-  databasePath,
-  drizzleDb as db,
-  initializeDatabaseConnection,
-  libsql,
-};
+export { closeDatabaseConnection, databaseExist, databasePath, drizzleDb as db, initializeDatabaseConnection, libsql };

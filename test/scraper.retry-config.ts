@@ -1,9 +1,5 @@
 import { expect } from 'vitest';
-import {
-  applyRetryConfig,
-  buildRetryConfig,
-  getDefaultTimeout,
-} from '../src/modules/scraper/retry-config.js';
+import { applyRetryConfig, buildRetryConfig, getDefaultTimeout } from '../src/modules/scraper/retry-config.js';
 
 describe('scraper retry config', () => {
   it('uses the legacy default timeout for non-special urls', () => {

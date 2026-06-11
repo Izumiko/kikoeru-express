@@ -14,19 +14,19 @@ describe('createCleanupRunner', () => {
     };
   });
 
-  const createRunner = options =>
+  const createRunner = (options) =>
     createCleanupRunner({
       skipCleanup: options.skipCleanup,
       performCleanup: () => {
         calls.cleanups += 1;
         return options.cleanupError ? Promise.reject(options.cleanupError) : Promise.resolve();
       },
-      addMainLog: log => calls.mainLogs.push(log),
+      addMainLog: (log) => calls.mainLogs.push(log),
       consoleLogger: {
-        log: message => calls.consoleLogs.push(message),
-        error: message => calls.consoleErrors.push(message),
+        log: (message) => calls.consoleLogs.push(message),
+        error: (message) => calls.consoleErrors.push(message),
       },
-      exit: code => calls.exits.push(code),
+      exit: (code) => calls.exits.push(code),
     });
 
   it('skips cleanup when configured', async () => {

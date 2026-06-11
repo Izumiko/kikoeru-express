@@ -1,8 +1,5 @@
 import { expect } from 'vitest';
-import {
-  createMetadataUpdater,
-  shouldScrapeStaticMetadata,
-} from '../src/modules/scanner/workers/metadata-updater.js';
+import { createMetadataUpdater, shouldScrapeStaticMetadata } from '../src/modules/scanner/workers/metadata-updater.js';
 
 describe('createMetadataUpdater', () => {
   let calls;
@@ -17,7 +14,7 @@ describe('createMetadataUpdater', () => {
     };
   });
 
-  const createUpdater = options =>
+  const createUpdater = (options) =>
     createMetadataUpdater({
       tagLanguage: 'zh-cn',
       scrapeWorkMetadataFromDLsite: (id, tagLanguage) => {
@@ -26,7 +23,7 @@ describe('createMetadataUpdater', () => {
           ? Promise.reject(options.staticError)
           : Promise.resolve({ title: 'static metadata' });
       },
-      scrapeDynamicWorkMetadataFromDLsite: id => {
+      scrapeDynamicWorkMetadataFromDLsite: (id) => {
         calls.dynamicScrapes.push(id);
         return options.dynamicError
           ? Promise.reject(options.dynamicError)
@@ -36,7 +33,7 @@ describe('createMetadataUpdater', () => {
         calls.updates.push({ metadata, updateOptions });
         return Promise.resolve();
       },
-      addTask: rjcode => calls.tasks.push(rjcode),
+      addTask: (rjcode) => calls.tasks.push(rjcode),
       emitTaskLog: (message, rjcode, level) => calls.taskLogs.push({ message, rjcode, level }),
     });
 

@@ -45,7 +45,7 @@ const createApp = (): Express => {
       rewrites: [
         {
           from: /^\/api\/.*$/,
-          to: context => context.parsedUrl.path || '/',
+          to: (context) => context.parsedUrl.path || '/',
         },
       ],
       index: '/index.html',
@@ -58,7 +58,7 @@ const createApp = (): Express => {
   api(app);
 
   // 返回错误响应
-   
+
   const errorHandler: ErrorRequestHandler = (err: HttpError, req, res, _next) => {
     if (err.name === 'UnauthorizedError') {
       // 验证错误

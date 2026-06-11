@@ -29,11 +29,11 @@ const findFolderNode = (nodes: TrackTreeNode[], title: string): FolderNode | und
 const toTree = (tracks: Track[], workTitle: string, workDir: string, rootFolder: RootFolderConfig): TrackTreeNode[] => {
   const tree: TrackTreeNode[] = [];
 
-  tracks.forEach(track => {
+  tracks.forEach((track) => {
     let fatherFolder = tree;
     const filePath = track.subtitle ? track.subtitle.split('/') : [];
-    filePath.forEach(folderName => {
-      const index = fatherFolder.findIndex(item => item.type === 'folder' && item.title === folderName);
+    filePath.forEach((folderName) => {
+      const index = fatherFolder.findIndex((item) => item.type === 'folder' && item.title === folderName);
       if (index === -1) {
         fatherFolder.push({
           type: 'folder',
@@ -45,10 +45,10 @@ const toTree = (tracks: Track[], workTitle: string, workDir: string, rootFolder:
     });
   });
 
-  tracks.forEach(track => {
+  tracks.forEach((track) => {
     let fatherFolder = tree;
     const paths = track.subtitle ? track.subtitle.split('/') : [];
-    paths.forEach(folderName => {
+    paths.forEach((folderName) => {
       fatherFolder = findFolderNode(fatherFolder, folderName)?.children || fatherFolder;
     });
 

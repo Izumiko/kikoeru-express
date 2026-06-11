@@ -27,7 +27,7 @@ router.post(
   [
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('password').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
-    check('group').custom(value => {
+    check('group').custom((value) => {
       if (value !== 'user' && value !== 'guest') {
         throw new Error(`用户组名称必须为 ['user', 'guest'] 的一个.`);
       }
@@ -111,12 +111,12 @@ router.delete('/user', (req: Request, res: Response, next: NextFunction) => {
   const userReq = req as UserRequest;
 
   if (!config.auth || userReq.user?.name === 'admin') {
-    if (!users.find(user => user.name === 'admin')) {
+    if (!users.find((user) => user.name === 'admin')) {
       db.deleteUser(users)
         .then(() => {
           res.send({ message: '删除成功.' });
         })
-        .catch(err => {
+        .catch((err) => {
           next(err);
         });
     } else {
@@ -132,10 +132,10 @@ router.get('/users', (req: Request, res: Response, next: NextFunction) => {
   const userReq = req as UserRequest;
   if (!config.auth || userReq.user?.name === 'admin') {
     db.getUsers()
-      .then(users => {
+      .then((users) => {
         res.send({ users });
       })
-      .catch(err => {
+      .catch((err) => {
         next(err);
       });
   } else {

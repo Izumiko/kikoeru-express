@@ -36,7 +36,7 @@ type RetryGet = (url: string, requestConfig: RetryRequestConfig) => Promise<Retr
 const createDelay =
   (setTimeoutFn: (fn: () => void, ms: number) => TimeoutHandle = setTimeout) =>
   (ms: number): Promise<void> =>
-    new Promise(resolve => setTimeoutFn(resolve, ms));
+    new Promise((resolve) => setTimeoutFn(resolve, ms));
 
 const getRetryUrl = (error: RetryError, fallbackUrl: string): string =>
   // error.request._currentRequest.path 是请求被转发后的地址，重试时优先复用它。
@@ -59,10 +59,7 @@ const createRetryGet = ({
     const retry = requestConfig.retry as RetryState;
 
     const abort = cancelTokenSource();
-    const timeoutId = setTimeoutFn(
-      () => abort.cancel(`Timeout of ${retry.timeout}ms.`),
-      retry.timeout
-    );
+    const timeoutId = setTimeoutFn(() => abort.cancel(`Timeout of ${retry.timeout}ms.`), retry.timeout);
     requestConfig.cancelToken = abort.token;
 
     try {
@@ -85,9 +82,5 @@ const createRetryGet = ({
   return retryGet;
 };
 
-export {
-  createDelay,
-  createRetryGet,
-  getRetryUrl,
-};
+export { createDelay, createRetryGet, getRetryUrl };
 export type { RetryHttpGet };

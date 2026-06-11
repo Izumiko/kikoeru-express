@@ -15,7 +15,5 @@ const SOCKET_EVENTS = {
 
 type SocketEventName = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];
 
-export {
-  SOCKET_EVENTS,
-};
+export { SOCKET_EVENTS };
 export type { SocketEventName };

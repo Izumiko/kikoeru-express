@@ -23,7 +23,7 @@ const createWorkRefresher = ({
   consoleLogger = console,
 }: WorkRefresherOptions) => {
   const markTaskResult = (rjcode: string, result: Extract<ScanResult, 'updated' | 'failed'>): void => {
-    const task = tasks.find(task => task.rjcode === rjcode);
+    const task = tasks.find((task) => task.rjcode === rjcode);
     if (task) task.result = result;
     removeTask(rjcode);
   };
@@ -33,7 +33,7 @@ const createWorkRefresher = ({
     idColumnName: string,
     processor: (id: number) => Promise<Extract<ScanResult, 'updated' | 'failed'>>
   ): Promise<ScanCounters> => {
-    return query.then(async works => {
+    return query.then(async (works) => {
       consoleLogger.log(` * 共 ${works.length} 个音声.`);
       addMainLog({
         level: 'info',
@@ -42,10 +42,10 @@ const createWorkRefresher = ({
 
       const counts = new ScanCounters();
 
-      const promises = works.map(work => {
+      const promises = works.map((work) => {
         const workid = work[idColumnName];
         const rjcode = formatRjCode(workid);
-        return processor(workid).then(result => {
+        return processor(workid).then((result) => {
           counts.increment(result === 'failed' ? 'failed' : 'updated');
           markTaskResult(rjcode, result);
           if (result === 'failed') {

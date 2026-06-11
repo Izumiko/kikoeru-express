@@ -2,9 +2,7 @@
   "version": "7",
   "dialect": "sqlite",
   "id": "9f34f882-35e3-4a00-8214-59af814bfc5a",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "name": "t_circle",
@@ -379,13 +377,9 @@
       "table": "t_work"
     },
     {
-      "columns": [
-        "user_name"
-      ],
+      "columns": ["user_name"],
       "tableTo": "t_user",
-      "columnsTo": [
-        "name"
-      ],
+      "columnsTo": ["name"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -394,13 +388,9 @@
       "table": "t_review"
     },
     {
-      "columns": [
-        "work_id"
-      ],
+      "columns": ["work_id"],
       "tableTo": "t_work",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -409,13 +399,9 @@
       "table": "t_review"
     },
     {
-      "columns": [
-        "tag_id"
-      ],
+      "columns": ["tag_id"],
       "tableTo": "t_tag",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -424,13 +410,9 @@
       "table": "r_tag_work"
     },
     {
-      "columns": [
-        "work_id"
-      ],
+      "columns": ["work_id"],
       "tableTo": "t_work",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -439,13 +421,9 @@
       "table": "r_tag_work"
     },
     {
-      "columns": [
-        "va_id"
-      ],
+      "columns": ["va_id"],
       "tableTo": "t_va",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "CASCADE",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -454,13 +432,9 @@
       "table": "r_va_work"
     },
     {
-      "columns": [
-        "work_id"
-      ],
+      "columns": ["work_id"],
       "tableTo": "t_work",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "CASCADE",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -469,13 +443,9 @@
       "table": "r_va_work"
     },
     {
-      "columns": [
-        "circle_id"
-      ],
+      "columns": ["circle_id"],
       "tableTo": "t_circle",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -484,75 +454,56 @@
       "table": "t_work"
     },
     {
-      "columns": [
-        "user_name",
-        "work_id"
-      ],
+      "columns": ["user_name", "work_id"],
       "nameExplicit": false,
       "name": "t_review_pk",
       "entityType": "pks",
       "table": "t_review"
     },
     {
-      "columns": [
-        "tag_id",
-        "work_id"
-      ],
+      "columns": ["tag_id", "work_id"],
       "nameExplicit": false,
       "name": "r_tag_work_pk",
       "entityType": "pks",
       "table": "r_tag_work"
     },
     {
-      "columns": [
-        "va_id",
-        "work_id"
-      ],
+      "columns": ["va_id", "work_id"],
       "nameExplicit": false,
       "name": "r_va_work_pk",
       "entityType": "pks",
       "table": "r_va_work"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "t_circle_pk",
       "table": "t_circle",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "t_tag_pk",
       "table": "t_tag",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "t_user_pk",
       "table": "t_user",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "t_va_pk",
       "table": "t_va",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "t_work_pk",
       "table": "t_work",
