@@ -2,13 +2,6 @@ import { parseArgs } from 'node:util';
 import { performUpdate } from '../core/runtime.js';
 import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 
-type UpdateArgv = {
-  refreshAll?: boolean;
-  includeNSFW?: boolean;
-  includeTags?: boolean;
-  includeVA?: boolean;
-};
-
 type RunUpdateCliOptions = {
   argv?: string[];
   performUpdateFn?: ((options: MetadataUpdateOptions) => Promise<void>) | undefined;
