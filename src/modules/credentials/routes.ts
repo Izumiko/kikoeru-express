@@ -13,17 +13,6 @@ type UserRequest = Request & {
   user?: AuthUser;
 };
 
-type CreateUserRequestBody = {
-  name: string;
-  password: string;
-  group: 'user' | 'guest';
-};
-
-type UpdatePasswordRequestBody = {
-  name: string;
-  newPassword: string;
-};
-
 type DeleteUserRequestBody = {
   users: Array<{
     name: string;

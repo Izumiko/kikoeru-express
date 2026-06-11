@@ -1,10 +1,10 @@
 import path from 'path';
 import express from 'express';
-import type { ErrorRequestHandler, Express } from 'express';
+import type { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import compression from 'compression';
 import history from 'connect-history-api-fallback';
 import serveIndexFactory from 'serve-index';
-const serveIndex = serveIndexFactory as (path: string, options?: { icons?: boolean }) => import('express').RequestHandler;
+const serveIndex = serveIndexFactory as (path: string, options?: { icons?: boolean }) => RequestHandler;
 import { config } from '../../config.js';
 import { runtimeBaseDir } from '../../config.js';
 import api from '../api/mount.js';
@@ -58,8 +58,8 @@ const createApp = (): Express => {
   api(app);
 
   // 返回错误响应
-  // eslint-disable-next-line no-unused-vars
-  const errorHandler: ErrorRequestHandler = (err: HttpError, req, res, next) => {
+   
+  const errorHandler: ErrorRequestHandler = (err: HttpError, req, res, _next) => {
     if (err.name === 'UnauthorizedError') {
       // 验证错误
       res.set('WWW-Authenticate', 'Bearer realm="Authorization Required"');

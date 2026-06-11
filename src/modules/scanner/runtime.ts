@@ -31,6 +31,7 @@ import { createVoiceActorRepairRunner } from './voice-actor-repair-runner.js';
 import { createWorkProcessor } from './work-processor.js';
 import { createWorkRefresher } from './work-refresher.js';
 import { SOCKET_EVENTS } from '../socket/events.js';
+import type { MetadataUpdateOptions } from './metadata-updater.js';
 
 type ScannerRuntimeMessage = {
   emit?: typeof SOCKET_EVENTS.SCAN_INIT_STATE;
@@ -108,7 +109,7 @@ const { updateMetadata } = createMetadataUpdater({
   tagLanguage: config.tagLanguage,
   scrapeWorkMetadataFromDLsite,
   scrapeDynamicWorkMetadataFromDLsite,
-  updateWorkMetadata: db.updateWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string; id?: number }, options: import('./metadata-updater.js').MetadataUpdateOptions) => Promise<unknown>,
+  updateWorkMetadata: db.updateWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string; id?: number }, options: MetadataUpdateOptions) => Promise<unknown>,
   addTask: addTask as (rjcode: string) => void,
   emitTaskLog,
 });
@@ -169,13 +170,13 @@ const { runScan } = createScanRunner({
  */
 const performScan = () => runScan();
 
-const updateMetadataLimited = limit((id: number, options: import('./metadata-updater.js').MetadataUpdateOptions | null = null) => updateMetadata(id, options));
+const updateMetadataLimited = limit((id: number, options: MetadataUpdateOptions | null = null) => updateMetadata(id, options));
 const updateVoiceActorLimited = limit((id: number) => updateMetadata(id, { includeVA: true }));
 const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
   listWorkIds: db.listWorkIds,
   listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds as (voiceActorIds: string[]) => Promise<{ work_id: number }[]>,
   refreshWorks,
-  updateMetadata: updateMetadataLimited as (id: number, options: import('./metadata-updater.js').MetadataUpdateOptions | null) => Promise<'updated' | 'failed'>,
+  updateMetadata: updateMetadataLimited as (id: number, options: MetadataUpdateOptions | null) => Promise<'updated' | 'failed'>,
   updateVoiceActor: updateVoiceActorLimited as (id: number) => Promise<'updated' | 'failed'>,
   finishUpdate: (message, exitCode) => scannerLifecycle.finish(message, exitCode),
   nameToUUID,

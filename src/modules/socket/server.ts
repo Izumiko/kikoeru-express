@@ -12,11 +12,14 @@ import type { ScannerGatewayIo } from './scanner-gateway.js';
 
 type SocketServerLike = ScannerGatewayIo & {
   engine: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     use: (middleware: (...args: any[]) => void) => unknown;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   use: (middleware: (...args: any[]) => void) => unknown;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SocketServerConstructor = new (...args: any[]) => SocketServerLike;
 
 type SocketServerConfig = Pick<AppConfig, 'auth' | 'jwtsecret'>;

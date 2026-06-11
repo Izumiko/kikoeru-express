@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { param, query } from 'express-validator';
+import { param } from 'express-validator';
 import db from '../../database.js';
 import { config } from '../../../config.js';
 import { formatRjCode } from '../media/rj-code.js';
@@ -14,7 +14,6 @@ import { isValidRequest } from '../../shared/http/validate.js';
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PAGE_SIZE = config.pageSize || 12;
-const METADATA_FIELD_ROUTES = ['/circles/:id', '/tags/:id', '/vas/:id'];
 const METADATA_FIELD_WORK_ROUTES = ['/circles/:id/works', '/tags/:id/works', '/vas/:id/works'];
 const METADATA_LABEL_ROUTES = ['/circles', '/tags', '/vas', '/circles/', '/tags/', '/vas/'];
 const WORK_ORDER_FIELDS = new Set([

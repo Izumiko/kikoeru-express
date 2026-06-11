@@ -8,8 +8,8 @@
  */
 function strftime(sFormat: string, date?: Date | string | number): string {
   if (!(date instanceof Date)) date = new Date();
-  var resolvedDate = date;
-  var nDay = resolvedDate.getDay(),
+  const resolvedDate = date;
+  const nDay = resolvedDate.getDay(),
     nDate = resolvedDate.getDate(),
     nMonth = resolvedDate.getMonth(),
     nYear = resolvedDate.getFullYear(),
@@ -34,7 +34,7 @@ function strftime(sFormat: string, date?: Date | string | number): string {
       return (nYear % 4 === 0 && nYear % 100 !== 0) || nYear % 400 === 0;
     },
     getThursday = function () {
-      var target = new Date(date);
+      const target = new Date(date);
       target.setDate(nDate - ((nDay + 6) % 7) + 3);
       return target;
     },
@@ -69,10 +69,10 @@ function strftime(sFormat: string, date?: Date | string | number): string {
         '%S': zeroPad(resolvedDate.getSeconds(), 2),
         '%u': nDay || 7,
         '%V': (function () {
-          var target = getThursday(),
+          const target = getThursday(),
             n1stThu = target.valueOf();
           target.setMonth(0, 1);
-          var nJan1 = target.getDay();
+          const nJan1 = target.getDay();
           if (nJan1 !== 4) target.setMonth(0, 1 + ((4 - nJan1 + 7) % 7));
           return zeroPad(1 + Math.ceil((n1stThu - target.valueOf()) / 604800000), 2);
         })(),

@@ -1,7 +1,7 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { query, body } from 'express-validator';
-import { type StaticMetadataRecord } from '../../shared/metadata/normalize.js';
+import type { StaticMetadataRecord } from '../../shared/metadata/normalize.js';
 
 import { config } from '../../../config.js';
 import db from '../../database.js';
@@ -21,7 +21,7 @@ router.get(
   query('sort').optional({ nullable: true }).isIn(['desc', 'asc']),
   query('seed').optional({ nullable: true }).isInt(),
   query('filter').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']),
-  // eslint-disable-next-line no-unused-vars
+   
   async (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
@@ -69,11 +69,11 @@ router.put(
   body('progress').optional({ nullable: true }).isIn(['marked', 'listening', 'listened', 'replay', 'postponed']),
   body('starOnly').optional({ nullable: true }).isBoolean(),
   body('progressOnly').optional({ nullable: true }).isBoolean(),
-  // eslint-disable-next-line no-unused-vars
+   
   (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
-    let username = (config.auth ? (req as ReviewRequest).user?.name : 'admin') || 'admin';
+    const username = (config.auth ? (req as ReviewRequest).user?.name : 'admin') || 'admin';
     let starOnly = true;
     let progressOnly = false;
     if (req.query.starOnly === 'false') {
@@ -110,7 +110,7 @@ router.put(
 router.delete('/', query('work_id').isInt(), (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
 
-  let username = (config.auth ? (req as ReviewRequest).user?.name : 'admin') || 'admin';
+  const username = (config.auth ? (req as ReviewRequest).user?.name : 'admin') || 'admin';
   db.deleteUserReview(username, req.query.work_id as string)
     .then(() => {
       res.send({ message: '删除标记成功' });

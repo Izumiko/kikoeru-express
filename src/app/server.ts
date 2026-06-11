@@ -146,9 +146,17 @@ const startServer = ({
   const localOnly = appConfig.blockRemoteConnection;
 
   // Note: for some unknown reasons, :: does not always work
-  localOnly ? server.listen(listenPort, 'localhost') : server.listen(listenPort);
+  if (localOnly) {
+    server.listen(listenPort, 'localhost');
+  } else {
+    server.listen(listenPort);
+  }
   if (appConfig.httpsEnabled && httpsSuccess) {
-    localOnly ? httpsServer?.listen(appConfig.httpsPort, 'localhost') : httpsServer?.listen(appConfig.httpsPort);
+    if (localOnly) {
+      httpsServer?.listen(appConfig.httpsPort, 'localhost');
+    } else {
+      httpsServer?.listen(appConfig.httpsPort);
+    }
   }
 
   server.on('listening', () => {

@@ -17,11 +17,6 @@ import type { AuthUser } from './service.js';
 
 const router = express.Router();
 
-type LoginRequestBody = {
-  name: string;
-  password: string;
-};
-
 type AuthenticatedRequest = Request & {
   auth?: AuthUser;
 };
@@ -69,8 +64,8 @@ if (config.auth) {
 }
 
 // 获取用户信息
-// eslint-disable-next-line no-unused-vars
-router.get('/me', (req: AuthenticatedRequest, res: Response, next) => {
+ 
+router.get('/me', (req: AuthenticatedRequest, res: Response, _next) => {
   // 同时告诉客户端，服务器是否启用用户验证
   const auth = config.auth;
   const user = config.auth

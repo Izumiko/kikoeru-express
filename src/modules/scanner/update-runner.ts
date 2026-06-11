@@ -1,4 +1,5 @@
-import { ScanCounters, createUpdateFinishedMessage } from './counters.js';
+import type { ScanCounters} from './counters.js';
+import { createUpdateFinishedMessage } from './counters.js';
 import type { MetadataUpdateOptions } from './metadata-updater.js';
 
 type WorkIdRow = { id: number };
