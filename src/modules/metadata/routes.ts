@@ -190,8 +190,23 @@ router.get(METADATA_LOOKUP_ROUTES, (req: Request, res: Response, next: NextFunct
   const ids = getMetadataIds(req);
   const field = getMetadataField(req) as 'circle' | 'tag' | 'va';
 
-  db.getMetadata({ field, ids })
-    .then(list => res.send(list))
+  return db
+    .getMetadata({ field, ids })
+    .then(items => {
+      if (items.every(item => item && ids.includes(item.id as never))) {
+        res.send(items);
+      } else {
+        const missingIds = ids.filter(
+          id => !items.some(item => item && item.id === id)
+        );
+        const errorMessage = {
+          circle: `社团${missingIds.join(',')}不存在`,
+          tag: `标签${missingIds.join(',')}不存在`,
+          va: `声优${missingIds.join(',')}不存在`,
+        };
+        res.status(404).send({ error: errorMessage[field] });
+      }
+    })
     .catch(err => next(err));
 });
 
@@ -239,7 +254,7 @@ router.get(METADATA_LABEL_ROUTES, (req: Request, res: Response, next: NextFuncti
     .catch(err => next(err));
 });
 
-router.get('/search', async (req: Request, res: Response) => {
+router.get(['/search', '/search/:keyword'], async (req: Request, res: Response) => {
   if (!isValidRequest(req, res)) return;
 
   const currentPage = parseInt(req.query.page as string) || 1;
@@ -247,7 +262,7 @@ router.get('/search', async (req: Request, res: Response) => {
   const sort = (req.query.sort as string) || 'desc';
   const username = getUsername(req);
   const shuffleSeed = req.query.seed ? parseInt(req.query.seed as string) : 7;
-  const keyword = (req.query.keyword as string) || '';
+  const keyword = req.params.keyword ? (req.params.keyword as string).trim() : '';
 
   try {
     await sendPaginatedWorks(
