@@ -1,13 +1,25 @@
-// @ts-nocheck
 import originAxios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { httpsOverHttp, httpOverHttp } from 'tunnel-agent';
 
 import { config } from '../../../config.js';
 import { applyRetryConfig } from './retry-config.js';
+import type { RetryRequestConfig } from './retry-config.js';
 import { createRetryGet } from './retry-client.js';
 const Config = config;
 
-const axios = originAxios.create();
+type RetryAxiosInstance = AxiosInstance & {
+  retryGet: (url: string, requestConfig: RetryRequestConfig) => Promise<AxiosResponse>;
+};
+
+type TunnelOptions = {
+  proxy: {
+    port: number;
+    host?: string;
+  };
+};
+
+const axios = originAxios.create() as RetryAxiosInstance;
 // axios.defaults.timeout = Config.timeout || 2000; // 请求超时的毫秒数
 // // 拦截请求 (添加自定义默认参数)
 // axios.interceptors.request.use(function (config) {
@@ -17,7 +29,7 @@ const axios = originAxios.create();
 // });
 
 // 代理设置
-const TUNNEL_OPTIONS = {
+const TUNNEL_OPTIONS: TunnelOptions = {
   proxy: {
     port: Config.httpProxyPort,
   },
@@ -69,11 +81,11 @@ axios.interceptors.request.use(function (config) {
 // });
 
 const retryGet = createRetryGet({
-  httpGet: (url, requestConfig) => axios.get(url, requestConfig),
+  httpGet: (url, requestConfig) => axios.get(url, requestConfig as AxiosRequestConfig),
   cancelTokenSource: () => originAxios.CancelToken.source(),
   applyRetryConfig,
   appConfig: Config,
-});
+}) as RetryAxiosInstance['retryGet'];
 axios.retryGet = retryGet;
 
 /**
