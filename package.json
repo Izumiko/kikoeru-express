@@ -1,6 +1,6 @@
 {
   "name": "kikoeru-express",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "A self-hosted media server for listening to your DLsite voice works.",
   "type": "module",
   "homepage": "https://github.com/XunJiJiang/kikoeru-express",
@@ -49,7 +49,7 @@
     "express": "^5.2.1",
     "express-jwt": "^8.5.1",
     "express-validator": "^7.3.2",
-    "htmlparser2": "^10.1.0",
+    "htmlparser2": "^12.0.0",
     "jschardet": "^3.1.4",
     "jsonwebtoken": "^9.0.3",
     "limit-promise": "^1.0.6",
@@ -57,9 +57,9 @@
     "natural-orderby": "^5.0.0",
     "socket.io": "^4.8.3",
     "tunnel-agent": "^0.6.0",
-    "url-join": "^4.0.1",
-    "uuid": "^11.1.1",
-    "yargs": "^17.7.2"
+    "url-join": "^5.0.0",
+    "uuid": "^14.0.0",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -67,8 +67,7 @@
     "@types/connect-history-api-fallback": "^1.5.4",
     "@types/express": "^5.0.6",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^24.13.1",
-    "@types/url-join": "^4.0.3",
+    "@types/node": "^24.13.2",
     "@types/yargs": "^17.0.35",
     "@vitest/coverage-v8": "^4.1.8",
     "drizzle-kit": "^1.0.0-beta.22",
