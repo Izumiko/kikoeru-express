@@ -1,9 +1,31 @@
-// @ts-nocheck
 import * as cheerio from 'cheerio';
+import type { RetryRequestConfig } from '../scraper/retry-config.js';
+import type { ScannerLog } from '../media/folder-scanner.js';
 import { formatRjCode } from '../media/rj-code.js';
 
-const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, consoleLogger = console }) => {
-  const getImageRequestUrlTemplate = rjcode => {
+type CoverDownloadResult = 'added' | 'failed';
+
+type CoverResponse = {
+  data: unknown;
+};
+
+type RetryHttpClient = {
+  retryGet: (url: string, options: RetryRequestConfig) => Promise<CoverResponse>;
+};
+
+type ImageRequestUrlTemplate = (type: string) => string;
+
+type CoverDownloaderOptions = {
+  axios: RetryHttpClient;
+  saveCoverImageToDisk: (stream: unknown, rjcode: string, type: string) => Promise<void>;
+  addLogForTask: (rjcode: string, log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'log' | 'error'>;
+};
+
+const getErrorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, consoleLogger = console }: CoverDownloaderOptions) => {
+  const getImageRequestUrlTemplate = (rjcode: string): Promise<ImageRequestUrlTemplate> => {
     return new Promise((resolve, reject) => {
       const url = `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
       const COOKIE_LOCALE = 'locale=zh-cn';
@@ -15,7 +37,7 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
         })
         .then(response => response.data)
         .then(data => {
-          const $ = cheerio.load(data);
+          const $ = cheerio.load(String(data));
           // 展示图的第一个；之后仅需修改 type 部分即可拼出其他封面尺寸。
           const img = $('div.slider_body ul li:first-child picture img').attr('srcset');
           if (img) {
@@ -28,14 +50,15 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
               return `https:${prefix}_img_${type}.jpg`;
             });
           }
+          reject(new Error('Could not parse cover image url template.'));
         })
         .catch(() => {
-          reject();
+          reject(new Error('Could not request cover image url template.'));
         });
     });
   };
 
-  const saveCoverImage = (imageRes, rjcode, type) =>
+  const saveCoverImage = (imageRes: CoverResponse, rjcode: string, type: string): Promise<Extract<CoverDownloadResult, 'added'>> =>
     saveCoverImageToDisk(imageRes.data, rjcode, type).then(() => {
       consoleLogger.log(` -> [RJ${rjcode}] 封面 RJ${rjcode}_img_${type}.jpg 下载成功.`);
       addLogForTask(rjcode, {
@@ -43,14 +66,14 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
         message: `封面 RJ${rjcode}_img_${type}.jpg 下载成功.`,
       });
 
-      return 'added';
+      return 'added' as const;
     });
 
-  const getCoverImage = (id, types) => {
+  const getCoverImage = (id: number, types: string[]): Promise<Extract<CoverDownloadResult, 'added'>> => {
     const rjcode = formatRjCode(id);
-    const id2 = id % 1000 === 0 ? id : parseInt(id / 1000) * 1000 + 1000;
+    const id2 = id % 1000 === 0 ? id : Math.trunc(id / 1000) * 1000 + 1000;
     const rjcode2 = formatRjCode(id2);
-    const promises = [];
+    const promises: Array<Promise<CoverDownloadResult>> = [];
 
     types.forEach(type => {
       // 对于不是合集的音声，封面图片的请求地址通常由 RJ 分组目录和作品 RJ 号拼出。
@@ -62,7 +85,7 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
         axios
           .retryGet(url, { responseType: 'stream', retry: {} })
           .then(imageRes => saveCoverImage(imageRes, rjcode, type))
-          .catch(async err => {
+          .catch(async (err: unknown) => {
             try {
               // 可能是网站转发导致图片 RJ code 和音声 RJ code 不同；失败后回到作品首页解析真实头图地址。
               const imageRequestUrlTemplate = await getImageRequestUrlTemplate(rjcode);
@@ -73,27 +96,29 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
                   retry: {},
                 })
                 .then(imageRes => saveCoverImage(imageRes, rjcode, type))
-                .catch(err => {
+                .catch((err: unknown) => {
+                  const message = getErrorMessage(err);
                   consoleLogger.error(
-                    `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`
+                    `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${message}`
                   );
                   addLogForTask(rjcode, {
                     level: 'error',
-                    message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
+                    message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${message}`,
                   });
 
-                  return 'failed';
+                  return 'failed' as const;
                 });
             } catch {
+              const message = getErrorMessage(err);
               consoleLogger.error(
-                `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`
+                `  ! [RJ${rjcode}] 在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${message}`
               );
               addLogForTask(rjcode, {
                 level: 'error',
-                message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${err.message}`,
+                message: `在下载封面 RJ${rjcode}_img_${type}.jpg 过程中出错: ${message}`,
               });
 
-              return 'failed';
+              return 'failed' as const;
             }
           })
       );
@@ -112,7 +137,7 @@ const createCoverDownloader = ({ axios, saveCoverImageToDisk, addLogForTask, con
         }
       });
 
-      return 'added';
+      return 'added' as const;
     });
   };
 
