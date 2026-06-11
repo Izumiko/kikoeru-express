@@ -18,10 +18,10 @@ function initDatabaseDir(): void {
 }
 
 const initApp = async (): Promise<void> => {
-  if (databaseExist) return;
-
   initDatabaseDir();
   await createSchema();
+
+  if (databaseExist) return;
 
   try {
     await createUser({

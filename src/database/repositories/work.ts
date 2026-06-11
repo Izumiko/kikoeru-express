@@ -59,6 +59,7 @@ const toWorkRow = (work: WorkMetadata) => ({
   rateAverage2dp: work.rate_average_2dp,
   rateCountDetail: JSON.stringify(work.rate_count_detail),
   rank: work.rank ? JSON.stringify(work.rank) : null,
+  insertTime: new Date().toISOString(),
 });
 
 const toDynamicWorkRow = (work: WorkMetadata) => ({

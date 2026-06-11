@@ -6,6 +6,7 @@ const dropDatabase = async () => {
   await libsql.execute('DROP TABLE IF EXISTS __drizzle_migrations');
   await libsql.execute('DROP TABLE IF EXISTS r_tag_work');
   await libsql.execute('DROP TABLE IF EXISTS r_va_work');
+  await libsql.execute('DROP TABLE IF EXISTS t_history');
   await libsql.execute('DROP TABLE IF EXISTS t_review');
   await libsql.execute('DROP TABLE IF EXISTS t_work');
   await libsql.execute('DROP TABLE IF EXISTS t_tag');

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, primaryKey, real, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, sqliteView, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 const circles = sqliteTable('t_circle', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -25,6 +25,7 @@ const works = sqliteTable(
     rateAverage2dp: real('rate_average_2dp'),
     rateCountDetail: text('rate_count_detail'),
     rank: text('rank'),
+    insertTime: text('insert_time').default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     workIndex: index('t_work_index').on(
@@ -96,6 +97,28 @@ const reviews = sqliteTable(
   })
 );
 
+const histories = sqliteTable(
+  't_history',
+  {
+    id: integer('id').primaryKey(),
+    userName: text('user_name')
+      .notNull()
+      .references(() => users.name, { onDelete: 'cascade' }),
+    workId: integer('work_id')
+      .notNull()
+      .references(() => works.id, { onDelete: 'cascade' }),
+    fileIndex: text('file_index').notNull(),
+    fileName: text('file_name'),
+    playTime: integer('play_time'),
+    totalTime: integer('total_time'),
+    createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    unique: uniqueIndex('t_history_unique').on(table.userName, table.workId, table.fileIndex),
+  })
+);
+
 const staticMetadata = sqliteView('staticMetadata', {
   id: integer('id'),
   title: text('title'),
@@ -111,6 +134,7 @@ const staticMetadata = sqliteView('staticMetadata', {
   rateAverage2dp: real('rate_average_2dp'),
   rateCountDetail: text('rate_count_detail'),
   rank: text('rank'),
+  insertTime: text('insert_time'),
   vaObj: text('vaObj'),
   tagObj: text('tagObj'),
 }).as(sql`
@@ -133,7 +157,8 @@ const staticMetadata = sqliteView('staticMetadata', {
         t_work.rate_count,
         t_work.rate_average_2dp,
         t_work.rate_count_detail,
-        t_work.rank
+        t_work.rank,
+        t_work.insert_time
       FROM t_work
       JOIN t_circle ON t_circle.id = t_work.circle_id
     ) AS baseQuery
@@ -146,10 +171,11 @@ const staticMetadata = sqliteView('staticMetadata', {
   GROUP BY baseQueryWithVA.id
 `);
 
-export { circles, reviews, staticMetadata, tagWorks, tags, users, voiceActors, voiceActorWorks, works };
+export { circles, histories, reviews, staticMetadata, tagWorks, tags, users, voiceActors, voiceActorWorks, works };
 
 export default {
   circles,
+  histories,
   reviews,
   staticMetadata,
   tagWorks,

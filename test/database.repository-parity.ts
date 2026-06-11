@@ -232,4 +232,72 @@ describe('Database repository parity baseline', function () {
     await repositories.deleteUser([{ name: 'temporary' }]);
     expect(await repositories.getUserByName('temporary')).to.equal(undefined);
   });
+
+  it('records and retrieves playback history', async function () {
+    await repositories.insertHistory({
+      userName: 'listener',
+      workId: 100,
+      fileIndex: '0',
+      fileName: 'track1.mp3',
+      playTime: 120,
+      totalTime: 300,
+    });
+
+    const allHistory = await repositories.getHistoryByUsername('listener');
+    expect(allHistory).to.have.lengthOf(1);
+    expect(allHistory[0]).to.include({
+      userName: 'listener',
+      workId: 100,
+      fileIndex: '0',
+      fileName: 'track1.mp3',
+      playTime: 120,
+      totalTime: 300,
+    });
+
+    const byIndex = await repositories.getHistoryByWorkIdIndex('listener', 100, '0');
+    expect(byIndex).to.have.lengthOf(1);
+    expect(byIndex[0]).to.include({ playTime: 120 });
+
+    await repositories.insertHistory({
+      userName: 'listener',
+      workId: 100,
+      fileIndex: '0',
+      fileName: 'track1.mp3',
+      playTime: 200,
+      totalTime: 300,
+    });
+
+    const updated = await repositories.getHistoryByWorkIdIndex('listener', 100, '0');
+    expect(updated[0]).to.include({ playTime: 200 });
+  });
+
+  it('groups history by work id for recent playback', async function () {
+    await repositories.insertHistory({
+      userName: 'listener',
+      workId: 100,
+      fileIndex: '0',
+      fileName: 'track1.mp3',
+      playTime: 120,
+      totalTime: 300,
+    });
+    await repositories.insertHistory({
+      userName: 'listener',
+      workId: 101,
+      fileIndex: '0',
+      fileName: 'track2.mp3',
+      playTime: 60,
+      totalTime: 240,
+    });
+
+    const recent = await repositories.getHistoryGroupByWorkId('listener');
+    expect(recent).to.have.lengthOf(2);
+    const workIds = recent.map((r) => r.workId).sort((a, b) => a - b);
+    expect(workIds).to.deep.equal([100, 101]);
+  });
+
+  it('includes insert_time in work metadata', async function () {
+    const works = await repositories.getWorkMetadata(100, 'listener');
+    expect(works[0]).to.have.property('insertTime');
+    expect(works[0].insertTime).to.be.a('string');
+  });
 });

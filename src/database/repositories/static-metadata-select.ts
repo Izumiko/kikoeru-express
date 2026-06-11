@@ -17,6 +17,7 @@ const staticMetadataFields = {
   rate_average_2dp: staticMetadata.rateAverage2dp,
   rate_count_detail: staticMetadata.rateCountDetail,
   rank: staticMetadata.rank,
+  insertTime: staticMetadata.insertTime,
   vaObj: staticMetadata.vaObj,
   tagObj: staticMetadata.tagObj,
 };
