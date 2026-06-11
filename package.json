@@ -1,7 +1,8 @@
 {
   "name": "kikoeru-express",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "A self-hosted media server for listening to your DLsite voice works.",
+  "type": "module",
   "homepage": "https://github.com/XunJiJiang/kikoeru-express",
   "repository": {
     "type": "git",
@@ -11,32 +12,28 @@
     "kikoeru"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "bin": {
-    "kikoeru-express": "src/cli/server.js"
-  },
-  "nodemonConfig": {
-    "ignore": [
-      "config/*",
-      "sqlite/*"
-    ],
-    "delay": "2500"
+    "kikoeru-express": "build/server.js"
   },
   "scripts": {
-    "start": "node --trace-warnings src/cli/server.js",
-    "start:bundle": "node --trace-warnings build/server.js",
-    "dev": "nodemon --trace-warnings src/cli/server.js",
-    "dev:tsx": "tsx src/cli/server.js",
-    "scan": "node --trace-warnings src/cli/scanner.js",
-    "update": "node --trace-warnings src/cli/updater.js",
-    "build": "node scripts/build.js",
-    "build:tauri": "npm run build:quasar && npm run move-quasar && npm run build",
-    "build:quasar": "cd ../kikoeru-quasar && npx quasar build",
-    "move-quasar": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-quasar/dist/spa ../kikoeru-express/dist",
+    "start": "tsx --env-file=.env --trace-warnings src/cli/server.ts",
+    "start:bundle": "node --env-file=.env --trace-warnings build/server.js",
+    "dev": "tsx watch --env-file=.env --exclude \"config/*\" --exclude \"sqlite/*\" --trace-warnings src/cli/server.ts",
+    "scan": "tsx --env-file=.env --trace-warnings src/cli/scanner.ts",
+    "update": "tsx --env-file=.env --trace-warnings src/cli/updater.ts",
+    "build": "tsx scripts/build.ts",
+    "build:all": "npm run build:frontend && npm run move-frontend && npm run build",
+    "build:frontend": "cd ../kikoeru-web && npm run build",
+    "move-frontend": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-web/dist/spa ../kikoeru-express/dist",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "typecheck": "tsc --noEmit",
-    "test:unit": "cross-env NODE_ENV=test mocha test/",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test": "npm run lint && npm run typecheck && npm run test:unit"
   },
   "author": "Watanuki-Kimihiro",
@@ -44,47 +41,35 @@
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "axios": "^1.17.0",
-    "bcryptjs": "^3.0.3",
-    "bluebird": "^3.7.2",
     "cheerio": "^1.2.0",
     "compare-versions": "^6.1.1",
     "compression": "^1.8.1",
-    "connect-history-api-fallback": "^2.0.0",
-    "crypto": "^1.0.1",
-    "dotenv": "^17.4.2",
     "drizzle-orm": "^1.0.0-beta.22",
     "express": "^5.2.1",
     "express-jwt": "^8.5.1",
     "express-validator": "^7.3.2",
-    "htmlparser2": "^10.1.0",
-    "https": "^1.0.0",
     "jschardet": "^3.1.4",
     "jsonwebtoken": "^9.0.3",
-    "limit-promise": "^1.0.6",
-    "lodash": "^4.18.1",
-    "md5": "^2.3.0",
-    "natural-orderby": "^5.0.0",
     "socket.io": "^4.8.3",
-    "tunnel-agent": "^0.6.0",
-    "url-join": "^4.0.1",
-    "uuid": "^11.1.1",
-    "yargs": "^17.7.2"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.13.1",
-    "chai": "^4.5.0",
-    "chai-string": "^1.6.0",
-    "cross-env": "^10.1.0",
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.13.2",
+    "@vitest/coverage-v8": "^4.1.8",
     "drizzle-kit": "^1.0.0-beta.22",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.1.0",
     "globals": "^17.6.0",
-    "mocha": "^11.7.6",
-    "nodemon": "^3.1.14",
+    "prettier": "^3.8.4",
     "serve-index": "^1.9.2",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0",
+    "vitest": "^4.1.8"
   }
 }

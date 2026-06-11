@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-nvm use 14
+nvm use 24

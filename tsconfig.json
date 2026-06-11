@@ -1,28 +1,17 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "checkJs": false,
     "noEmit": true,
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2021",
     "lib": ["ES2021"],
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": [
-    "*.js",
-    "scripts/**/*.js",
-    "src/**/*.js",
-    "src/**/*.ts",
-    "test/**/*.js"
-  ],
-  "exclude": [
-    "build",
-    "node_modules",
-    "dist",
-    "package"
-  ]
+  "include": ["*.ts", "scripts/**/*.ts", "src/**/*.ts"],
+  "exclude": ["build", "node_modules", "dist", "package"]
 }

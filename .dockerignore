@@ -1,43 +1,16 @@
-# Git
-.git
-
-# Package
-package/*
-package-macos/*
-build/*
-
-# Config
-config/*
-
-# Covers
-covers/*
-
-# SQLite
-sqlite/*
-
-# Node modules
 node_modules
-
-*.md
-
-# Storage
-VoiceWork
-
-# HTTPS
-kikoeru.crt
-kikoeru.key
-
-# Release template
-Release-Template.md
-
-# GitHub
-.github
-
-# Env
-.env
-
-# Use build artifact from muveex/kikoeru-quasar instead
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+build
 dist
-
-# GitHub Actions
+*.md
 .github
+test
+vitest.config.ts
+coverage
+*.sqlite3
+config
+VoiceWork
