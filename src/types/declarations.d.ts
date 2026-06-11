@@ -4,12 +4,4 @@ declare module 'serve-index' {
   export default serveIndex;
 }
 
-declare module 'limit-promise' {
-  class LimitPromise {
-    constructor(maxConcurrency: number);
-    call<T>(fn: (...args: unknown[]) => T | Promise<T>, ...args: unknown[]): Promise<T>;
-  }
-  export default LimitPromise;
-}
-
 
