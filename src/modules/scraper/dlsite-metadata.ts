@@ -1,6 +1,65 @@
-// @ts-nocheck
 import * as cheerio from 'cheerio';
 import { formatRjCode } from '../media/rj-code.js';
+
+type DlsiteLanguageConfig = {
+  cookieLocale: string;
+  ageRatingsLabel: string;
+  genreLabel: string;
+  releaseLabel: string;
+  seriesLabel: string;
+  voiceActorLabel: string;
+};
+
+type WorkCircle = {
+  id?: number | string;
+  name?: string;
+};
+
+type WorkTag = {
+  id: number | string;
+  name: string;
+};
+
+type WorkVoiceActor = {
+  id: string;
+  name: string;
+};
+
+type WorkSeries = {
+  id: number;
+  name: string;
+};
+
+type StaticWorkMetadata = {
+  id: number;
+  title?: string;
+  circle?: WorkCircle;
+  nsfw?: boolean;
+  release?: string;
+  series?: WorkSeries;
+  tags: WorkTag[];
+  vas: WorkVoiceActor[];
+};
+
+type DynamicMetadataInput = {
+  dl_count?: number | string;
+  rate_average_2dp?: number;
+  rate_count?: number;
+  rate_count_detail?: unknown;
+  review_count?: number;
+  price?: number;
+  rank?: unknown[];
+};
+
+type DynamicWorkMetadata = {
+  dl_count: number | string;
+  rate_average_2dp: number;
+  rate_count: number;
+  rate_count_detail?: unknown;
+  review_count?: number;
+  price?: number;
+  rank?: unknown[];
+};
 
 const DLSITE_LANGUAGE_CONFIG = {
   'ja-jp': {
@@ -27,22 +86,23 @@ const DLSITE_LANGUAGE_CONFIG = {
     seriesLabel: '系列名',
     voiceActorLabel: '声优',
   },
-};
+} satisfies Record<string, DlsiteLanguageConfig>;
 
-const getDlsiteLanguageConfig = language => DLSITE_LANGUAGE_CONFIG[language] || DLSITE_LANGUAGE_CONFIG['zh-cn'];
+const getDlsiteLanguageConfig = (language: string): DlsiteLanguageConfig =>
+  DLSITE_LANGUAGE_CONFIG[language] || DLSITE_LANGUAGE_CONFIG['zh-cn'];
 
-const buildDlsiteWorkUrl = id => {
+const buildDlsiteWorkUrl = (id: number | string): string => {
   const rjcode = formatRjCode(id);
   return `https://www.dlsite.com/maniax/work/=/product_id/RJ${rjcode}.html`;
 };
 
-const buildDlsiteDynamicMetadataUrl = id => {
+const buildDlsiteDynamicMetadataUrl = (id: number | string): string => {
   const rjcode = formatRjCode(id);
   return `https://www.dlsite.com/maniax-touch/product/info/ajax?product_id=RJ${rjcode}`;
 };
 
-const parseDynamicWorkMetadata = data => {
-  const work = {};
+const parseDynamicWorkMetadata = (data: DynamicMetadataInput): DynamicWorkMetadata => {
+  const work = {} as DynamicWorkMetadata;
   work.dl_count = data.dl_count ? data.dl_count : '0'; // 售出数
   work.rate_average_2dp = data.rate_average_2dp ? data.rate_average_2dp : 0.0; // 平均评价
   work.rate_count = data.rate_count ? data.rate_count : 0; // 评价数量
@@ -55,9 +115,23 @@ const parseDynamicWorkMetadata = data => {
   return work;
 };
 
-const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID }) => {
+type ParseStaticWorkMetadataHtmlOptions = {
+  html: string;
+  id: number;
+  url: string;
+  languageConfig: DlsiteLanguageConfig;
+  nameToUUID: (name: string) => string;
+};
+
+const parseStaticWorkMetadataHtml = ({
+  html,
+  id,
+  url,
+  languageConfig,
+  nameToUUID,
+}: ParseStaticWorkMetadataHtmlOptions): StaticWorkMetadata => {
   const $ = cheerio.load(html);
-  const work = { id, tags: [], vas: [] };
+  const work: StaticWorkMetadata = { id, tags: [], vas: [] };
 
   work.title = $('meta[property="og:title"]').attr('content');
   if (work.title === undefined) {
@@ -66,7 +140,7 @@ const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID
 
   // 'xxxxx [circle_name] | DLsite' => 'xxxxx'
   const titlePattern = / \[.+\] \| DLsite$/;
-  work.title = work.title.replace(titlePattern, '');
+  work.title = (work.title || '').replace(titlePattern, '');
 
   const circleElement = $('span[class="maker_name"]').children('a');
   const circleUrl = circleElement.attr('href');
@@ -113,9 +187,10 @@ const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID
     .children('a');
   if (seriesElement.length) {
     const seriesUrl = seriesElement.attr('href');
-    if (seriesUrl.match(/SRI(\d{10})/)) {
+    const seriesMatch = seriesUrl?.match(/SRI(\d{10})/);
+    if (seriesMatch) {
       work.series = {
-        id: parseInt(seriesUrl.match(/SRI(\d{10})/)[1]),
+        id: parseInt(seriesMatch[1]),
         name: seriesElement.text(),
       };
     }
@@ -135,9 +210,10 @@ const parseStaticWorkMetadataHtml = ({ html, id, url, languageConfig, nameToUUID
     .each(function () {
       const tagUrl = $(this).attr('href');
       const tagName = $(this).text();
-      if (tagUrl.match(/genre\/(\d{3})/)) {
+      const tagMatch = tagUrl?.match(/genre\/(\d{3})/);
+      if (tagMatch) {
         work.tags.push({
-          id: parseInt(tagUrl.match(/genre\/(\d{3})/)[1]),
+          id: parseInt(tagMatch[1]),
           name: tagName,
         });
       }
@@ -170,4 +246,13 @@ export {
   getDlsiteLanguageConfig,
   parseDynamicWorkMetadata,
   parseStaticWorkMetadataHtml,
+};
+export type {
+  DlsiteLanguageConfig,
+  DynamicMetadataInput,
+  DynamicWorkMetadata,
+  StaticWorkMetadata,
+  WorkCircle,
+  WorkTag,
+  WorkVoiceActor,
 };

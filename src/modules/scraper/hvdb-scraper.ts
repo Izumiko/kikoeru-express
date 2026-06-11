@@ -1,13 +1,32 @@
-// @ts-nocheck
 import { formatRjCode } from '../media/rj-code.js';
 import { buildHvdbWorkUrl, parseHvdbWorkMetadataHtml } from './hvdb-metadata.js';
+import type { HvdbWorkMetadata } from './hvdb-metadata.js';
+import type { RetryRequestConfig } from './retry-config.js';
 
-const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }) => {
+type RetryHttpClient = {
+  retryGet: (url: string, config: RetryRequestConfig) => Promise<{ data: unknown }>;
+};
+
+type HvdbScraperOptions = {
+  httpClient: RetryHttpClient;
+  nameToUUID: (name: string) => string;
+  consoleLogger?: Pick<Console, 'log'>;
+};
+
+type HttpResponseError = {
+  response?: {
+    status?: number;
+  };
+  request?: unknown;
+  message?: string;
+};
+
+const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }: HvdbScraperOptions) => {
   /**
    * Scrapes work metadata from public HVDB page HTML.
    * @param {number} id Work id.
    */
-  const scrapeWorkMetadataFromHVDB = id =>
+  const scrapeWorkMetadataFromHVDB = (id: number): Promise<HvdbWorkMetadata> =>
     new Promise((resolve, reject) => {
       const rjcode = formatRjCode(id);
       const url = buildHvdbWorkUrl(id);
@@ -20,7 +39,7 @@ const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }) 
           return response.data;
         })
         .then(data => {
-          const work = parseHvdbWorkMetadataHtml({ html: data, id, nameToUUID });
+          const work = parseHvdbWorkMetadataHtml({ html: String(data), id, nameToUUID });
 
           if (work.tags.length === 0 && work.vas.length === 0) {
             reject(new Error("Couldn't parse data from HVDB work page."));
@@ -29,7 +48,7 @@ const createHvdbScraper = ({ httpClient, nameToUUID, consoleLogger = console }) 
             resolve(work);
           }
         })
-        .catch(error => {
+        .catch((error: HttpResponseError) => {
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             reject(new Error(`Couldn't request work page HTML (${url}), received: ${error.response.status}.`));
