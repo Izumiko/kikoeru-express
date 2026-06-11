@@ -1,12 +1,36 @@
-// @ts-nocheck
 import express from 'express';
+import type { Request } from 'express';
 import { check, validationResult } from 'express-validator'; // 后端校验
 
 import { config } from '../../../config.js';
 import db from '../../database.js';
 import { hashPassword } from '../auth/service.js';
+import type { AuthUser } from '../auth/service.js';
 
 const router = express.Router();
+
+type UserRequest = Request & {
+  user?: AuthUser;
+};
+
+type CreateUserRequestBody = {
+  name: string;
+  password: string;
+  group: 'user' | 'guest';
+};
+
+type UpdatePasswordRequestBody = {
+  name: string;
+  newPassword: string;
+};
+
+type DeleteUserRequestBody = {
+  users: Array<{
+    name: string;
+  }>;
+};
+
+const getErrorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 // 创建一个新用户 (只有 admin 账号拥有权限)
 router.post(
@@ -21,7 +45,7 @@ router.post(
       return true;
     }),
   ],
-  (req, res, next) => {
+  (req: Request<unknown, unknown, CreateUserRequestBody>, res, next) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -34,16 +58,18 @@ router.post(
       group: req.body.group,
     };
 
-    if (!config.auth || req.user.name === 'admin') {
+    const userReq = req as UserRequest;
+    if (!config.auth || userReq.user?.name === 'admin') {
       db.createUser({
         name: user.name,
         password: hashPassword(user.password),
         group: user.group,
       })
         .then(() => res.send({ message: `用户 ${user.name} 创建成功.` }))
-        .catch(err => {
-          if (err.message.indexOf('已存在') !== -1) {
-            res.status(403).send({ error: err.message });
+        .catch((err: unknown) => {
+          const message = getErrorMessage(err);
+          if (message.indexOf('已存在') !== -1) {
+            res.status(403).send({ error: message });
           } else {
             next(err);
           }
@@ -61,7 +87,7 @@ router.put(
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('newPassword').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
   ],
-  (req, res, next) => {
+  (req: Request<unknown, unknown, UpdatePasswordRequestBody>, res, next) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -73,11 +99,12 @@ router.put(
     };
     const newPassword = hashPassword(req.body.newPassword);
 
-    if (!config.auth || req.user.name === 'admin' || req.user.name === user.name) {
+    const userReq = req as UserRequest;
+    if (!config.auth || userReq.user?.name === 'admin' || userReq.user?.name === user.name) {
       db.updateUserPassword(user, newPassword)
         .then(() => res.send({ message: '密码修改成功.' }))
-        .catch(err => {
-          if (err.message.indexOf('用户名错误.') !== -1) {
+        .catch((err: unknown) => {
+          if (getErrorMessage(err).indexOf('用户名错误.') !== -1) {
             res.status(403).send({ error: '用户名错误.' });
           } else {
             next(err);
@@ -91,9 +118,10 @@ router.put(
 
 // 删除用户 (仅 admin 账号拥有权限)
 router.delete('/user', (req, res, next) => {
-  const users = req.body.users;
+  const { users } = req.body as DeleteUserRequestBody;
+  const userReq = req as UserRequest;
 
-  if (!config.auth || req.user.name === 'admin') {
+  if (!config.auth || userReq.user?.name === 'admin') {
     if (!users.find(user => user.name === 'admin')) {
       db.deleteUser(users)
         .then(() => {
@@ -112,7 +140,8 @@ router.delete('/user', (req, res, next) => {
 
 // 获取所有用户
 router.get('/users', (req, res, next) => {
-  if (!config.auth || req.user.name === 'admin') {
+  const userReq = req as UserRequest;
+  if (!config.auth || userReq.user?.name === 'admin') {
     db.getUsers()
       .then(users => {
         res.send({ users });

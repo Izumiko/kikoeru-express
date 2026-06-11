@@ -1,18 +1,27 @@
-// @ts-nocheck
 import express from 'express';
 import axios from 'axios';
 import compareVersions from 'compare-versions';
 import { config } from '../../../config.js';
 import { updateLock } from '../../upgrade/lock.js';
-import pjson from '../../../package.json';
+import pjson from '../../../package.json' with { type: 'json' };
 const router = express.Router();
 
-let lastGitHubCheck = null;
+type VersionCheckResponse = {
+  latest_stable: string | null;
+  latest_release: string | null;
+  update_available: boolean | null;
+};
+
+type GitHubRelease = {
+  tag_name?: string;
+};
+
+let lastGitHubCheck: number | null = null;
 let lastGitHubResponse = {
   latest_stable: null,
   latest_release: null,
   update_available: null,
-};
+} satisfies VersionCheckResponse;
 
 router.get('/', (req, res) => {
   const lockReason = '新版解决了旧版扫描时将かの仔和こっこ识别为同一个人的问题，建议进行扫描以自动修复这一问题';
@@ -38,13 +47,12 @@ router.get('/', (req, res) => {
 
   const urlLatestStable = 'https://api.github.com/repos/umonaca/kikoeru-express/releases/latest';
   const urlLatestRelease = 'https://api.github.com/repos/umonaca/kikoeru-express/releases';
-  const requestLatestStable = axios.get(urlLatestStable);
-  const requestLatestRelease = axios.get(urlLatestRelease);
+  const requestLatestStable = axios.get<GitHubRelease>(urlLatestStable);
+  const requestLatestRelease = axios.get<GitHubRelease[]>(urlLatestRelease);
 
-  axios
-    .all([requestLatestStable, requestLatestRelease])
+  Promise.all([requestLatestStable, requestLatestRelease])
     .then(
-      axios.spread((responseStable, responseLatest) => {
+      ([responseStable, responseLatest]) => {
         if (
           responseStable.data &&
           responseLatest.data &&
@@ -79,7 +87,7 @@ router.get('/', (req, res) => {
         } else {
           res.send(throttledResponse);
         }
-      })
+      }
     )
     .catch(function () {
       res.send({ throttledResponse });

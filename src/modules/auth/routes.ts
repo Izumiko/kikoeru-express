@@ -1,5 +1,5 @@
-// @ts-nocheck
 import express from 'express';
+import type { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator'; // 后端校验
 import { expressjwt as expressJwt } from 'express-jwt'; // 把 JWT 的 payload 部分赋值于 req.auth
 
@@ -13,8 +13,18 @@ import {
 } from './service.js';
 
 import { config } from '../../../config.js';
+import type { AuthUser } from './service.js';
 
 const router = express.Router();
+
+type LoginRequestBody = {
+  name: string;
+  password: string;
+};
+
+type AuthenticatedRequest = Request & {
+  auth?: AuthUser;
+};
 
 // 用户登录
 router.post(
@@ -23,7 +33,7 @@ router.post(
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('password').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
   ],
-  (req, res /*, next */) => {
+  (req: Request<unknown, unknown, LoginRequestBody>, res: Response /*, next */) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -63,7 +73,10 @@ if (config.auth) {
 router.get('/me', (req, res, next) => {
   // 同时告诉客户端，服务器是否启用用户验证
   const auth = config.auth;
-  const user = config.auth ? { name: req.auth.name, group: req.auth.group } : { name: 'admin', group: 'administrator' };
+  const authReq = req as AuthenticatedRequest;
+  const user = config.auth
+    ? { name: authReq.auth?.name, group: authReq.auth?.group }
+    : { name: 'admin', group: 'administrator' };
   res.send({ user, auth });
 });
 

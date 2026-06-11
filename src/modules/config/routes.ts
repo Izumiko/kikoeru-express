@@ -1,11 +1,23 @@
-// @ts-nocheck
 import _ from 'lodash';
 import express from 'express';
+import type { Request } from 'express';
 import { config, setConfig, sharedConfigHandle } from '../../../config.js';
+import type { AppConfig } from '../../config/types.js';
+import type { AuthUser } from '../auth/service.js';
 
 const router = express.Router();
 
-const filterConfig = (_config, option = 'read') => {
+type ConfigFilterMode = 'read' | 'write';
+
+type UserRequest = Request & {
+  user?: AuthUser;
+};
+
+type AdminConfigRequestBody = {
+  config?: Partial<AppConfig>;
+};
+
+const filterConfig = (_config: Partial<AppConfig>, option: ConfigFilterMode = 'read'): Partial<AppConfig> => {
   const currentConfig = config;
   const configClone = _.cloneDeep(_config);
   delete configClone.md5secret;
@@ -21,10 +33,12 @@ const filterConfig = (_config, option = 'read') => {
 
 // 修改配置文件
 router.put('/admin', (req, res, next) => {
-  if (!config.auth || req.user.name === 'admin') {
+  const userReq = req as UserRequest;
+  if (!config.auth || userReq.user?.name === 'admin') {
     try {
       // Note: setConfig uses Object.assign to merge new configs
-      setConfig(filterConfig(req.body.config, 'write'));
+      const body = req.body as AdminConfigRequestBody;
+      setConfig(filterConfig(body.config || {}, 'write'));
       res.send({ message: '保存成功.' });
     } catch (err) {
       next(err);
@@ -36,7 +50,8 @@ router.put('/admin', (req, res, next) => {
 
 // 获取配置文件
 router.get('/admin', (req, res, next) => {
-  if (!config.auth || req.user.name === 'admin') {
+  const userReq = req as UserRequest;
+  if (!config.auth || userReq.user?.name === 'admin') {
     try {
       res.send({ config: filterConfig(config, 'read') });
     } catch (err) {
