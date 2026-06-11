@@ -2,7 +2,6 @@ import path from 'path';
 import express from 'express';
 import type { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import compression from 'compression';
-import history from 'connect-history-api-fallback';
 import serveIndexFactory from 'serve-index';
 const serveIndex = serveIndexFactory as (path: string, options?: { icons?: boolean }) => RequestHandler;
 import { config } from '../../config.js';
@@ -39,23 +38,37 @@ const createApp = (): Express => {
     app.use('/media/download/VoiceWork', express.static('VoiceWork'), serveIndex('VoiceWork', { icons: true }));
   }
 
-  // connect-history-api-fallback 必须放在静态资源之前，保证静态资源优先，其他全部回到 index.html
-  app.use(
-    history({
-      rewrites: [
-        {
-          from: /^\/api\/.*$/,
-          to: (context) => context.parsedUrl.path || '/',
-        },
-      ],
-      index: '/index.html',
-      verbose: false,
-    })
-  );
-  // Serve WebApp routes
-  app.use(express.static(path.join(runtimeBaseDir, 'dist')));
-  // Expose API routes
+  // 首先挂载 API 路由
   api(app);
+
+  // 其次挂载静态资源
+  app.use(express.static(path.join(runtimeBaseDir, 'dist')));
+
+  // 最后使用原生中间件实现 SPA 路由兜底
+  app.use((req, res, next) => {
+    // 只有 GET 请求才可能是页面导航
+    if (req.method !== 'GET') {
+      return next();
+    }
+
+    // 排除 API 路由 
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    // 排除带有扩展名的资源请求 (Dot Rule)
+    if (req.path.includes('.')) {
+      return next();
+    }
+
+    // 确认请求接受 HTML
+    const accept = req.headers.accept || '';
+    if (accept.includes('text/html') || accept.includes('*/*')) {
+      res.sendFile(path.join(runtimeBaseDir, 'dist', 'index.html'));
+    } else {
+      next();
+    }
+  });
 
   // 返回错误响应
 
