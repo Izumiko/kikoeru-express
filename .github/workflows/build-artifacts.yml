@@ -2,42 +2,32 @@ name: Build artifacts
 
 on:
   push:
-    branches-ignore:
-      - "dependabot/**"
     tags:
       - v*
 
 jobs:
   build-front-end:
-    runs-on: ubuntu-22.04
-    name: Build front end PWA from source
+    runs-on: ubuntu-latest
+    name: Build front end from source
     steps:
       - name: Check out latest front end
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
-          repository: kikoeru-project/kikoeru-quasar
+          repository: Izumiko/kikoeru-web
           ref: unstable
 
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6
         with:
-          node-version: 14
+          node-version: '24.x'
 
-      - run: npm install -g @quasar/cli
       - run: npm ci
-      - run: quasar build && quasar build -m pwa
+      - run: npm run build
 
-      - name: Upload PWA
-        uses: actions/upload-artifact@v2
+      - name: Upload front end artifacts
+        uses: actions/upload-artifact@v7
         with:
-          name: PWA-unstable
-          path: dist/pwa
-          if-no-files-found: error
-
-      - name: Upload SPA
-        uses: actions/upload-artifact@v2
-        with:
-          name: SPA-unstable
+          name: web-unstable
           path: dist/spa
           if-no-files-found: error
 
@@ -51,25 +41,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             node_version: 24
             archive_name_prefix: kikoeru-linux-x64
 
-          - os: macos-14
+          - os: macos-latest
             node_version: 24
             archive_name_prefix: kikoeru-darwin-x64
 
-          - os: windows-2022
+          - os: windows-latest
             node_version: 24
             archive_name_prefix: kikoeru-win-x64
 
     name: Node ${{ matrix.node_version }} on ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node_version }}
 
@@ -81,10 +71,10 @@ jobs:
         id: source_name
         run: echo ::set-output name=SOURCE_NAME::${GITHUB_REF##*/}
 
-      - name: Download front-end artifact (PWA)
-        uses: actions/download-artifact@v2
+      - name: Download front-end artifact
+        uses: actions/download-artifact@v8
         with:
-          name: PWA-unstable
+          name: web-unstable
           path: dist
 
       - name: Build backend bundle
@@ -97,45 +87,47 @@ jobs:
         run: |
           set -e
           mkdir -p ${archive_name}
+          rm build/*.map
           cp -R build ${archive_name}/
           mkdir -p ${archive_name}/build/config ${archive_name}/build/sqlite ${archive_name}/build/covers ${archive_name}/build/VoiceWork
-          cp -R node_modules ${archive_name}/
+          mkdir -p ${archive_name}/node_modules/@libsql
+          cp -R node_modules/@libsql/*-x64* ${archive_name}/node_modules/@libsql/
           cp package.json package-lock.json ${archive_name}/
         env:
           archive_name: ${{ matrix.archive_name_prefix }}-${{ steps.source_name.outputs.SOURCE_NAME }}
 
       - name: Prepare release archive
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.archive_name_prefix }}-${{ steps.source_name.outputs.SOURCE_NAME }}
           path: ${{ matrix.archive_name_prefix }}-${{ steps.source_name.outputs.SOURCE_NAME }}
           if-no-files-found: error
 
   build-docker:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Prepare multiarch docker images
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/unstable') || startsWith(github.ref, 'refs/heads/stable')
     needs: build
 
     steps:
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up QEMU for cross platform builds
         id: qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v4
 
       - name: Available platforms
         run: echo ${{ steps.qemu.outputs.platforms }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v4
 
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -158,16 +150,16 @@ jobs:
         run: echo "${{ steps.front_version.outputs.value }}"
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v7
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           pull: true
           tags: |
-            muveex/kikoeru-express:${{ steps.source_name.outputs.SOURCE_NAME }}
-            muveex/kikoeru-express:dev
-            muveex/kikoeru:${{ steps.source_name.outputs.SOURCE_NAME }}
-            muveex/kikoeru:dev
+            izumiko/kikoeru-express:${{ steps.source_name.outputs.SOURCE_NAME }}
+            izumiko/kikoeru-express:latest
+            izumiko/kikoeru:${{ steps.source_name.outputs.SOURCE_NAME }}
+            izumiko/kikoeru:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           build-args:
@@ -190,18 +182,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             archive_name_prefix: kikoeru-linux-x64
 
-          - os: macos-14
+          - os: macos-latest
             archive_name_prefix: kikoeru-darwin-x64
 
-          - os: windows-2022
+          - os: windows-latest
             archive_name_prefix: kikoeru-win-x64
 
     steps:
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6
         with:
           node-version: 24
 
@@ -210,7 +202,7 @@ jobs:
         run: echo ::set-output name=SOURCE_NAME::${GITHUB_REF##*/}
 
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.archive_name_prefix }}-${{ steps.source_name.outputs.SOURCE_NAME }}
 
@@ -218,7 +210,7 @@ jobs:
         run: ls -al .
 
       - name: Test bundled server on *nix
-        if: ${{ matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-14' }}
+        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest' }}
         run: |
           set -e
           nohup node build/server.js &
@@ -227,7 +219,7 @@ jobs:
           pkill -TERM node
 
       - name: Test bundled server on Windows
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'windows-latest' }}
         shell: pwsh
         run: |
           $PSVersionTable
@@ -243,7 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Test Docker image on linux/amd64
     needs: build-docker
-    container: 'muveex/kikoeru:dev'
+    container: 'izumiko/kikoeru:latest'
 
     steps:
       - name: Show running process
@@ -259,14 +251,14 @@ jobs:
           pkill -TERM node
 
   publish:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Prepare release draft
     if: startsWith(github.ref, 'refs/tags/')
     needs: [test-release-archive]
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -277,7 +269,7 @@ jobs:
         run: ls -al artifacts/
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files:
