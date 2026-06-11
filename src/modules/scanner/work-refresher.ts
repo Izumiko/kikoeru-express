@@ -1,6 +1,18 @@
-// @ts-nocheck
 import { formatRjCode } from '../media/rj-code.js';
 import { ScanCounters } from './counters.js';
+import type { ScanResult } from './counters.js';
+import type { ScannerLog, ScanTask } from './session.js';
+
+type WorkRefresherOptions = {
+  tasks: ScanTask[];
+  addMainLog: (log: ScannerLog) => void;
+  emitMainLog: (message: string) => void;
+  removeTask: (rjcode: string) => void;
+  addResult: (rjcode: string, result: Extract<ScanResult, 'updated' | 'failed'>, count: number) => void;
+  consoleLogger?: Pick<Console, 'log'>;
+};
+
+type WorkIdRow = Record<string, number>;
 
 const createWorkRefresher = ({
   tasks,
@@ -9,13 +21,18 @@ const createWorkRefresher = ({
   removeTask,
   addResult,
   consoleLogger = console,
-}) => {
-  const markTaskResult = (rjcode, result) => {
-    tasks.find(task => task.rjcode === rjcode).result = result;
+}: WorkRefresherOptions) => {
+  const markTaskResult = (rjcode: string, result: Extract<ScanResult, 'updated' | 'failed'>): void => {
+    const task = tasks.find(task => task.rjcode === rjcode);
+    if (task) task.result = result;
     removeTask(rjcode);
   };
 
-  const refreshWorks = async (query, idColumnName, processor) => {
+  const refreshWorks = async (
+    query: Promise<WorkIdRow[]>,
+    idColumnName: string,
+    processor: (id: number) => Promise<Extract<ScanResult, 'updated' | 'failed'>>
+  ): Promise<ScanCounters> => {
     return query.then(async works => {
       consoleLogger.log(` * 共 ${works.length} 个音声.`);
       addMainLog({

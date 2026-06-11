@@ -1,7 +1,24 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
+import type { ScannerLog, WorkFolder } from '../media/folder-scanner.js';
 import { formatRjCode } from '../media/rj-code.js';
+import type { ScanResult } from './counters.js';
+
+type WorkProcessorOptions = {
+  workExists: (id: number) => Promise<boolean>;
+  coverFolderDir: string;
+  tagLanguage: string;
+  getMetadata: (
+    id: number,
+    rootFolderName: string,
+    dir: string,
+    tagLanguage: string
+  ) => Promise<Extract<ScanResult, 'added' | 'failed'>>;
+  getCoverImage: (id: number, types: string[]) => Promise<Extract<ScanResult, 'added' | 'failed'>>;
+  addTask: (rjcode: string) => void;
+  addLogForTask: (rjcode: string, log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'log'>;
+};
 
 const createWorkProcessor = ({
   workExists,
@@ -12,13 +29,13 @@ const createWorkProcessor = ({
   addTask,
   addLogForTask,
   consoleLogger = console,
-}) => {
+}: WorkProcessorOptions) => {
   const coverTypes = ['main', 'sam', '240x240'];
 
-  const findMissingCoverTypes = rjcode =>
+  const findMissingCoverTypes = (rjcode: string): string[] =>
     coverTypes.filter(type => !fs.existsSync(path.join(coverFolderDir, `RJ${rjcode}_img_${type}.jpg`)));
 
-  const processFolder = folder =>
+  const processFolder = (folder: WorkFolder): Promise<Extract<ScanResult, 'added' | 'failed' | 'skipped'>> =>
     workExists(folder.id).then(exists => {
       const rjcode = formatRjCode(folder.id);
       if (exists) {

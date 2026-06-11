@@ -1,13 +1,33 @@
-// @ts-nocheck
+import type { ScannerLog } from '../media/folder-scanner.js';
 import { formatRjCode } from '../media/rj-code.js';
+import type { ScanResult } from './counters.js';
+
+type WorkMetadata = Record<string, unknown> & {
+  rootFolderName?: string;
+  dir?: string;
+};
+
+type MetadataIngestionOptions = {
+  scrapeWorkMetadataFromDLsite: (id: number, tagLanguage: string) => Promise<WorkMetadata>;
+  insertWorkMetadata: (metadata: WorkMetadata) => Promise<unknown>;
+  addLogForTask: (rjcode: string, log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'log' | 'error'>;
+};
+
+const toErrorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 const createMetadataIngestion = ({
   scrapeWorkMetadataFromDLsite,
   insertWorkMetadata,
   addLogForTask,
   consoleLogger = console,
-}) => {
-  const getMetadata = (id, rootFolderName, dir, tagLanguage) => {
+}: MetadataIngestionOptions) => {
+  const getMetadata = (
+    id: number,
+    rootFolderName: string,
+    dir: string,
+    tagLanguage: string
+  ): Promise<Extract<ScanResult, 'added' | 'failed'>> => {
     const rjcode = formatRjCode(id);
     consoleLogger.log(` -> [RJ${rjcode}] 从 DLSite 抓取元数据...`);
     addLogForTask(rjcode, {
@@ -33,26 +53,28 @@ const createMetadataIngestion = ({
               message: '元数据成功添加到数据库.',
             });
 
-            return 'added';
+            return 'added' as const;
           })
-          .catch(err => {
-            consoleLogger.error(`  ! [RJ${rjcode}] 在插入元数据过程中出错: ${err.message}`);
+          .catch((err: unknown) => {
+            const message = toErrorMessage(err);
+            consoleLogger.error(`  ! [RJ${rjcode}] 在插入元数据过程中出错: ${message}`);
             addLogForTask(rjcode, {
               level: 'error',
-              message: `在插入元数据过程中出错: ${err.message}`,
+              message: `在插入元数据过程中出错: ${message}`,
             });
 
-            return 'failed';
+            return 'failed' as const;
           });
       })
-      .catch(err => {
-        consoleLogger.error(`  ! [RJ${rjcode}] 在抓取元数据过程中出错: ${err.message}`);
+      .catch((err: unknown) => {
+        const message = toErrorMessage(err);
+        consoleLogger.error(`  ! [RJ${rjcode}] 在抓取元数据过程中出错: ${message}`);
         addLogForTask(rjcode, {
           level: 'error',
-          message: `在抓取元数据过程中出错: ${err.message}`,
+          message: `在抓取元数据过程中出错: ${message}`,
         });
 
-        return 'failed';
+        return 'failed' as const;
       });
   };
 
@@ -64,3 +86,4 @@ const createMetadataIngestion = ({
 export {
   createMetadataIngestion,
 };
+export type { WorkMetadata };

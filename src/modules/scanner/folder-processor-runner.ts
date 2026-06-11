@@ -1,5 +1,17 @@
-// @ts-nocheck
+import type { WorkFolder } from '../media/folder-scanner.js';
 import { formatRjCode } from '../media/rj-code.js';
+import type { ScanCounters, ScanResult } from './counters.js';
+import type { ScannerLog, ScanTask } from './session.js';
+
+type FolderProcessResult = Extract<ScanResult, 'added' | 'failed' | 'skipped'>;
+
+type FolderProcessorRunnerOptions = {
+  tasks: ScanTask[];
+  addLogForTask: (rjcode: string, log: ScannerLog) => void;
+  removeTask: (rjcode: string) => void;
+  addResult: (rjcode: string, result: Extract<ScanResult, 'added' | 'failed'>, count: number) => void;
+  consoleLogger?: Pick<Console, 'log' | 'error'>;
+};
 
 const createFolderProcessorRunner = ({
   tasks,
@@ -7,13 +19,14 @@ const createFolderProcessorRunner = ({
   removeTask,
   addResult,
   consoleLogger = console,
-}) => {
-  const markTaskResult = (rjcode, result) => {
-    tasks.find(task => task.rjcode === rjcode).result = result;
+}: FolderProcessorRunnerOptions) => {
+  const markTaskResult = (rjcode: string, result: FolderProcessResult): void => {
+    const task = tasks.find(task => task.rjcode === rjcode);
+    if (task) task.result = result;
     removeTask(rjcode);
   };
 
-  const reportAdded = (rjcode, count) => {
+  const reportAdded = (rjcode: string, count: number): void => {
     consoleLogger.log(` -> [RJ${rjcode}] 添加成功! Added: ${count}`);
     addLogForTask(rjcode, {
       level: 'info',
@@ -23,7 +36,7 @@ const createFolderProcessorRunner = ({
     addResult(rjcode, 'added', count);
   };
 
-  const reportFailed = (rjcode, count) => {
+  const reportFailed = (rjcode: string, count: number): void => {
     consoleLogger.error(` -> [RJ${rjcode}] 添加失败! Failed: ${count}`);
     addLogForTask(rjcode, {
       level: 'error',
@@ -33,7 +46,7 @@ const createFolderProcessorRunner = ({
     addResult(rjcode, 'failed', count);
   };
 
-  const processFolderResult = (folder, result, counts) => {
+  const processFolderResult = (folder: WorkFolder, result: FolderProcessResult, counts: ScanCounters): void => {
     const rjcode = formatRjCode(folder.id);
     counts.increment(result);
 
@@ -44,7 +57,11 @@ const createFolderProcessorRunner = ({
     }
   };
 
-  const processFolders = (folders, processor, counts) =>
+  const processFolders = (
+    folders: WorkFolder[],
+    processor: (folder: WorkFolder) => Promise<FolderProcessResult>,
+    counts: ScanCounters
+  ): Promise<void[]> =>
     Promise.all(
       folders.map(folder =>
         processor(folder).then(result => {
