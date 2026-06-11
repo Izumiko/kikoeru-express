@@ -1,5 +1,4 @@
-import yargs from 'yargs/yargs';
-import { hideBin } from 'yargs/helpers';
+import { parseArgs } from 'node:util';
 import { performUpdate } from '../core/runtime.js';
 import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 
@@ -16,50 +15,39 @@ type RunUpdateCliOptions = {
   exit?: ((code: number) => void) | undefined;
 };
 
-const createUpdateArgParser = (argv: string[]) =>
-  yargs(argv)
-    .option('refreshAll', {
-      alias: 'all',
-      description: 'Refresh both dynamic and static metadata',
-      type: 'boolean',
-    })
-    .option('includeNSFW', {
-      alias: 'nsfw',
-      description: 'Refresh dynamic metadata and nsfw field',
-      type: 'boolean',
-    })
-    .option('includeTags', {
-      alias: 'tags',
-      description: 'Refresh dynamic metadata and tags',
-      type: 'boolean',
-    })
-    .option('includeVA', {
-      alias: 'vas',
-      description: 'Refresh dynamic metadata and voice actors',
-      type: 'boolean',
-    });
+const parseUpdateOptions = (argv: string[]): MetadataUpdateOptions => {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      refreshAll: { type: 'boolean', short: 'a' },
+      all: { type: 'boolean' },
+      includeNSFW: { type: 'boolean', short: 'n' },
+      nsfw: { type: 'boolean' },
+      includeTags: { type: 'boolean', short: 't' },
+      tags: { type: 'boolean' },
+      includeVA: { type: 'boolean', short: 'v' },
+      vas: { type: 'boolean' },
+    },
+    strict: false,
+  });
 
-const buildUpdateOptions = (argv: UpdateArgv): MetadataUpdateOptions => {
   const updateOptions: MetadataUpdateOptions = {};
 
-  if (argv.refreshAll) {
+  if (values.refreshAll || values.all) {
     updateOptions.refreshAll = true;
-  } else if (argv.includeNSFW) {
+  } else if (values.includeNSFW || values.nsfw) {
     updateOptions.includeNSFW = true;
-  } else if (argv.includeTags) {
+  } else if (values.includeTags || values.tags) {
     updateOptions.includeTags = true;
-  } else if (argv.includeVA) {
+  } else if (values.includeVA || values.vas) {
     updateOptions.includeVA = true;
   }
 
   return updateOptions;
 };
 
-const parseUpdateOptions = (argv: string[]): MetadataUpdateOptions =>
-  buildUpdateOptions(createUpdateArgParser(argv).argv as UpdateArgv);
-
 const runUpdateCli = ({
-  argv = hideBin(process.argv),
+  argv = process.argv.slice(2),
   performUpdateFn = undefined,
   exit = (code) => process.exit(code),
 }: RunUpdateCliOptions = {}) =>
@@ -71,4 +59,4 @@ const runUpdateCli = ({
       throw err;
     });
 
-export { buildUpdateOptions, parseUpdateOptions, runUpdateCli };
+export { parseUpdateOptions, runUpdateCli };
