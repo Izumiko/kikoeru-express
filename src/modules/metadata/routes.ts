@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { param } from 'express-validator';
+import { param, query } from 'express-validator';
 import db from '../../database.js';
 import { config } from '../../../config.js';
 import { formatRjCode } from '../media/rj-code.js';
@@ -151,6 +151,38 @@ router.get('/tracks/:id', param('id').isInt(), (req: Request, res: Response, nex
     })
     .catch(err => next(err));
 });
+
+router.get(
+  '/works',
+  query('page').optional({ nullable: true }).isInt(),
+  query('sort').optional({ nullable: true }).isIn(['desc', 'asc']),
+  query('seed').optional({ nullable: true }).isInt(),
+  async (req: Request, res: Response) => {
+    if (!isValidRequest(req, res)) return;
+
+    const currentPage = parseInt(req.query.page as string) || 1;
+    const order = (req.query.order as string) || 'release';
+    const sort = (req.query.sort as string) || 'desc';
+    const username = getUsername(req);
+    const shuffleSeed = req.query.seed ? parseInt(req.query.seed as string) : 7;
+
+    try {
+      await sendPaginatedWorks(
+        res,
+        () => db.getWorksBy({ username }),
+        currentPage,
+        PAGE_SIZE,
+        order,
+        sort,
+        shuffleSeed,
+        true
+      );
+    } catch (err) {
+      res.status(500).send({ error: '服务器错误' });
+      console.error(err);
+    }
+  }
+);
 
 router.get(METADATA_LOOKUP_ROUTES, (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
