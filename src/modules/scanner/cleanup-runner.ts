@@ -1,12 +1,21 @@
-// @ts-nocheck
+import type { ScannerLog } from '../media/folder-scanner.js';
+
+type CleanupRunnerOptions = {
+  skipCleanup: boolean;
+  performCleanup: () => Promise<void>;
+  addMainLog: (log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'log' | 'error'>;
+  exit?: (code: number) => void;
+};
+
 const createCleanupRunner = ({
   skipCleanup,
   performCleanup,
   addMainLog,
   consoleLogger = console,
   exit = code => process.exit(code),
-}) => {
-  const runCleanup = async () => {
+}: CleanupRunnerOptions) => {
+  const runCleanup = async (): Promise<void> => {
     if (skipCleanup) {
       consoleLogger.log(' * 根据设置跳过清理.');
       return;
@@ -26,13 +35,14 @@ const createCleanupRunner = ({
         level: 'info',
         message: '清理完成. 现在开始扫描...',
       });
-    } catch (err) {
-      consoleLogger.error(` ! 在执行清理过程中出错: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      consoleLogger.error(` ! 在执行清理过程中出错: ${message}`);
       addMainLog({
         level: 'error',
-        message: `在执行清理过程中出错: ${err.message}`,
+        message: `在执行清理过程中出错: ${message}`,
       });
-      return exit(1);
+      exit(1);
     }
   };
 

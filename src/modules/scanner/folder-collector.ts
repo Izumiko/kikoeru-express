@@ -1,16 +1,29 @@
-// @ts-nocheck
 import path from 'path';
+import type { RootFolderConfig } from '../../config/types.js';
+import type { ScannerLog, WorkFolder } from '../media/folder-scanner.js';
 import { formatRjCode } from '../media/rj-code.js';
 import { dedupeFoldersById } from './folder-dedupe.js';
+
+type FolderCollectorOptions = {
+  rootFolders: RootFolderConfig[];
+  getFolderList: (
+    rootFolder: RootFolderConfig,
+    current: string,
+    depth: number,
+    callback: (log: ScannerLog) => void
+  ) => AsyncIterable<WorkFolder>;
+  addMainLog: (log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'log'>;
+};
 
 const createFolderCollector = ({
   rootFolders,
   getFolderList,
   addMainLog,
   consoleLogger = console,
-}) => {
-  const collectFolders = async () => {
-    const folderList = [];
+}: FolderCollectorOptions) => {
+  const collectFolders = async (): Promise<WorkFolder[]> => {
+    const folderList: WorkFolder[] = [];
     for (const rootFolder of rootFolders) {
       for await (const folder of getFolderList(rootFolder, '', 0, addMainLog)) {
         folderList.push(folder);
@@ -26,9 +39,10 @@ const createFolderCollector = ({
     return folderList;
   };
 
-  const logDuplicateFolders = (uniqueFolderList, duplicate) => {
+  const logDuplicateFolders = (uniqueFolderList: WorkFolder[], duplicate: Record<string, WorkFolder[]>): void => {
     Object.keys(duplicate).forEach(key => {
       const addedFolder = uniqueFolderList.find(folder => folder.id === parseInt(key));
+      if (!addedFolder) return;
       duplicate[key].push(addedFolder);
 
       const rjcode = formatRjCode(key);
@@ -40,6 +54,7 @@ const createFolderCollector = ({
 
       duplicate[key].forEach(folder => {
         const rootFolder = rootFolders.find(rootFolder => rootFolder.name === folder.rootFolderName);
+        if (!rootFolder) return;
         const absolutePath = path.join(rootFolder.path, folder.relativePath);
         consoleLogger.log(`   "${absolutePath}"`);
         addMainLog({
@@ -50,7 +65,7 @@ const createFolderCollector = ({
     });
   };
 
-  const dedupeAndReport = folderList => {
+  const dedupeAndReport = (folderList: WorkFolder[]): { uniqueFolderList: WorkFolder[]; duplicateNum: number } => {
     const dedupedFolders = dedupeFoldersById(folderList);
     const uniqueFolderList = dedupedFolders.uniqueArr;
     const duplicate = dedupedFolders.duplicate;
@@ -68,7 +83,8 @@ const createFolderCollector = ({
     return { uniqueFolderList, duplicateNum };
   };
 
-  const collectUniqueFolders = async () => dedupeAndReport(await collectFolders());
+  const collectUniqueFolders = async (): Promise<{ uniqueFolderList: WorkFolder[]; duplicateNum: number }> =>
+    dedupeAndReport(await collectFolders());
 
   return {
     collectFolders,
