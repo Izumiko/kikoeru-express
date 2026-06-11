@@ -12,9 +12,4 @@ declare module 'limit-promise' {
   export default LimitPromise;
 }
 
-declare module 'tunnel-agent' {
-  export function httpOverHttp(options?: unknown): unknown;
-  export function httpOverHttps(options?: unknown): unknown;
-  export function httpsOverHttp(options?: unknown): unknown;
-  export function httpsOverHttps(options?: unknown): unknown;
-}
+

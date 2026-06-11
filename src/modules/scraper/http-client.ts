@@ -1,6 +1,5 @@
 import originAxios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { httpsOverHttp, httpOverHttp } from 'tunnel-agent';
 
 import { config } from '../../../config.js';
 import { applyRetryConfig } from './retry-config.js';
@@ -19,13 +18,6 @@ type RetryAxiosInstance = AxiosInstance & {
   retryGet: (url: string, requestConfig: RetryRequestConfig) => Promise<AxiosResponse>;
 };
 
-type TunnelOptions = {
-  proxy: {
-    port: number;
-    host?: string;
-  };
-};
-
 const axios = originAxios.create() as RetryAxiosInstance;
 // axios.defaults.timeout = Config.timeout || 2000; // 请求超时的毫秒数
 // // 拦截请求 (添加自定义默认参数)
@@ -35,22 +27,14 @@ const axios = originAxios.create() as RetryAxiosInstance;
 //   return config;
 // });
 
-// 代理设置
-const TUNNEL_OPTIONS: TunnelOptions = {
-  proxy: {
-    port: Config.httpProxyPort,
-  },
-};
-if (Config.httpProxyHost) {
-  TUNNEL_OPTIONS.proxy.host = Config.httpProxyHost;
-}
-
 // 拦截请求 (http 代理)
 axios.interceptors.request.use(function (config) {
   if (Config.httpProxyPort) {
-    config.proxy = false; // 强制禁用环境变量中的代理配置
-    config.httpAgent = httpOverHttp(TUNNEL_OPTIONS);
-    config.httpsAgent = httpsOverHttp(TUNNEL_OPTIONS);
+    config.proxy = {
+      protocol: 'http',
+      host: Config.httpProxyHost || '127.0.0.1',
+      port: Config.httpProxyPort,
+    };
   }
 
   return config;
