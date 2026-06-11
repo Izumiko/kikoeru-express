@@ -12,7 +12,7 @@ describe('Auth service', function () {
     expect(authService.shouldUpgradePasswordHash(passwordHash)).to.equal(true);
   });
 
-  it('verifies modern bcrypt password hashes', function () {
+  it('verifies modern scrypt password hashes', function () {
     const passwordHash = authService.hashPassword('password');
 
     expect(authService.isModernPasswordHash(passwordHash)).to.equal(true);

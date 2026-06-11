@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import bcrypt from 'bcryptjs';
+import { createHash, scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload, SignOptions } from 'jsonwebtoken';
 import type { Request } from 'express';
@@ -8,9 +7,9 @@ import { config } from '../../../config.js';
 
 const issuer = 'http://kikoeru';
 const audience = 'http://kikoeru/api';
-const bcryptPrefix = '$2';
-const bcryptRounds = 12;
+const scryptPrefix = 'scrypt$';
 const jwtAlgorithm = 'HS256' as const;
+const scryptKeylen = 64;
 
 type AuthUser = {
   name: string;
@@ -41,14 +40,28 @@ const hashLegacyPassword = (password: string): string =>
     .update(password + config.md5secret)
     .digest('hex');
 
-const hashPassword = (password: string): string => bcrypt.hashSync(password, bcryptRounds);
+const hashPassword = (password: string): string => {
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, scryptKeylen).toString('hex');
+  return `${scryptPrefix}${salt}$${hash}`;
+};
 
 const isModernPasswordHash = (passwordHash: unknown): passwordHash is string =>
-  typeof passwordHash === 'string' && passwordHash.startsWith(bcryptPrefix);
+  typeof passwordHash === 'string' && passwordHash.startsWith(scryptPrefix);
+
+const verifyScryptPassword = (password: string, passwordHash: string): boolean => {
+  const parts = passwordHash.slice(scryptPrefix.length).split('$');
+  if (parts.length !== 2) return false;
+  const [salt, hash] = parts;
+  const expectedHash = scryptSync(password, salt, scryptKeylen);
+  const actualHash = Buffer.from(hash, 'hex');
+  if (expectedHash.length !== actualHash.length) return false;
+  return timingSafeEqual(expectedHash, actualHash);
+};
 
 const verifyPassword = (password: string, passwordHash: string): boolean => {
   if (isModernPasswordHash(passwordHash)) {
-    return bcrypt.compareSync(password, passwordHash);
+    return verifyScryptPassword(password, passwordHash);
   }
 
   return passwordHash === hashLegacyPassword(password);
