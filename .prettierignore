@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+.github
+.vscode
+config
+covers
+docs
+sqlite
+static
+VoiceWork
+*.min.js
+*.md

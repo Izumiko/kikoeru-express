@@ -49,6 +49,7 @@ typings/
 
 # Optional npm cache directory
 .npm
+.npm-cache
 
 # Optional eslint cache
 .eslintcache
@@ -80,6 +81,7 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
+build
 dist
 
 # Gatsby files
@@ -104,7 +106,7 @@ dist
 .tern-port
 
 # Visual Studio Code
-# .vscode/
+.vscode/
 
 # Windows Batch
 /*.bat
@@ -114,20 +116,21 @@ package
 package-macos
 
 # Config
-config
+/config
 
 # Covers
-covers
+/covers
 
 # SQLite
-sqlite
+/sqlite
+/test/*.sqlite3
 
 # VoiceWork
-VoiceWork
+/VoiceWork
 
 # HTTPS
-kikoeru.crt
-kikoeru.key
+/kikoeru.crt
+/kikoeru.key
 
 # Release template
 Release-Template.md

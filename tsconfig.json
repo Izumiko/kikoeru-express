@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "checkJs": false,
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts", "scripts/**/*.ts", "src/**/*.ts"],
+  "exclude": ["build", "node_modules", "dist", "package"]
+}
