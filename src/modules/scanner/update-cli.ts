@@ -1,9 +1,22 @@
-// @ts-nocheck
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { performUpdate } from './runtime.js';
+import type { MetadataUpdateOptions } from './metadata-updater.js';
 
-const createUpdateArgParser = argv =>
+type UpdateArgv = {
+  refreshAll?: boolean;
+  includeNSFW?: boolean;
+  includeTags?: boolean;
+  includeVA?: boolean;
+};
+
+type RunUpdateCliOptions = {
+  argv?: string[];
+  performUpdateFn?: (options: MetadataUpdateOptions) => Promise<void>;
+  exit?: (code: number) => void;
+};
+
+const createUpdateArgParser = (argv: string[]) =>
   yargs(argv)
     .option('refreshAll', {
       alias: 'all',
@@ -26,8 +39,8 @@ const createUpdateArgParser = argv =>
       type: 'boolean',
     });
 
-const buildUpdateOptions = argv => {
-  const updateOptions = {};
+const buildUpdateOptions = (argv: UpdateArgv): MetadataUpdateOptions => {
+  const updateOptions: MetadataUpdateOptions = {};
 
   if (argv.refreshAll) {
     updateOptions.refreshAll = true;
@@ -42,13 +55,14 @@ const buildUpdateOptions = argv => {
   return updateOptions;
 };
 
-const parseUpdateOptions = argv => buildUpdateOptions(createUpdateArgParser(argv).argv);
+const parseUpdateOptions = (argv: string[]): MetadataUpdateOptions =>
+  buildUpdateOptions(createUpdateArgParser(argv).argv as UpdateArgv);
 
 const runUpdateCli = ({
   argv = hideBin(process.argv),
   performUpdateFn = null,
   exit = code => process.exit(code),
-} = {}) =>
+}: RunUpdateCliOptions = {}) =>
   (performUpdateFn || performUpdate)(parseUpdateOptions(argv))
     .then(() => {
       exit(0);

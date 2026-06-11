@@ -1,18 +1,50 @@
-// @ts-nocheck
 import { ScanCounters, createScanFinishedMessage } from './counters.js';
+import type { ScannerLog } from '../media/folder-scanner.js';
+import type { WorkFolder } from '../media/folder-scanner.js';
+import type { ScanResult } from './counters.js';
 
-const createFatalLogger = ({ addMainLog, consoleLogger = console, exit = code => process.exit(code) }) => {
-  const fatal = (message, err) => {
-    consoleLogger.error(` ! ${message}: ${err.message}`);
+type FatalResult = { fatal: boolean };
+
+type FatalLoggerOptions = {
+  addMainLog: (log: ScannerLog) => void;
+  consoleLogger?: Pick<Console, 'error'>;
+  exit?: (code: number) => void;
+};
+
+const getErrorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+const createFatalLogger = ({ addMainLog, consoleLogger = console, exit = code => process.exit(code) }: FatalLoggerOptions) => {
+  const fatal = (message: string, err: unknown): FatalResult => {
+    const errorMessage = getErrorMessage(err);
+    consoleLogger.error(` ! ${message}: ${errorMessage}`);
     addMainLog({
       level: 'error',
-      message: `${message}: ${err.message}`,
+      message: `${message}: ${errorMessage}`,
     });
     exit(1);
     return { fatal: true };
   };
 
   return { fatal };
+};
+
+type FolderCollectionResult = {
+  uniqueFolderList: WorkFolder[];
+  duplicateNum: number;
+};
+
+type ScanRunnerOptions = FatalLoggerOptions & {
+  initializeScan: () => Promise<void>;
+  runVoiceActorRepair: (counts: ScanCounters) => Promise<boolean>;
+  runCleanup: () => Promise<void>;
+  collectUniqueFolders: () => Promise<FolderCollectionResult>;
+  processFolders: (
+    folders: WorkFolder[],
+    processor: (folder: WorkFolder) => Promise<Extract<ScanResult, 'added' | 'failed' | 'skipped'>>,
+    counts: ScanCounters
+  ) => Promise<unknown>;
+  processFolder: (folder: WorkFolder) => Promise<Extract<ScanResult, 'added' | 'failed' | 'skipped'>>;
+  finishScan: (message: string, exitCode: number) => void;
 };
 
 const createScanRunner = ({
@@ -26,10 +58,10 @@ const createScanRunner = ({
   addMainLog,
   consoleLogger = console,
   exit = code => process.exit(code),
-}) => {
+}: ScanRunnerOptions) => {
   const { fatal } = createFatalLogger({ addMainLog, consoleLogger, exit });
 
-  const runScanFolders = async counts => {
+  const runScanFolders = async (counts: ScanCounters): Promise<FatalResult> => {
     let folderResult;
     try {
       folderResult = await collectUniqueFolders();
@@ -47,7 +79,7 @@ const createScanRunner = ({
     return { fatal: false };
   };
 
-  const runScan = async () => {
+  const runScan = async (): Promise<FatalResult> => {
     try {
       await initializeScan();
     } catch (err) {
