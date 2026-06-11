@@ -30,9 +30,35 @@ async function build(): Promise<void> {
     target: 'node22',
     format: 'esm',
     outdir: buildDir,
-    packages: 'external',
+    splitting: true,
+    external: [
+      '@libsql/darwin-arm64',
+      '@libsql/linux-arm64-gnu',
+      '@libsql/linux-arm64-musl',
+      '@libsql/darwin-x64',
+      '@libsql/win32-x64-msvc',
+      '@libsql/linux-x64-gnu',
+      '@libsql/linux-x64-musl',
+      '@libsql/linux-arm-gnueabihf',
+      '@libsql/linux-arm-musleabihf'
+    ],
+    alias: {
+      'emitter': 'events'
+    },
+    banner: {
+      js: `
+import { createRequire as __createRequire } from 'module';
+import { fileURLToPath as __fileURLToPath } from 'url';
+import { dirname as __dirnamePath } from 'path';
+
+const require = __createRequire(import.meta.url);
+const __filename = __fileURLToPath(import.meta.url);
+const __dirname = __dirnamePath(__filename);
+      `.trim(),
+    },
     logLevel: 'info',
     minify: true,
+    sourcemap: true,
     define: {
       __APP_VERSION__: JSON.stringify(pjson.version),
     },
