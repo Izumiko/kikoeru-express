@@ -18,12 +18,12 @@
     "kikoeru-express": "build/server.js"
   },
   "scripts": {
-    "start": "tsx --trace-warnings src/cli/server.ts",
-    "start:bundle": "node --trace-warnings build/server.js",
-    "dev": "tsx watch --ignore config/* --ignore sqlite/* --trace-warnings src/cli/server.ts",
-    "dev:tsx": "tsx src/cli/server.ts",
-    "scan": "tsx --trace-warnings src/cli/scanner.ts",
-    "update": "tsx --trace-warnings src/cli/updater.ts",
+    "start": "tsx --env-file=.env --trace-warnings src/cli/server.ts",
+    "start:bundle": "node --env-file=.env --trace-warnings build/server.js",
+    "dev": "tsx --env-file=.env watch --ignore config/* --ignore sqlite/* --trace-warnings src/cli/server.ts",
+    "dev:tsx": "tsx --env-file=.env src/cli/server.ts",
+    "scan": "tsx --env-file=.env --trace-warnings src/cli/scanner.ts",
+    "update": "tsx --env-file=.env --trace-warnings src/cli/updater.ts",
     "build": "tsx scripts/build.ts",
     "build:tauri": "npm run build:quasar && npm run move-quasar && npm run build",
     "build:quasar": "cd ../kikoeru-quasar && npx quasar build",
