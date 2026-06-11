@@ -6,7 +6,7 @@ import { expressjwt as expressJwt } from 'express-jwt'; // 把 JWT 的 payload �
 import db from '../../database.js';
 import { getRouteJwtOptions, hashPassword, shouldUpgradePasswordHash, signToken, verifyPassword } from './service.js';
 
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import type { AuthUser } from './service.js';
 
 const router = express.Router();

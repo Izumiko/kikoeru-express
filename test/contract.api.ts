@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 
 import { createApp } from '../src/app/factory.js';
 import { request } from './helpers/http.js';
-import { config } from '../config.js';
+import { config } from '../src/config/index.js';
 import db from '../src/database.js';
 const createWorkRecord = (values) => ({
   id: 1,

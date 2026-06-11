@@ -11,7 +11,7 @@ import {
   scrapeWorkMetadataFromDLsite,
 } from '../../scraper.js';
 
-import { config } from '../../../../config.js';
+import { config } from '../../../config/index.js';
 import { updateLock } from '../../../upgrade/lock.js';
 import { createCleanupRunner } from '../workers/cleanup-runner.js';
 import { createConcurrencyLimiter } from '../support/concurrency-limiter.js';

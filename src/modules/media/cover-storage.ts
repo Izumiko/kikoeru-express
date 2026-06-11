@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { Readable } from 'stream';
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 
 const deleteCoverImageFromDisk = (rjcode: number | string): Promise<void> =>
   new Promise((resolve, reject) => {

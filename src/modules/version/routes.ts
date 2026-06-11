@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import compareVersions from 'compare-versions';
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import { updateLock } from '../../upgrade/lock.js';
 import { version as appVersion } from '../../version.js';
 const router = express.Router();

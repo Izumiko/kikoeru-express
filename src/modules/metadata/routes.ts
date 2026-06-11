@@ -4,7 +4,7 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { param, query } from 'express-validator';
 import db from '../../database.js';
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import { formatRjCode } from '../media/rj-code.js';
 import { getTrackList } from '../media/tracks.js';
 import { toTree } from '../media/tree.js';

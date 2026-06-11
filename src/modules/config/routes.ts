@@ -1,6 +1,6 @@
 import express from 'express';
 import type { Request } from 'express';
-import { config, setConfig, sharedConfigHandle } from '../../../config.js';
+import { config, setConfig, sharedConfigHandle } from '../../config/index.js';
 import type { AppConfig } from '../../config/types.js';
 import type { AuthUser } from '../auth/service.js';
 

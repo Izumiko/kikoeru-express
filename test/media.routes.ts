@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { expect } from 'vitest';
-import { config } from '../config.js';
+import { config } from '../src/config/index.js';
 import db from '../src/database.js';
 import mediaRouter from '../src/modules/media/routes.js';
 import { request } from './helpers/http.js';

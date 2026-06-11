@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { query, body } from 'express-validator';
 import type { StaticMetadataRecord } from '../../shared/metadata/normalize.js';
 
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import db from '../../database.js';
 import normalize from '../../shared/metadata/normalize.js';
 import { isValidRequest } from '../../shared/http/validate.js';

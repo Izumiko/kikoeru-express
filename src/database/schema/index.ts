@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { migrate } from 'drizzle-orm/libsql/migrator';
 
 import { db, libsql } from '../client.js';
-import { runtimeBaseDir } from '../../../config.js';
+import { runtimeBaseDir } from '../../config/index.js';
 
 const dbVersion = '20210502081522';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

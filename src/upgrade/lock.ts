@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { configFolderDir } from '../../config.js';
+import { configFolderDir } from '../config/index.js';
 
 type LockFileConfig = Record<string, unknown>;
 

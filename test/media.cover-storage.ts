@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { Readable } from 'stream';
 import { expect } from 'vitest';
-import { config } from '../config.js';
+import { config } from '../src/config/index.js';
 import { deleteCoverImageFromDisk, saveCoverImageToDisk } from '../src/modules/media/cover-storage.js';
 
 const makeTempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kikoeru-cover-test-'));

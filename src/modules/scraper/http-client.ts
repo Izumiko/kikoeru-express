@@ -1,7 +1,7 @@
 import originAxios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import { applyRetryConfig } from './retry-config.js';
 import type { RetryRequestConfig } from './retry-config.js';
 import { createRetryGet } from './retry-client.js';

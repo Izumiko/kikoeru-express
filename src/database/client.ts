@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 
-import { config } from '../../config.js';
+import { config } from '../config/index.js';
 import schema from './schema/tables.js';
 
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..');

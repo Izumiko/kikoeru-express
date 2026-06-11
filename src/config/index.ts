@@ -1,9 +1,9 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createConfigStore } from './src/config/loader.js';
-import { getRuntimeBaseDir } from './src/config/paths.js';
-import type { AppConfig } from './src/config/types.js';
-import { version } from './src/version.js';
+import { createConfigStore } from './loader.js';
+import { getRuntimeBaseDir } from './paths.js';
+import type { AppConfig } from './types.js';
+import { version } from '../version.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 

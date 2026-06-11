@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import jschardet from 'jschardet';
 import { param } from 'express-validator';
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import type { RootFolderConfig } from '../../config/types.js';
 import db from '../../database.js';
 import { joinFragments } from '../../shared/http/url.js';

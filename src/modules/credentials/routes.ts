@@ -2,7 +2,7 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { check, validationResult } from 'express-validator'; // 后端校验
 
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import db from '../../database.js';
 import { hashPassword } from '../auth/service.js';
 import type { AuthUser } from '../auth/service.js';

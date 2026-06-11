@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { config } from '../../../../config.js';
+import { config } from '../../../config/index.js';
 import type { ScannerLog } from '../../media/folder-scanner.js';
 import { formatRjCode } from '../../media/rj-code.js';
 import type { ScanResult } from '../support/counters.js';

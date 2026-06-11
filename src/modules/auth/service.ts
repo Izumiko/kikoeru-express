@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import type { JwtPayload, SignOptions } from 'jsonwebtoken';
 import type { Request } from 'express';
 import type { Params } from 'express-jwt';
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 
 const issuer = 'http://kikoeru';
 const audience = 'http://kikoeru/api';

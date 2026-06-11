@@ -1,7 +1,7 @@
 import { expect } from 'vitest';
 import jwt from 'jsonwebtoken';
 import authService from '../src/modules/auth/service.js';
-import { config } from '../config.js';
+import { config } from '../src/config/index.js';
 
 describe('Auth service', function () {
   it('verifies legacy md5 password hashes', function () {

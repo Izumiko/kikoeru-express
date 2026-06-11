@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { expect } from 'vitest';
-import { config } from '../config.js';
+import { config } from '../src/config/index.js';
 import { formatRjCode, getFolderList, getTrackList, toTree } from '../src/modules/media/service.js';
 
 const makeTempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kikoeru-media-test-'));

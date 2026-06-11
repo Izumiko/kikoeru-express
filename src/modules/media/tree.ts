@@ -1,4 +1,4 @@
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import type { RootFolderConfig } from '../../config/types.js';
 import { joinFragments } from '../../shared/http/url.js';
 import type { Track } from './tracks.js';

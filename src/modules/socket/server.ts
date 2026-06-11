@@ -3,7 +3,7 @@ import type { ForkScannerProcess } from './scanner-process-controller.js';
 import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import childProcess from 'child_process'; // 子进程
-import { config } from '../../../config.js';
+import { config } from '../../config/index.js';
 import type { AppConfig } from '../../config/types.js';
 import { toSocketAdminUser } from '../auth/service.js';
 import { createSocketAuthMiddleware, createSocketJwtEngineMiddleware } from './auth.js';

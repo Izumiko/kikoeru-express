@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { hashPassword } from '../modules/auth/service.js';
-import { config, updateConfig } from '../../config.js';
+import { config, updateConfig } from '../config/index.js';
 import { databaseExist } from './client.js';
 import { createUser } from './repositories.js';
 import { createSchema } from './schema.js';

@@ -6,7 +6,7 @@ import type { Express } from 'express';
 import type { AddressInfo } from 'net';
 import { initApp } from '../database/init.js';
 import { initSocket } from '../modules/socket/server.js';
-import { config } from '../../config.js';
+import { config } from '../config/index.js';
 import type { AppConfig } from '../config/types.js';
 import { createApp } from './factory.js';
 

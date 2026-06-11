@@ -4,8 +4,8 @@ import type { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import compression from 'compression';
 import serveIndexFactory from 'serve-index';
 const serveIndex = serveIndexFactory as (path: string, options?: { icons?: boolean }) => RequestHandler;
-import { config } from '../../config.js';
-import { runtimeBaseDir } from '../../config.js';
+import { config } from '../config/index.js';
+import { runtimeBaseDir } from '../config/index.js';
 import api from '../api/mount.js';
 
 type HttpError = Error & {

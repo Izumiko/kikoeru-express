@@ -1,7 +1,7 @@
 import { expressjwt as expressJwt } from 'express-jwt'; // 把 JWT 的 payload 部分赋值于 req.user
 import type { Application, Request } from 'express';
 import type { Params } from 'express-jwt';
-import { config } from '../../config.js';
+import { config } from '../config/index.js';
 import routes from './routes.js';
 import { getHttpJwtOptions } from '../modules/auth/service.js';
 
