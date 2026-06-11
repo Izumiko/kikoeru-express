@@ -5,6 +5,7 @@ Dockerfile
 .git
 .gitignore
 build
+docs
 dist
 *.md
 .github
