@@ -15,6 +15,7 @@ const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PAGE_SIZE = config.pageSize || 12;
 const METADATA_FIELD_WORK_ROUTES = ['/circles/:id/works', '/tags/:id/works', '/vas/:id/works'];
+const METADATA_LOOKUP_ROUTES = ['/circles/:id', '/tags/:id', '/vas/:id'];
 const METADATA_LABEL_ROUTES = ['/circles', '/tags', '/vas', '/circles/', '/tags/', '/vas/'];
 const WORK_ORDER_FIELDS = new Set([
   'id',
@@ -151,6 +152,17 @@ router.get('/tracks/:id', param('id').isInt(), (req: Request, res: Response, nex
     .catch(err => next(err));
 });
 
+router.get(METADATA_LOOKUP_ROUTES, (req: Request, res: Response, next: NextFunction) => {
+  if (!isValidRequest(req, res)) return;
+
+  const ids = getMetadataIds(req);
+  const field = getMetadataField(req) as 'circle' | 'tag' | 'va';
+
+  db.getMetadata({ field, ids })
+    .then(list => res.send(list))
+    .catch(err => next(err));
+});
+
 router.get(
   METADATA_FIELD_WORK_ROUTES,
   async (req: Request, res: Response) => {
@@ -193,6 +205,33 @@ router.get(METADATA_LABEL_ROUTES, (req: Request, res: Response, next: NextFuncti
     .orderBy('name', 'asc')
     .then(list => res.send(list))
     .catch(err => next(err));
+});
+
+router.get('/search', async (req: Request, res: Response) => {
+  if (!isValidRequest(req, res)) return;
+
+  const currentPage = parseInt(req.query.page as string) || 1;
+  const order = (req.query.order as string) || 'release';
+  const sort = (req.query.sort as string) || 'desc';
+  const username = getUsername(req);
+  const shuffleSeed = req.query.seed ? parseInt(req.query.seed as string) : 7;
+  const keyword = (req.query.keyword as string) || '';
+
+  try {
+    await sendPaginatedWorks(
+      res,
+      () => db.getWorksByKeyWord({ keyword, username }),
+      currentPage,
+      PAGE_SIZE,
+      order,
+      sort,
+      shuffleSeed,
+      false
+    );
+  } catch (err) {
+    res.status(500).send({ error: '查询过程中出错' });
+    console.error(err);
+  }
 });
 
 export default router;
