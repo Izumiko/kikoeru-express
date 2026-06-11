@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express from 'express';
 import { query, body } from 'express-validator';
 

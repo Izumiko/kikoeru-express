@@ -8,7 +8,7 @@ const staticMetadataFields = {
   circle_id: staticMetadata.circleId,
   name: staticMetadata.name,
   circleObj: staticMetadata.circleObj,
-  nsfw: sql`CAST(${staticMetadata.nsfw} AS INTEGER)`,
+  nsfw: sql<number>`CAST(${staticMetadata.nsfw} AS INTEGER)`,
   release: staticMetadata.release,
   dl_count: staticMetadata.dlCount,
   price: staticMetadata.price,
@@ -25,7 +25,7 @@ const userReviewFields = {
   userRating: reviews.rating,
   review_text: reviews.reviewText,
   progress: reviews.progress,
-  updated_at: sql`strftime('%Y-%m-%d %H-%M-%S', ${reviews.updatedAt}, 'localtime')`,
+  updated_at: sql<string>`strftime('%Y-%m-%d %H-%M-%S', ${reviews.updatedAt}, 'localtime')`,
   user_name: reviews.userName,
 };
 

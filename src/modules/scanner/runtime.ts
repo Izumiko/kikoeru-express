@@ -1,4 +1,3 @@
-// @ts-nocheck
 import db from '../../database.js';
 import { closeDatabaseConnection } from '../../database/client.js';
 import { createSchema } from '../../database/schema.js';
@@ -33,13 +32,22 @@ import { createWorkProcessor } from './work-processor.js';
 import { createWorkRefresher } from './work-refresher.js';
 import { SOCKET_EVENTS } from '../socket/events.js';
 
-// 只有在子进程中 process 对象才有 send() 方法
-process.send = process.send || function () {};
+type ScannerRuntimeMessage = {
+  emit?: typeof SOCKET_EVENTS.SCAN_INIT_STATE;
+  exit?: unknown;
+};
 
-const scanSession = new ScanSession(event => process.send(event));
+// 只有在子进程中 process 对象才有 send() 方法。
+const sendProcessMessage = (event: unknown): void => {
+  if (process.send) {
+    process.send(event);
+  }
+};
+
+const scanSession = new ScanSession(event => sendProcessMessage(event));
 const scannerLogger = new ScannerLogger(scanSession);
 const scannerLifecycle = new ScannerLifecycle({
-  send: event => process.send(event),
+  send: event => sendProcessMessage(event),
   destroyDatabase: closeDatabaseConnection,
   exit: code => process.exit(code),
 });
@@ -60,10 +68,11 @@ const emitMainLog = (message, level = 'info', truncate = 3) => scannerLogger.emi
 const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) =>
   scannerLogger.emitTaskLog(message, rjcode, level, truncate);
 
-process.on('message', m => {
-  if (m.emit === SOCKET_EVENTS.SCAN_INIT_STATE) {
+process.on('message', (m: unknown) => {
+  const message = m as ScannerRuntimeMessage;
+  if (message.emit === SOCKET_EVENTS.SCAN_INIT_STATE) {
     scanSession.emitInitState();
-  } else if (m.exit) {
+  } else if (message.exit) {
     console.error(' ! 终止扫描进程.');
     addMainLog({
       level: 'error',

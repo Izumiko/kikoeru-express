@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
@@ -256,7 +255,10 @@ router.get(
 router.get(METADATA_LABEL_ROUTES, (req, res, next) => {
   if (!isValidRequest(req, res)) return;
 
-  db.getLabels(getMetadataField(req))
+  const labelsQuery = db.getLabels(getMetadataField(req)) as unknown as {
+    orderBy: (field: string, sort: string) => Promise<unknown>;
+  };
+  labelsQuery
     .orderBy('name', 'asc')
     .then(list => res.send(list))
     .catch(err => next(err));
