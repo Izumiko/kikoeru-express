@@ -12,22 +12,15 @@
     "kikoeru"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "bin": {
     "kikoeru-express": "build/server.js"
   },
-  "nodemonConfig": {
-    "ignore": [
-      "config/*",
-      "sqlite/*"
-    ],
-    "delay": "2500"
-  },
   "scripts": {
     "start": "tsx --trace-warnings src/cli/server.ts",
     "start:bundle": "node --trace-warnings build/server.js",
-    "dev": "nodemon --exec tsx --trace-warnings src/cli/server.ts",
+    "dev": "tsx watch --ignore config/* --ignore sqlite/* --trace-warnings src/cli/server.ts",
     "dev:tsx": "tsx src/cli/server.ts",
     "scan": "tsx --trace-warnings src/cli/scanner.ts",
     "update": "tsx --trace-warnings src/cli/updater.ts",
@@ -47,24 +40,20 @@
     "@libsql/client": "^0.17.3",
     "axios": "^1.17.0",
     "bcryptjs": "^3.0.3",
-    "bluebird": "^3.7.2",
     "cheerio": "^1.2.0",
     "compare-versions": "^6.1.1",
     "compression": "^1.8.1",
     "connect-history-api-fallback": "^2.0.0",
-    "crypto": "^1.0.1",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^1.0.0-beta.22",
     "express": "^5.2.1",
     "express-jwt": "^8.5.1",
     "express-validator": "^7.3.2",
     "htmlparser2": "^10.1.0",
-    "https": "^1.0.0",
     "jschardet": "^3.1.4",
     "jsonwebtoken": "^9.0.3",
     "limit-promise": "^1.0.6",
     "lodash": "^4.18.1",
-    "md5": "^2.3.0",
     "natural-orderby": "^5.0.0",
     "socket.io": "^4.8.3",
     "tunnel-agent": "^0.6.0",
@@ -78,7 +67,6 @@
     "@types/connect-history-api-fallback": "^1.5.4",
     "@types/express": "^5.0.6",
     "@types/lodash": "^4.17.24",
-    "@types/md5": "^2.3.6",
     "@types/node": "^24.13.1",
     "@types/url-join": "^4.0.3",
     "@types/yargs": "^17.0.35",
@@ -89,7 +77,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.1.0",
     "globals": "^17.6.0",
-    "nodemon": "^3.1.14",
     "prettier": "^3.8.4",
     "serve-index": "^1.9.2",
     "tsx": "^4.22.4",

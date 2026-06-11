@@ -1,9 +1,9 @@
+import { createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload, SignOptions } from 'jsonwebtoken';
 import type { Request } from 'express';
 import type { Params } from 'express-jwt';
-import legacyMd5 from 'md5';
 import { config } from '../../../config.js';
 
 const issuer = 'http://kikoeru';
@@ -36,7 +36,8 @@ const signToken = (user: AuthUser): string => {
   return signPayload(payload);
 };
 
-const hashLegacyPassword = (password: string): string => legacyMd5(password + config.md5secret);
+const hashLegacyPassword = (password: string): string =>
+  createHash('md5').update(password + config.md5secret).digest('hex');
 
 const hashPassword = (password: string): string => bcrypt.hashSync(password, bcryptRounds);
 
