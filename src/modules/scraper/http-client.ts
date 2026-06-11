@@ -6,7 +6,10 @@ import { config } from '../../../config.js';
 import { applyRetryConfig } from './retry-config.js';
 import type { RetryRequestConfig } from './retry-config.js';
 import { createRetryGet } from './retry-client.js';
+import type { RetryHttpGet } from './retry-client.js';
 const Config = config;
+
+const applyRetryConfigTyped = applyRetryConfig as (url: string, requestConfig: RetryRequestConfig, appConfig: unknown) => RetryRequestConfig;
 
 type RetryAxiosInstance = AxiosInstance & {
   retryGet: (url: string, requestConfig: RetryRequestConfig) => Promise<AxiosResponse>;
@@ -81,9 +84,10 @@ axios.interceptors.request.use(function (config) {
 // });
 
 const retryGet = createRetryGet({
-  httpGet: (url, requestConfig) => axios.get(url, requestConfig as AxiosRequestConfig),
+  httpGet: ((url: string, requestConfig: RetryRequestConfig) =>
+    axios.get(url, requestConfig as AxiosRequestConfig)) as RetryHttpGet,
   cancelTokenSource: () => originAxios.CancelToken.source(),
-  applyRetryConfig,
+  applyRetryConfig: applyRetryConfigTyped,
   appConfig: Config,
 }) as RetryAxiosInstance['retryGet'];
 axios.retryGet = retryGet;

@@ -89,7 +89,7 @@ const DLSITE_LANGUAGE_CONFIG = {
 } satisfies Record<string, DlsiteLanguageConfig>;
 
 const getDlsiteLanguageConfig = (language: string): DlsiteLanguageConfig =>
-  DLSITE_LANGUAGE_CONFIG[language] || DLSITE_LANGUAGE_CONFIG['zh-cn'];
+  (DLSITE_LANGUAGE_CONFIG as Record<string, DlsiteLanguageConfig>)[language] || DLSITE_LANGUAGE_CONFIG['zh-cn'];
 
 const buildDlsiteWorkUrl = (id: number | string): string => {
   const rjcode = formatRjCode(id);
@@ -109,7 +109,7 @@ const parseDynamicWorkMetadata = (data: DynamicMetadataInput): DynamicWorkMetada
   work.rate_count_detail = data.rate_count_detail; // 评价分布明细
   work.review_count = data.review_count; // 评论数量
   work.price = data.price; // 价格
-  if (data.rank.length) {
+  if (data.rank && data.rank.length) {
     work.rank = data.rank; // 成绩
   }
   return work;

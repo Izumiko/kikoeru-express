@@ -31,7 +31,7 @@ const createConfigStore = ({ projectRoot, version }: { projectRoot: string; vers
   const config = {} as AppConfig;
 
   const replaceConfig = (nextConfig: Partial<AppConfig>) => {
-    Object.keys(config).forEach(key => delete config[key]);
+    Object.keys(config as Record<string, unknown>).forEach(key => delete (config as Record<string, unknown>)[key]);
     Object.assign(config, nextConfig);
   };
 
@@ -102,7 +102,7 @@ const createConfigStore = ({ projectRoot, version }: { projectRoot: string; vers
       }
     }
 
-    if (compareVersions.compare(cfg.version, versionDbRelativePath, '<')) {
+    if (cfg.version && compareVersions.compare(cfg.version, versionDbRelativePath, '<')) {
       console.log('数据库位置已设置为程序目录下的sqlite文件夹');
       console.log('如需指定其它位置，请阅读0.6.0-rc.0更新说明');
     }

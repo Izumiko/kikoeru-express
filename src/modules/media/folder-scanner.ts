@@ -31,12 +31,13 @@ async function* getFolderList(
 
     try {
       if ((await fs.promises.stat(absolutePath)).isDirectory()) {
-        if (folder.match(/RJ\d+/)) {
+        const match = folder.match(/RJ(\d+)/);
+        if (match) {
           yield {
             absolutePath,
             relativePath,
             rootFolderName: rootFolder.name,
-            id: parseInt(folder.match(/RJ(\d+)/)[1]),
+            id: parseInt(match[1]),
           };
         } else if (depth + 1 < config.scannerMaxRecursionDepth) {
           yield* getFolderList(rootFolder, relativePath, depth + 1, callback);

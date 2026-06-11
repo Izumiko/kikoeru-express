@@ -19,7 +19,7 @@ type AuthUser = {
 
 type KikoeruJwtPayload = JwtPayload & AuthUser;
 
-type TokenGetter = (req: Request) => string | null;
+type TokenGetter = (req: Request) => string | undefined;
 
 const signPayload = (payload: KikoeruJwtPayload): string =>
   jwt.sign(payload, config.jwtsecret, { expiresIn: config.expiresIn } as SignOptions);

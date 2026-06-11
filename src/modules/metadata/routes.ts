@@ -1,13 +1,14 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { param, query } from 'express-validator';
 import db from '../../database.js';
 import { config } from '../../../config.js';
 import { formatRjCode } from '../media/rj-code.js';
 import { getTrackList } from '../media/tracks.js';
 import { toTree } from '../media/tree.js';
-import normalize from '../../shared/metadata/normalize.js';
+import normalize, { type StaticMetadataRecord } from '../../shared/metadata/normalize.js';
 import { isValidRequest } from '../../shared/http/validate.js';
 
 const router = express.Router();
@@ -28,18 +29,20 @@ const WORK_ORDER_FIELDS = new Set([
   'random',
 ]);
 
-const getUsername = req => (config.auth ? req.user.name : 'admin');
-const getMetadataField = req => req.path.split('/')[1].replace(/s$/, '');
+const getUsername = (req: Request) => (config.auth ? (req as Request & { user: { name: string } }).user.name : 'admin');
+const getMetadataField = (req: Request) => req.path.split('/')[1].replace(/s$/, '');
 
-const getMetadataIds = req =>
-  getMetadataField(req) === 'tag' || getMetadataField(req) === 'circle'
-    ? req.params.id
+const getMetadataIds = (req: Request) => {
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  return getMetadataField(req) === 'tag' || getMetadataField(req) === 'circle'
+    ? idParam
         .split(',')
-        .map(id => parseInt(id.trim()))
-        .filter(id => !isNaN(id))
-    : req.params.id.split(',');
+        .map((id: string) => parseInt(id.trim()))
+        .filter((id: number) => !isNaN(id))
+    : idParam.split(',');
+};
 
-const compareValues = (left, right, sort) => {
+const compareValues = <T>(left: T, right: T, sort: string) => {
   if (left === right) return 0;
   if (left === null || left === undefined) return 1;
   if (right === null || right === undefined) return -1;
@@ -48,27 +51,38 @@ const compareValues = (left, right, sort) => {
   return left > right ? direction : -direction;
 };
 
-const sortWorks = (works, order, sort, shuffleSeed) => {
+const sortWorks = (works: unknown[], order: string, sort: string, shuffleSeed: number) => {
   if (!WORK_ORDER_FIELDS.has(order)) {
     order = 'release';
   }
 
   if (order === 'random') {
-    return works.sort((left, right) => (left.id % shuffleSeed) - (right.id % shuffleSeed));
+    return works.sort((left: unknown, right: unknown) => ((left as { id: number }).id % shuffleSeed) - ((right as { id: number }).id % shuffleSeed));
   }
 
-  return works.sort((left, right) => {
-    const primary = compareValues(left[order], right[order], sort);
+  return works.sort((left: unknown, right: unknown) => {
+    const leftRecord = left as Record<string, unknown>;
+    const rightRecord = right as Record<string, unknown>;
+    const primary = compareValues(leftRecord[order], rightRecord[order], sort);
     if (primary !== 0) return primary;
 
-    const release = compareValues(left.release, right.release, 'desc');
+    const release = compareValues(leftRecord.release, rightRecord.release, 'desc');
     if (release !== 0) return release;
 
-    return compareValues(left.id, right.id, 'desc');
+    return compareValues(leftRecord.id, rightRecord.id, 'desc');
   });
 };
 
-const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, order, sort, shuffleSeed, betterRandom) => {
+const sendPaginatedWorks = async (
+  res: Response,
+  queryFactory: () => Promise<unknown[]>,
+  currentPage: number,
+  pageSize: number,
+  order: string,
+  sort: string,
+  shuffleSeed: number,
+  betterRandom: boolean
+) => {
   const offset = (currentPage - 1) * pageSize;
   const allWorks = await queryFactory();
   const totalCount = allWorks.length;
@@ -82,7 +96,7 @@ const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, orde
     works = sortWorks(works, order, sort, shuffleSeed).slice(offset, offset + pageSize);
   }
 
-  works = normalize(works);
+  works = normalize(works as StaticMetadataRecord[]);
 
   res.send({
     works,
@@ -94,11 +108,11 @@ const sendPaginatedWorks = async (res, queryFactory, currentPage, pageSize, orde
   });
 };
 
-router.get('/cover/:id', param('id').isInt(), (req, res, next) => {
+router.get('/cover/:id', param('id').isInt(), (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
 
-  const rjcode = formatRjCode(req.params.id);
-  const type = req.query.type || 'main';
+  const rjcode = formatRjCode(Number(req.params.id));
+  const type = (req.query.type as string) || 'main';
   res.sendFile(path.join(config.coverFolderDir, `RJ${rjcode}_img_${type}.jpg`), err => {
     if (err) {
       res.sendFile(path.join(__dirname, '../../../static/no-image.jpg'), err2 => {
@@ -110,25 +124,25 @@ router.get('/cover/:id', param('id').isInt(), (req, res, next) => {
   });
 });
 
-router.get('/work/:id', param('id').isInt(), (req, res, next) => {
+router.get('/work/:id', param('id').isInt(), (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
 
-  db.getWorkMetadata(req.params.id, getUsername(req))
+  db.getWorkMetadata(Number(req.params.id), getUsername(req))
     .then(work => {
-      normalize(work);
+      normalize(work as unknown as StaticMetadataRecord[]);
       res.send(work[0]);
     })
     .catch(err => next(err));
 });
 
-router.get('/tracks/:id', param('id').isInt(), (req, res, next) => {
+router.get('/tracks/:id', param('id').isInt(), (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
 
-  db.getWorkTrackMetadata(req.params.id)
+  db.getWorkTrackMetadata(Number(req.params.id))
     .then(work => {
       const rootFolder = config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
       if (rootFolder) {
-        getTrackList(req.params.id, path.join(rootFolder.path, work.dir))
+        getTrackList(Number(req.params.id), path.join(rootFolder.path, work.dir))
           .then(tracks => res.send(toTree(tracks, work.title, work.dir, rootFolder)))
           .catch(() => res.status(500).send({ error: '获取文件列表失败，请检查文件是否存在或重新扫描清理' }));
       } else {
@@ -139,100 +153,17 @@ router.get('/tracks/:id', param('id').isInt(), (req, res, next) => {
 });
 
 router.get(
-  '/works',
-  query('page').optional({ nullable: true }).isInt(),
-  query('sort').optional({ nullable: true }).isIn(['desc', 'asc']),
-  query('seed').optional({ nullable: true }).isInt(),
-  async (req, res) => {
-    if (!isValidRequest(req, res)) return;
-
-    const currentPage = parseInt(req.query.page) || 1;
-    const order = req.query.order || 'release';
-    const sort = req.query.sort || 'desc';
-    const username = getUsername(req);
-    const shuffleSeed = req.query.seed ? req.query.seed : 7;
-
-    try {
-      await sendPaginatedWorks(
-        res,
-        () => db.getWorksBy({ username: username }),
-        currentPage,
-        PAGE_SIZE,
-        order,
-        sort,
-        shuffleSeed,
-        true
-      );
-    } catch (err) {
-      res.status(500).send({ error: '服务器错误' });
-      console.error(err);
-    }
-  }
-);
-
-router.get(METADATA_FIELD_ROUTES, (req, res, next) => {
-  if (!isValidRequest(req, res)) return;
-
-  const ids = getMetadataIds(req);
-  const field = getMetadataField(req);
-
-  return db
-    .getMetadata({
-      field,
-      ids,
-    })
-    .then(items => {
-      if (items.every(item => item && ids.includes(item.id))) {
-        res.send(items);
-      } else {
-        const errorMessage = {
-          circle: `社团${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
-          tag: `标签${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
-          va: `声优${ids.filter(id => !items.some(item => item && item.id === id)).join(',')}不存在`,
-        };
-        res.status(404).send({ error: errorMessage[field] });
-      }
-    })
-    .catch(err => next(err));
-});
-
-router.get(['/search', '/search/:keyword'], async (req, res) => {
-  const keyword = req.params.keyword ? req.params.keyword.trim() : '';
-  const currentPage = parseInt(req.query.page) || 1;
-  const order = req.query.order || 'release';
-  const sort = req.query.sort || 'desc';
-  const username = getUsername(req);
-  const shuffleSeed = req.query.seed ? req.query.seed : 7;
-
-  try {
-    await sendPaginatedWorks(
-      res,
-      () => db.getWorksByKeyWord({ keyword: keyword, username: username }),
-      currentPage,
-      PAGE_SIZE,
-      order,
-      sort,
-      shuffleSeed,
-      false
-    );
-  } catch (err) {
-    res.status(500).send({ error: '查询过程中出错' });
-    console.error(err);
-  }
-});
-
-router.get(
   METADATA_FIELD_WORK_ROUTES,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
-    const currentPage = parseInt(req.query.page) || 1;
-    const order = req.query.order || 'release';
-    const sort = req.query.sort || 'desc';
+    const currentPage = parseInt(req.query.page as string) || 1;
+    const order = (req.query.order as string) || 'release';
+    const sort = (req.query.sort as string) || 'desc';
     const username = getUsername(req);
-    const shuffleSeed = req.query.seed ? req.query.seed : 7;
+    const shuffleSeed = req.query.seed ? parseInt(req.query.seed as string) : 7;
     const ids = getMetadataIds(req);
-    const field = getMetadataField(req);
+    const field = getMetadataField(req) as 'circle' | 'tag' | 'va';
 
     try {
       await sendPaginatedWorks(
@@ -252,10 +183,11 @@ router.get(
   }
 );
 
-router.get(METADATA_LABEL_ROUTES, (req, res, next) => {
+router.get(METADATA_LABEL_ROUTES, (req: Request, res: Response, next: NextFunction) => {
   if (!isValidRequest(req, res)) return;
 
-  const labelsQuery = db.getLabels(getMetadataField(req)) as unknown as {
+  const field = getMetadataField(req) as 'circle' | 'tag' | 'va';
+  const labelsQuery = db.getLabels(field) as unknown as {
     orderBy: (field: string, sort: string) => Promise<unknown>;
   };
   labelsQuery

@@ -37,7 +37,7 @@ const createUpdateRunner = ({
 
   const fixVoiceActorBug = (): Promise<ScanCounters> => {
     const voiceActorIds = [nameToUUID('かの仔'), nameToUUID('こっこ')];
-    const processor = id => updateVoiceActor(id);
+    const processor = (id: number) => updateVoiceActor(id);
     return refreshWorks(listWorkIdsByVoiceActorIds(voiceActorIds), 'work_id', processor);
   };
 

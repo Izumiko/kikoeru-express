@@ -80,7 +80,7 @@ const getWorkIdsByVoiceActor = async (voiceActorId: string): Promise<Array<numbe
   return rows.map(row => row.workId);
 };
 
-const inArrayOrNoMatch = (column, values: Array<number | string | null>) =>
+const inArrayOrNoMatch = (column: Parameters<typeof inArray>[0], values: Array<number | string | null>) =>
   values.length ? inArray(column, values) : sql`0 = 1`;
 
 /**
@@ -145,7 +145,8 @@ const getWorkIdsByMatchingVoiceActors = async (keyword: string): Promise<Array<n
  * @param {String} keyword
  */
 const getWorksByKeyWord = async ({ keyword = '', username = 'admin' }: KeywordSearchOptions = {}) => {
-  const workid = keyword.match(/((R|r)(J|j))?(\d+)/) ? keyword.match(/((R|r)(J|j))?(\d+)/)[4] : '';
+  const match = keyword.match(/((R|r)(J|j))?(\d+)/);
+  const workid = match ? match[4] : '';
   if (workid) {
     return workRowsWithRatings(username, eq(staticMetadata.id, Number(workid)));
   }

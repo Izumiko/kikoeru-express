@@ -90,3 +90,4 @@ export {
   createRetryGet,
   getRetryUrl,
 };
+export type { RetryHttpGet };

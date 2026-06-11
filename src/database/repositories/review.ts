@@ -49,6 +49,8 @@ const orderColumnByName = {
 
 type ReviewSortOption = 'asc' | 'desc';
 
+type OrderColumnMap = typeof orderColumnByName;
+
 type GetWorksWithReviewsOptions = {
   username?: string;
   limit?: number;
@@ -58,9 +60,11 @@ type GetWorksWithReviewsOptions = {
   filter?: string;
 };
 
-const normalizeOrderBy = (orderBy: string) => orderColumnByName[orderColumns.has(orderBy) ? orderBy : 'release'];
+const normalizeOrderBy = (orderBy: string) =>
+  orderColumnByName[(orderColumns.has(orderBy) ? orderBy : 'release') as keyof OrderColumnMap];
 const normalizeSortOption = (sortOption: string): ReviewSortOption => (sortOption === 'asc' ? 'asc' : 'desc');
-const sortExpression = (column, sortOption) => (normalizeSortOption(sortOption) === 'asc' ? asc(column) : desc(column));
+const sortExpression = (column: Parameters<typeof asc>[0], sortOption: string) =>
+  normalizeSortOption(sortOption) === 'asc' ? asc(column) : desc(column);
 
 // 添加星标或评语或进度
 const updateUserReview = async (

@@ -1,14 +1,14 @@
 import strftime from './strftime.js';
 
-type StaticMetadataRecord = {
+export type StaticMetadataRecord = {
   nsfw?: unknown;
-  circleObj?: string;
+  circleObj?: string | null;
   circle?: unknown;
   rate_count_detail?: string | unknown;
   rank?: string | null | unknown;
-  vaObj?: string;
+  vaObj?: string | null;
   vas?: unknown;
-  tagObj?: string;
+  tagObj?: string | null;
   tags?: unknown;
   updated_at?: string | Date;
   [key: string]: unknown;

@@ -1,4 +1,6 @@
 import { eq, inArray, sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
 import { db } from '../client.js';
 import {
@@ -77,7 +79,9 @@ const toDynamicWorkRow = (work: WorkMetadata) => ({
   rank: work.rank ? JSON.stringify(work.rank) : null,
 });
 
-const insertWorkRelationships = async (tx, work: WorkMetadata, options: WorkRelationshipOptions = {}) => {
+type TransactionType = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const insertWorkRelationships = async (tx: TransactionType, work: WorkMetadata, options: WorkRelationshipOptions = {}) => {
   if (options.includeTags) {
     if (options.purgeTags) {
       await tx.delete(tagWorks).where(eq(tagWorks.workId, work.id));
@@ -143,12 +147,17 @@ const updateWorkMetadata = (work: WorkMetadata, options: UpdateWorkMetadataOptio
     }
   });
 
-const countRows = async (tx, table, where) => {
+const countRows = async (tx: TransactionType, table: SQLiteTable, where: SQL | undefined) => {
   const rows = await tx.select({ count: sql`COUNT(*)` }).from(table).where(where);
   return rows[0].count;
 };
 
-const cleanupOrphans = async (tx, circleId, tagIds, vaIds) => {
+const cleanupOrphans = async (
+  tx: TransactionType,
+  circleId: number,
+  tagIds: number[],
+  vaIds: string[]
+) => {
   if ((await countRows(tx, works, eq(works.circleId, circleId))) === 0) {
     await tx.delete(circles).where(eq(circles.id, circleId));
   }
@@ -188,8 +197,8 @@ const removeWork = (id: number) =>
     await cleanupOrphans(
       tx,
       work.circleId,
-      workTags.map(tag => tag.tagId),
-      workVas.map(va => va.vaId)
+      workTags.map(tag => tag.tagId).filter((id): id is number => id !== null),
+      workVas.map(va => va.vaId).filter((id): id is string => id !== null)
     );
   });
 

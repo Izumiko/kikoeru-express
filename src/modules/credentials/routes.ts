@@ -1,5 +1,5 @@
 import express from 'express';
-import type { Request } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { check, validationResult } from 'express-validator'; // 后端校验
 
 import { config } from '../../../config.js';
@@ -45,7 +45,7 @@ router.post(
       return true;
     }),
   ],
-  (req: Request<unknown, unknown, CreateUserRequestBody>, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -87,7 +87,7 @@ router.put(
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('newPassword').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
   ],
-  (req: Request<unknown, unknown, UpdatePasswordRequestBody>, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -117,7 +117,7 @@ router.put(
 );
 
 // 删除用户 (仅 admin 账号拥有权限)
-router.delete('/user', (req, res, next) => {
+router.delete('/user', (req: Request, res: Response, next: NextFunction) => {
   const { users } = req.body as DeleteUserRequestBody;
   const userReq = req as UserRequest;
 
@@ -139,7 +139,7 @@ router.delete('/user', (req, res, next) => {
 });
 
 // 获取所有用户
-router.get('/users', (req, res, next) => {
+router.get('/users', (req: Request, res: Response, next: NextFunction) => {
   const userReq = req as UserRequest;
   if (!config.auth || userReq.user?.name === 'admin') {
     db.getUsers()

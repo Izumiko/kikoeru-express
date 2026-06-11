@@ -8,13 +8,13 @@ import { getHttpJwtOptions } from '../modules/auth/service.js';
 /**
  * Get token from header or query string.
  */
-const getToken = (req: Request): string | null => {
+const getToken = (req: Request): string | undefined => {
   if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
     return req.headers.authorization.split(' ')[1];
   } else if (req.query && req.query.token) {
-    return req.query.token;
+    return req.query.token as string;
   }
-  return null;
+  return undefined;
 };
 
 const mountApi = (app: Application): void => {

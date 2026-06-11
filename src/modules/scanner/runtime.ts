@@ -53,20 +53,20 @@ const scannerLifecycle = new ScannerLifecycle({
 });
 const tasks = scanSession.tasks;
 
-const addTask = rjcode => scanSession.addTask(rjcode);
-const removeTask = rjcode => scanSession.removeTask(rjcode);
-const addLogForTask = (rjcode, log) => scanSession.addLogForTask(rjcode, log);
-const addResult = (rjcode, result, count) => scanSession.addResult(rjcode, result, count);
-const addMainLog = log => scanSession.addMainLog(log);
+const addTask = (rjcode: string | number) => scanSession.addTask(rjcode);
+const removeTask = (rjcode: string | number) => scanSession.removeTask(rjcode);
+const addLogForTask = (rjcode: string | number, log: { level: string; message: string }) => scanSession.addLogForTask(rjcode, log);
+const addResult = (rjcode: string | number, result: 'updated' | 'failed', count: number) => scanSession.addResult(rjcode, result, count);
+const addMainLog = (log: { level: string; message: string }) => scanSession.addMainLog(log);
 const { getCoverImage } = createCoverDownloader({
   axios: httpClient,
-  saveCoverImageToDisk,
+  saveCoverImageToDisk: saveCoverImageToDisk as (stream: unknown, rjcode: string, type: string) => Promise<void>,
   addLogForTask,
 });
 
-const emitMainLog = (message, level = 'info', truncate = 3) => scannerLogger.emitMainLog(message, level, truncate);
-const emitTaskLog = (message, rjcode, level = 'info', truncate = 15) =>
-  scannerLogger.emitTaskLog(message, rjcode, level, truncate);
+const emitMainLog = (message: string, level = 'info', truncate = 3) => scannerLogger.emitMainLog(message, level, truncate);
+const emitTaskLog = (message: string, rjcode: string | number, level = 'info', truncate = 15) =>
+  scannerLogger.emitTaskLog(message, String(rjcode), level, truncate);
 
 process.on('message', (m: unknown) => {
   const message = m as ScannerRuntimeMessage;
@@ -85,8 +85,8 @@ process.on('message', (m: unknown) => {
 
 const { getMetadata } = createMetadataIngestion({
   scrapeWorkMetadataFromDLsite,
-  insertWorkMetadata: db.insertWorkMetadata,
-  addLogForTask,
+  insertWorkMetadata: db.insertWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string }) => Promise<unknown>,
+  addLogForTask: addLogForTask as (rjcode: string, log: { level: string; message: string }) => void,
 });
 const { processFolder } = createWorkProcessor({
   workExists: db.workExists,
@@ -94,8 +94,8 @@ const { processFolder } = createWorkProcessor({
   tagLanguage: config.tagLanguage,
   getMetadata,
   getCoverImage,
-  addTask,
-  addLogForTask,
+  addTask: addTask as (rjcode: string) => void,
+  addLogForTask: addLogForTask as (rjcode: string, log: { level: string; message: string }) => void,
 });
 const { performCleanup } = createMissingWorkCleaner({
   listWorkStorageLocations: db.listWorkStorageLocations,
@@ -108,16 +108,16 @@ const { updateMetadata } = createMetadataUpdater({
   tagLanguage: config.tagLanguage,
   scrapeWorkMetadataFromDLsite,
   scrapeDynamicWorkMetadataFromDLsite,
-  updateWorkMetadata: db.updateWorkMetadata,
-  addTask,
+  updateWorkMetadata: db.updateWorkMetadata as (metadata: Record<string, unknown> & { rootFolderName?: string; dir?: string; id?: number }, options: import('./metadata-updater.js').MetadataUpdateOptions) => Promise<unknown>,
+  addTask: addTask as (rjcode: string) => void,
   emitTaskLog,
 });
 const { refreshWorks } = createWorkRefresher({
   tasks,
   addMainLog,
   emitMainLog,
-  removeTask,
-  addResult,
+  removeTask: removeTask as (rjcode: string) => void,
+  addResult: addResult as (rjcode: string, result: 'updated' | 'failed', count: number) => void,
 });
 const { collectUniqueFolders } = createFolderCollector({
   rootFolders: config.rootFolders,
@@ -126,9 +126,9 @@ const { collectUniqueFolders } = createFolderCollector({
 });
 const { processFolders } = createFolderProcessorRunner({
   tasks,
-  addLogForTask,
-  removeTask,
-  addResult,
+  addLogForTask: addLogForTask as (rjcode: string, log: { level: string; message: string }) => void,
+  removeTask: removeTask as (rjcode: string) => void,
+  addResult: addResult as (rjcode: string, result: 'added' | 'failed', count: number) => void,
 });
 const { initializeScan } = createScanInitializer({
   coverFolderDir: config.coverFolderDir,
@@ -169,14 +169,14 @@ const { runScan } = createScanRunner({
  */
 const performScan = () => runScan();
 
-const updateMetadataLimited = limit((id, options = null) => updateMetadata(id, options));
-const updateVoiceActorLimited = limit(id => updateMetadata(id, { includeVA: true }));
+const updateMetadataLimited = limit((id: number, options: import('./metadata-updater.js').MetadataUpdateOptions | null = null) => updateMetadata(id, options));
+const updateVoiceActorLimited = limit((id: number) => updateMetadata(id, { includeVA: true }));
 const { performUpdate, fixVoiceActorBug } = createUpdateRunner({
   listWorkIds: db.listWorkIds,
-  listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds,
+  listWorkIdsByVoiceActorIds: db.listWorkIdsByVoiceActorIds as (voiceActorIds: string[]) => Promise<{ work_id: number }[]>,
   refreshWorks,
-  updateMetadata: updateMetadataLimited,
-  updateVoiceActor: updateVoiceActorLimited,
+  updateMetadata: updateMetadataLimited as (id: number, options: import('./metadata-updater.js').MetadataUpdateOptions | null) => Promise<'updated' | 'failed'>,
+  updateVoiceActor: updateVoiceActorLimited as (id: number) => Promise<'updated' | 'failed'>,
   finishUpdate: (message, exitCode) => scannerLifecycle.finish(message, exitCode),
   nameToUUID,
 });

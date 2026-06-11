@@ -12,21 +12,31 @@ type VersionCheckResponse = {
   update_available: boolean | null;
 };
 
+type ThrottledResponse = {
+  current: string;
+  latest_stable: string | null;
+  latest_release: string | null;
+  update_available: boolean | null;
+  notifyUser: boolean;
+  lockFileExists: boolean;
+  lockReason: string | null;
+};
+
 type GitHubRelease = {
   tag_name?: string;
 };
 
 let lastGitHubCheck: number | null = null;
-let lastGitHubResponse = {
+let lastGitHubResponse: VersionCheckResponse = {
   latest_stable: null,
   latest_release: null,
   update_available: null,
-} satisfies VersionCheckResponse;
+};
 
 router.get('/', (req, res) => {
   const lockReason = '新版解决了旧版扫描时将かの仔和こっこ识别为同一个人的问题，建议进行扫描以自动修复这一问题';
 
-  const throttledResponse = {
+  const throttledResponse: ThrottledResponse = {
     current: pjson.version,
     ...lastGitHubResponse,
     notifyUser: config.checkUpdate,

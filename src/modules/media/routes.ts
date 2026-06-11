@@ -1,20 +1,28 @@
 import express from 'express';
+import type { Request, Response, NextFunction, Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import jschardet from 'jschardet';
 import { param } from 'express-validator';
 import { config } from '../../../config.js';
+import type { RootFolderConfig } from '../../config/types.js';
 import db from '../../database.js';
 import { joinFragments } from '../../shared/http/url.js';
 import { isValidRequest } from '../../shared/http/validate.js';
 import { getTrackList } from './tracks.js';
+import type { Track } from './tracks.js';
 
-const removeFileExtension = filePath => filePath.slice(0, filePath.lastIndexOf('.'));
+type WorkStorage = {
+  root_folder: string;
+  dir: string;
+};
 
-const isSubtitleTrack = track =>
+const removeFileExtension = (filePath: string) => filePath.slice(0, filePath.lastIndexOf('.'));
+
+const isSubtitleTrack = (track: Track) =>
   track.title.endsWith('.lrc') || track.title.endsWith('.txt') || track.title.endsWith('.vtt');
 
-const isWebVttTextFile = filePath => {
+const isWebVttTextFile = (filePath: string) => {
   try {
     const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' });
     return /^\s*WEBVTT/i.test(fileContent) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(fileContent);
@@ -23,24 +31,25 @@ const isWebVttTextFile = filePath => {
   }
 };
 
-const findRootFolder = work => config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
+const findRootFolder = (work: WorkStorage) => config.rootFolders.find(rootFolder => rootFolder.name === work.root_folder);
 
-const sendMissingRootFolder = (res, work) =>
+const sendMissingRootFolder = (res: Response, work: WorkStorage) =>
   res.status(500).send({ error: `找不到文件夹: "${work.root_folder}"，请尝试重启服务器或重新扫描.` });
 
-const getWorkRootAndTracks = async id => {
-  const work = await db.getWorkStorageLocation(id);
+const getWorkRootAndTracks = async (id: string | number) => {
+  const numId = typeof id === 'string' ? Number(id) : id;
+  const work = await db.getWorkStorageLocation(numId);
   const rootFolder = findRootFolder(work);
 
   if (!rootFolder) {
-    return { work, rootFolder: null, tracks: [] };
+    return { work, rootFolder: null as RootFolderConfig | null, tracks: [] as Track[] };
   }
 
-  const tracks = await getTrackList(id, path.join(rootFolder.path, work.dir));
+  const tracks = await getTrackList(numId, path.join(rootFolder.path, work.dir));
   return { work, rootFolder, tracks };
 };
 
-const createOffloadUrl = (baseUrl, rootFolder, work, track) => {
+const createOffloadUrl = (baseUrl: string, rootFolder: RootFolderConfig, work: WorkStorage, track: Track) => {
   let offloadUrl = joinFragments(baseUrl, rootFolder.name, work.dir, track.subtitle || '', track.title);
   if (process.platform === 'win32') {
     offloadUrl = offloadUrl.replace(/\\/g, '/');
@@ -48,18 +57,20 @@ const createOffloadUrl = (baseUrl, rootFolder, work, track) => {
   return offloadUrl;
 };
 
-const addMediaRoutes = (router, prefix = '/media') => {
-  router.get(`${prefix}/stream/:id/:index`, param('id').isInt(), param('index').isInt(), async (req, res, next) => {
+const addMediaRoutes = (router: Router, prefix = '/media') => {
+  router.get(`${prefix}/stream/:id/:index`, param('id').isInt(), param('index').isInt(), async (req: Request, res: Response, next: NextFunction) => {
     if (!isValidRequest(req, res)) return;
 
     try {
-      const { work, rootFolder, tracks } = await getWorkRootAndTracks(req.params.id);
+      const id = req.params.id as string;
+      const index = req.params.index as string;
+      const { work, rootFolder, tracks } = await getWorkRootAndTracks(id);
       if (!rootFolder) {
         sendMissingRootFolder(res, work);
         return;
       }
 
-      const track = tracks[req.params.index];
+      const track = tracks[Number(index)];
       const fileName = path.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
       const extName = path.extname(fileName);
       if (extName === '.txt' || extName === '.lrc' || extName === '.vtt') {
@@ -83,17 +94,19 @@ const addMediaRoutes = (router, prefix = '/media') => {
     }
   });
 
-  router.get(`${prefix}/download/:id/:index`, param('id').isInt(), param('index').isInt(), async (req, res, next) => {
+  router.get(`${prefix}/download/:id/:index`, param('id').isInt(), param('index').isInt(), async (req: Request, res: Response, next: NextFunction) => {
     if (!isValidRequest(req, res)) return;
 
     try {
-      const { work, rootFolder, tracks } = await getWorkRootAndTracks(req.params.id);
+      const id = req.params.id as string;
+      const index = req.params.index as string;
+      const { work, rootFolder, tracks } = await getWorkRootAndTracks(id);
       if (!rootFolder) {
         sendMissingRootFolder(res, work);
         return;
       }
 
-      const track = tracks[req.params.index];
+      const track = tracks[Number(index)];
       if (config.offloadMedia) {
         res.redirect(createOffloadUrl(config.offloadDownloadPath, rootFolder, work, track));
       } else {
@@ -104,11 +117,12 @@ const addMediaRoutes = (router, prefix = '/media') => {
     }
   });
 
-  router.get(`${prefix}/find-all-lrc/:id/:index`, param('id').isInt(), param('index').isInt(), async (req, res, next) => {
+  router.get(`${prefix}/find-all-lrc/:id/:index`, param('id').isInt(), param('index').isInt(), async (req: Request, res: Response, next: NextFunction) => {
     if (!isValidRequest(req, res)) return;
 
     try {
-      const { work, rootFolder, tracks } = await getWorkRootAndTracks(req.params.id);
+      const id = req.params.id as string;
+      const { work, rootFolder, tracks } = await getWorkRootAndTracks(id);
       if (!rootFolder) {
         sendMissingRootFolder(res, work);
         return;
@@ -137,17 +151,19 @@ const addMediaRoutes = (router, prefix = '/media') => {
     }
   });
 
-  router.get(`${prefix}/check-lrc/:id/:index`, param('id').isInt(), param('index').isInt(), async (req, res, next) => {
+  router.get(`${prefix}/check-lrc/:id/:index`, param('id').isInt(), param('index').isInt(), async (req: Request, res: Response, next: NextFunction) => {
     if (!isValidRequest(req, res)) return;
 
     try {
-      const { work, rootFolder, tracks } = await getWorkRootAndTracks(req.params.id);
+      const id = req.params.id as string;
+      const index = req.params.index as string;
+      const { work, rootFolder, tracks } = await getWorkRootAndTracks(id);
       if (!rootFolder) {
         sendMissingRootFolder(res, work);
         return;
       }
 
-      const track = tracks[req.params.index];
+      const track = tracks[Number(index)];
       const fileLoc = path.join(rootFolder.path, work.dir, track.subtitle || '', track.title);
       let lrcFileLoc = `${removeFileExtension(fileLoc)}.lrc`;
       let lrcFileName = `${removeFileExtension(track.title)}.lrc`;
@@ -201,7 +217,7 @@ const createMediaRouter = ({ includeMediaPrefix = true } = {}) => {
   return router;
 };
 
-const router = createMediaRouter();
+const router = createMediaRouter() as Router & { createMediaRouter: typeof createMediaRouter };
 router.createMediaRouter = createMediaRouter;
 
 export default router;

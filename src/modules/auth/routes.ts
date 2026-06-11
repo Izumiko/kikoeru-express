@@ -33,7 +33,7 @@ router.post(
     check('name').isLength({ min: 5 }).withMessage('用户名长度至少为 5'),
     check('password').isLength({ min: 5 }).withMessage('密码长度至少为 5'),
   ],
-  (req: Request<unknown, unknown, LoginRequestBody>, res: Response /*, next */) => {
+  (req: Request, res: Response /*, next */) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -70,12 +70,11 @@ if (config.auth) {
 
 // 获取用户信息
 // eslint-disable-next-line no-unused-vars
-router.get('/me', (req, res, next) => {
+router.get('/me', (req: AuthenticatedRequest, res: Response, next) => {
   // 同时告诉客户端，服务器是否启用用户验证
   const auth = config.auth;
-  const authReq = req as AuthenticatedRequest;
   const user = config.auth
-    ? { name: authReq.auth?.name, group: authReq.auth?.group }
+    ? { name: req.auth?.name, group: req.auth?.group }
     : { name: 'admin', group: 'administrator' };
   res.send({ user, auth });
 });

@@ -29,8 +29,8 @@ const closeDatabaseConnection = async (): Promise<void> => {
   await libsql.close();
 };
 
-if (process.env.NODE_ENV === 'test' && typeof global.after === 'function') {
-  global.after(async () => {
+if (process.env.NODE_ENV === 'test' && typeof (globalThis as typeof globalThis & { after?: (fn: () => Promise<void>) => void }).after === 'function') {
+  (globalThis as typeof globalThis & { after?: (fn: () => Promise<void>) => void }).after!(async () => {
     await closeDatabaseConnection();
   });
 }

@@ -3,7 +3,8 @@ import express from 'express';
 import type { ErrorRequestHandler, Express } from 'express';
 import compression from 'compression';
 import history from 'connect-history-api-fallback';
-import serveIndex from 'serve-index';
+import serveIndexFactory from 'serve-index';
+const serveIndex = serveIndexFactory as (path: string, options?: { icons?: boolean }) => import('express').RequestHandler;
 import { config } from '../../config.js';
 import { runtimeBaseDir } from '../../config.js';
 import api from '../api/mount.js';
@@ -44,7 +45,7 @@ const createApp = (): Express => {
       rewrites: [
         {
           from: /^\/api\/.*$/,
-          to: context => context.parsedUrl.path,
+          to: context => context.parsedUrl.path || '/',
         },
       ],
       index: '/index.html',

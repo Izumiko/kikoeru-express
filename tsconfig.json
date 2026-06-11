@@ -7,7 +7,7 @@
     "moduleResolution": "NodeNext",
     "target": "ES2021",
     "lib": ["ES2021"],
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true

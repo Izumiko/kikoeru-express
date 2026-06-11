@@ -12,8 +12,8 @@ type UpdateArgv = {
 
 type RunUpdateCliOptions = {
   argv?: string[];
-  performUpdateFn?: (options: MetadataUpdateOptions) => Promise<void>;
-  exit?: (code: number) => void;
+  performUpdateFn?: ((options: MetadataUpdateOptions) => Promise<void>) | undefined;
+  exit?: ((code: number) => void) | undefined;
 };
 
 const createUpdateArgParser = (argv: string[]) =>
@@ -60,10 +60,10 @@ const parseUpdateOptions = (argv: string[]): MetadataUpdateOptions =>
 
 const runUpdateCli = ({
   argv = hideBin(process.argv),
-  performUpdateFn = null,
+  performUpdateFn = undefined,
   exit = code => process.exit(code),
 }: RunUpdateCliOptions = {}) =>
-  (performUpdateFn || performUpdate)(parseUpdateOptions(argv))
+  (performUpdateFn ?? performUpdate)(parseUpdateOptions(argv))
     .then(() => {
       exit(0);
     })
