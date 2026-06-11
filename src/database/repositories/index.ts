@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as metadata from './metadata.js';
 import * as review from './review.js';
 import * as user from './user.js';
