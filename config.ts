@@ -1,16 +1,15 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createConfigStore } from './src/config/loader.js';
 import { getRuntimeBaseDir } from './src/config/paths.js';
 import type { AppConfig } from './src/config/types.js';
+import { version } from './src/version.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
-const pjson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as { version: string };
 
 const store = createConfigStore({
   projectRoot,
-  version: pjson.version,
+  version,
 });
 
 store.initialize();

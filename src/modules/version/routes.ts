@@ -3,7 +3,7 @@ import axios from 'axios';
 import compareVersions from 'compare-versions';
 import { config } from '../../../config.js';
 import { updateLock } from '../../upgrade/lock.js';
-import pjson from '../../../package.json' with { type: 'json' };
+import { version as appVersion } from '../../version.js';
 const router = express.Router();
 
 type VersionCheckResponse = {
@@ -37,7 +37,7 @@ router.get('/', (req, res) => {
   const lockReason = '新版解决了旧版扫描时将かの仔和こっこ识别为同一个人的问题，建议进行扫描以自动修复这一问题';
 
   const throttledResponse: ThrottledResponse = {
-    current: pjson.version,
+    current: appVersion,
     ...lastGitHubResponse,
     notifyUser: config.checkUpdate,
     lockFileExists: updateLock.isLockFilePresent,
@@ -68,7 +68,7 @@ router.get('/', (req, res) => {
         responseStable.data.tag_name &&
         responseLatest.data[0].tag_name
       ) {
-        const current = pjson.version;
+        const current = appVersion;
         const latest_stable = responseStable.data.tag_name;
         const latest_release = responseLatest.data[0].tag_name;
         const newVerAvailable = () => {

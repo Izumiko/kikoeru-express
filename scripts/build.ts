@@ -6,6 +6,8 @@ import * as esbuild from 'esbuild';
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildDir = path.join(rootDir, 'build');
 
+const pjson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as { version: string };
+
 const entries = {
   server: path.join(rootDir, 'src/cli/server.ts'),
   scanner: path.join(rootDir, 'src/cli/scanner.ts'),
@@ -30,6 +32,10 @@ async function build(): Promise<void> {
     outdir: buildDir,
     packages: 'external',
     logLevel: 'info',
+    minify: true,
+    define: {
+      __APP_VERSION__: JSON.stringify(pjson.version),
+    },
   });
 
   copyIfExists(path.join(rootDir, 'dist'), path.join(buildDir, 'dist'));
