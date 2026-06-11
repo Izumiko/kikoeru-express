@@ -18,10 +18,10 @@ const getUsername = (req: Request) =>
 router.put(
   '/',
   body('work_id').isInt(),
-  body('file_index').isString(),
+  body('file_index').isInt(),
   body('file_name').optional({ nullable: true }).isString(),
-  body('play_time').optional({ nullable: true }).isInt(),
-  body('total_time').optional({ nullable: true }).isInt(),
+  body('play_time').optional({ nullable: true }).isFloat(),
+  body('total_time').optional({ nullable: true }).isFloat(),
   (req: Request, res: Response) => {
     if (!isValidRequest(req, res)) return;
 
