@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { orderBy } from 'natural-orderby';
 
 const playableExtensions = new Set([
   '.mp3',
@@ -41,6 +40,8 @@ type RecursiveDirent = {
 
 const getDirentParentPath = (dirent: RecursiveDirent): string => dirent.parentPath || dirent.path || '';
 
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
 const getTrackList = async (id: number | string, dir: string): Promise<Track[]> => {
   try {
     // 1. 使用原生 API 递归读取目录（Node.js 20+）
@@ -71,7 +72,18 @@ const getTrackList = async (id: number | string, dir: string): Promise<Track[]> 
     }, []);
 
     // 3. 排序
-    const sortedFiles = orderBy(fileItems, [v => v.subtitle, v => v.title, v => v.ext]);
+    const sortedFiles = fileItems.sort((a, b) => {
+      const subtitleCompare =
+        a.subtitle === null && b.subtitle !== null
+          ? 1
+          : a.subtitle !== null && b.subtitle === null
+            ? -1
+            : collator.compare(a.subtitle ?? '', b.subtitle ?? '');
+      if (subtitleCompare !== 0) return subtitleCompare;
+      const titleCompare = collator.compare(a.title, b.title);
+      if (titleCompare !== 0) return titleCompare;
+      return collator.compare(a.ext, b.ext);
+    });
 
     // 4. 返回最终结果
     return sortedFiles.map((file, index) => ({
