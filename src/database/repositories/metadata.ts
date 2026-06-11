@@ -1,5 +1,5 @@
-// @ts-nocheck
 import { and, count, countDistinct, eq, inArray, like, or, sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 
 import { db } from '../client.js';
 import {
@@ -20,17 +20,38 @@ const tableByField = {
   va: voiceActors,
 };
 
-const reviewJoinKey = username =>
+type MetadataField = keyof typeof tableByField;
+
+type WorkListField = MetadataField;
+
+type GetWorksByOptions = {
+  id?: Array<number | string>;
+  field?: WorkListField;
+  username?: string;
+};
+
+type KeywordSearchOptions = {
+  keyword?: string;
+  username?: string;
+};
+
+type GetMetadataOptions = {
+  field?: MetadataField;
+  ids?: Array<number | string>;
+};
+
+const reviewJoinKey = (username: string) =>
   and(eq(reviews.workId, staticMetadata.id), eq(reviews.userName, username));
 
-const workRowsWithRatings = (username, where) => {
+const workRowsWithRatings = (username: string, where: SQL | undefined = undefined) => {
   let query = db
     .select({
       ...staticMetadataFields,
       userRating: reviews.rating,
     })
     .from(staticMetadata)
-    .leftJoin(reviews, reviewJoinKey(username));
+    .leftJoin(reviews, reviewJoinKey(username))
+    .$dynamic();
 
   if (where) {
     query = query.where(where);
@@ -39,7 +60,7 @@ const workRowsWithRatings = (username, where) => {
   return query;
 };
 
-const getWorkIdsForAllTags = async tagIds => {
+const getWorkIdsForAllTags = async (tagIds: number[]): Promise<Array<number | null>> => {
   const rows = await db
     .select({ workId: tagWorks.workId })
     .from(tagWorks)
@@ -50,7 +71,7 @@ const getWorkIdsForAllTags = async tagIds => {
   return rows.map(row => row.workId);
 };
 
-const getWorkIdsByVoiceActor = async voiceActorId => {
+const getWorkIdsByVoiceActor = async (voiceActorId: string): Promise<Array<number | null>> => {
   const rows = await db
     .select({ workId: voiceActorWorks.workId })
     .from(voiceActorWorks)
@@ -59,14 +80,15 @@ const getWorkIdsByVoiceActor = async voiceActorId => {
   return rows.map(row => row.workId);
 };
 
-const inArrayOrNoMatch = (column, values) => (values.length ? inArray(column, values) : sql`0 = 1`);
+const inArrayOrNoMatch = (column, values: Array<number | string | null>) =>
+  values.length ? inArray(column, values) : sql`0 = 1`;
 
 /**
  * Fetches metadata for a specific work id.
  * @param {Number} id Work identifier.
  * @param {String} username 'admin' or other usernames for current user
  */
-const getWorkMetadata = async (id, username) => {
+const getWorkMetadata = async (id: number, username: string) => {
   const work = await db
     .select(workWithUserReviewFields)
     .from(staticMetadata)
@@ -82,23 +104,23 @@ const getWorkMetadata = async (id, username) => {
  * @param {Number[]} id Which id to filter by.
  * @param {String} field Which field to filter by.
  */
-const getWorksBy = async ({ id, field, username = '' } = {}) => {
+const getWorksBy = async ({ id = [], field, username = '' }: GetWorksByOptions = {}) => {
   switch (field) {
     case 'circle':
-      return workRowsWithRatings(username, eq(staticMetadata.circleId, id[0]));
+      return workRowsWithRatings(username, eq(staticMetadata.circleId, Number(id[0])));
 
     case 'tag':
-      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsForAllTags(id)));
+      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsForAllTags(id.map(Number))));
 
     case 'va':
-      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsByVoiceActor(id[0])));
+      return workRowsWithRatings(username, inArrayOrNoMatch(staticMetadata.id, await getWorkIdsByVoiceActor(String(id[0]))));
 
     default:
       return workRowsWithRatings(username);
   }
 };
 
-const getWorkIdsByMatchingTags = async keyword => {
+const getWorkIdsByMatchingTags = async (keyword: string): Promise<Array<number | null>> => {
   const rows = await db
     .select({ workId: tagWorks.workId })
     .from(tagWorks)
@@ -108,7 +130,7 @@ const getWorkIdsByMatchingTags = async keyword => {
   return rows.map(row => row.workId);
 };
 
-const getWorkIdsByMatchingVoiceActors = async keyword => {
+const getWorkIdsByMatchingVoiceActors = async (keyword: string): Promise<Array<number | null>> => {
   const rows = await db
     .select({ workId: voiceActorWorks.workId })
     .from(voiceActorWorks)
@@ -122,7 +144,7 @@ const getWorkIdsByMatchingVoiceActors = async keyword => {
  * 根据关键字查询音声
  * @param {String} keyword
  */
-const getWorksByKeyWord = async ({ keyword, username = 'admin' } = {}) => {
+const getWorksByKeyWord = async ({ keyword = '', username = 'admin' }: KeywordSearchOptions = {}) => {
   const workid = keyword.match(/((R|r)(J|j))?(\d+)/) ? keyword.match(/((R|r)(J|j))?(\d+)/)[4] : '';
   if (workid) {
     return workRowsWithRatings(username, eq(staticMetadata.id, Number(workid)));
@@ -145,7 +167,7 @@ const getWorksByKeyWord = async ({ keyword, username = 'admin' } = {}) => {
  * 获取所有社团/标签/声优的元数据列表
  * @param {Starting} field ['circle', 'tag', 'va'] 中的一个
  */
-const getLabels = field => {
+const getLabels = (field: MetadataField) => {
   if (field === 'circle') {
     return db
       .select({
@@ -188,8 +210,8 @@ const getLabels = field => {
  * }} param0
  * @returns
  */
-const getMetadata = ({ field = 'circle', ids } = {}) => {
-  const validFields = ['circle', 'tag', 'va'];
+const getMetadata = ({ field = 'circle', ids = [] }: GetMetadataOptions = {}) => {
+  const validFields: MetadataField[] = ['circle', 'tag', 'va'];
   if (!validFields.includes(field)) throw new Error('无效的查询域');
 
   const table = tableByField[field];

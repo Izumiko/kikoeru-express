@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { sql } from 'drizzle-orm';
 
 import { reviews, staticMetadata } from '../schema/tables.js';

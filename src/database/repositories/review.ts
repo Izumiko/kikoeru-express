@@ -1,14 +1,19 @@
-// @ts-nocheck
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 
 import { db } from '../client.js';
 import { reviews, staticMetadata } from '../schema/tables.js';
 import { workWithUserReviewFields } from './static-metadata-select.js';
 
-const reviewKey = (username, workid) =>
+type ReviewValues = {
+  rating?: number;
+  reviewText?: string;
+  progress?: string;
+};
+
+const reviewKey = (username: string, workid: number | string) =>
   and(eq(reviews.userName, username), eq(reviews.workId, String(workid)));
 
-const reviewValues = (username, workid, values = {}) => ({
+const reviewValues = (username: string, workid: number | string, values: ReviewValues = {}) => ({
   userName: username,
   workId: String(workid),
   ...values,
@@ -42,15 +47,26 @@ const orderColumnByName = {
   rate_average_2dp: staticMetadata.rateAverage2dp,
 };
 
-const normalizeOrderBy = orderBy => orderColumnByName[orderColumns.has(orderBy) ? orderBy : 'release'];
-const normalizeSortOption = sortOption => (sortOption === 'asc' ? 'asc' : 'desc');
+type ReviewSortOption = 'asc' | 'desc';
+
+type GetWorksWithReviewsOptions = {
+  username?: string;
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  sortOption?: string;
+  filter?: string;
+};
+
+const normalizeOrderBy = (orderBy: string) => orderColumnByName[orderColumns.has(orderBy) ? orderBy : 'release'];
+const normalizeSortOption = (sortOption: string): ReviewSortOption => (sortOption === 'asc' ? 'asc' : 'desc');
 const sortExpression = (column, sortOption) => (normalizeSortOption(sortOption) === 'asc' ? asc(column) : desc(column));
 
 // 添加星标或评语或进度
 const updateUserReview = async (
-  username,
-  workid,
-  rating,
+  username: string,
+  workid: number | string,
+  rating: number,
   review_text = '',
   progress = '',
   starOnly = true,
@@ -82,7 +98,7 @@ const updateUserReview = async (
   });
 
 // 删除星标、评语及进度
-const deleteUserReview = (username, workid) =>
+const deleteUserReview = (username: string, workid: number | string) =>
   db.transaction(tx => tx.delete(reviews).where(reviewKey(username, workid)));
 
 // 读取星标及评语 + 作品元数据
@@ -93,7 +109,7 @@ const getWorksWithReviews = async ({
   orderBy = 'release',
   sortOption = 'desc',
   filter,
-} = {}) => {
+}: GetWorksWithReviewsOptions = {}) => {
   const reviewWhere = filter
     ? and(eq(reviews.userName, username), eq(reviews.progress, filter))
     : eq(reviews.userName, username);

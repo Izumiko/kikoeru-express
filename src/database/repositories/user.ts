@@ -1,14 +1,23 @@
-// @ts-nocheck
 import { eq, inArray } from 'drizzle-orm';
 
 import { db } from '../client.js';
 import { users } from '../schema/tables.js';
 
+type UserCredentials = {
+  name: string;
+  password: string;
+  group: string;
+};
+
+type UserIdentity = {
+  name: string;
+};
+
 /**
  * 创建一个新用户
  * @param {Object} user User object.
  */
-const createUser = user =>
+const createUser = (user: UserCredentials) =>
   db.transaction(async tx => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (existing[0]) {
@@ -23,7 +32,7 @@ const createUser = user =>
  * @param {Object} user User object.
  * @param {String} newPassword new password
  */
-const updateUserPassword = (user, newPassword) =>
+const updateUserPassword = (user: UserIdentity, newPassword: string) =>
   db.transaction(async tx => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (!existing[0]) {
@@ -37,7 +46,7 @@ const updateUserPassword = (user, newPassword) =>
  * 重置用户密码为 "password"
  * @param {Object} user User object.
  */
-const resetUserPassword = user =>
+const resetUserPassword = (user: UserIdentity) =>
   db.transaction(async tx => {
     const existing = await tx.select().from(users).where(eq(users.name, user.name)).limit(1);
     if (!existing[0]) {
@@ -51,14 +60,14 @@ const resetUserPassword = user =>
  * 删除用户
  * @param {Object[]} usersToDelete User objects.
  */
-const deleteUser = usersToDelete =>
+const deleteUser = (usersToDelete: UserIdentity[]) =>
   db.transaction(tx => tx.delete(users).where(inArray(users.name, usersToDelete.map(user => user.name))));
 
 /**
  * 按用户名查找用户
  * @param {String} name username
  */
-const getUserByName = async name => {
+const getUserByName = async (name: string) => {
   const result = await db.select().from(users).where(eq(users.name, name)).limit(1);
   return result[0];
 };
@@ -75,4 +84,8 @@ export {
   getUsers,
   resetUserPassword,
   updateUserPassword,
+};
+export type {
+  UserCredentials,
+  UserIdentity,
 };
