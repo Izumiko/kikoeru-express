@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { hashLegacyPassword } from '../modules/auth/service.js';
+import { hashPassword } from '../modules/auth/service.js';
 import { config, updateConfig } from '../../config.js';
 import { databaseExist } from './client.js';
 import { createUser } from './repositories.js';
@@ -26,7 +26,7 @@ const initApp = async (): Promise<void> => {
   try {
     await createUser({
       name: 'admin',
-      password: hashLegacyPassword('admin'),
+      password: hashPassword('admin'),
       group: 'administrator',
     });
     updateConfig();

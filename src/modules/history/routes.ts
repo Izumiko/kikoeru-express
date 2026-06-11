@@ -12,8 +12,7 @@ type HistoryRequest = Request & {
   user?: { name: string };
 };
 
-const getUsername = (req: Request) =>
-  (config.auth ? (req as HistoryRequest).user?.name : 'admin') || 'admin';
+const getUsername = (req: Request) => (config.auth ? (req as HistoryRequest).user?.name : 'admin') || 'admin';
 
 router.put(
   '/',

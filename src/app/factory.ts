@@ -51,7 +51,7 @@ const createApp = (): Express => {
       return next();
     }
 
-    // 排除 API 路由 
+    // 排除 API 路由
     if (req.path.startsWith('/api/')) {
       return next();
     }

@@ -40,10 +40,10 @@ async function build(): Promise<void> {
       '@libsql/linux-x64-gnu',
       '@libsql/linux-x64-musl',
       '@libsql/linux-arm-gnueabihf',
-      '@libsql/linux-arm-musleabihf'
+      '@libsql/linux-arm-musleabihf',
     ],
     alias: {
-      'emitter': 'events'
+      emitter: 'events',
     },
     banner: {
       js: `

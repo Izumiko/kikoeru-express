@@ -3,5 +3,3 @@ declare module 'serve-index' {
   function serveIndex(path: string, options?: unknown): RequestHandler;
   export default serveIndex;
 }
-
-
