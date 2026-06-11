@@ -43,7 +43,7 @@ type VerifyAdminTokenOptions = {
   jwtImpl: JwtVerifier;
 };
 
-type SocketAuthMiddlewareOptions = Omit<VerifyAdminTokenOptions, 'token'> & {
+type SocketAuthMiddlewareOptions = Omit<VerifyAdminTokenOptions, 'token' | 'jwtImpl'> & {
   jwtImpl?: JwtVerifier;
 };
 
