@@ -1,9 +1,8 @@
-// @ts-nocheck
 import express from 'express';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { config } from '../config.js';
 import db from '../src/database.js';
 import mediaRouter from '../src/modules/media/routes.js';

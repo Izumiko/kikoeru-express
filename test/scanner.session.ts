@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { ScanSession } from '../src/modules/scanner/session.js';
 
 describe('ScanSession', () => {

@@ -1,6 +1,4 @@
-// @ts-nocheck
-import chai from 'chai';
-const expect = chai.expect;
+import { expect } from 'vitest';
 import { joinFragments } from '../src/shared/http/url.js';
 
 describe('joinfragments()', function(){

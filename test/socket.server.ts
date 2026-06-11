@@ -1,6 +1,5 @@
-// @ts-nocheck
 import path from 'path';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createSocketServer, resolveScannerScriptPaths } from '../src/modules/socket/server.js';
 
 describe('createSocketServer', () => {

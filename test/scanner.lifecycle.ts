@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { ScannerLifecycle } from '../src/modules/scanner/lifecycle.js';
 
 describe('ScannerLifecycle', () => {

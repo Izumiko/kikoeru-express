@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { SOCKET_EVENTS } from '../src/modules/socket/events.js';
 
 describe('socket event contract', () => {

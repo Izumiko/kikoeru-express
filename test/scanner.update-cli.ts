@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { parseUpdateOptions, runUpdateCli } from '../src/modules/scanner/update-cli.js';
 
 describe('scanner update CLI', () => {

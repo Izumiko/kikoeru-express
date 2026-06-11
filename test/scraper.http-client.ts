@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import httpClient from '../src/modules/scraper/http-client.js';
 
 describe('scraper http client', () => {

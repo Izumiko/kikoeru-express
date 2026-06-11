@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { NAME_UUID_NAMESPACE, hasLetter, nameToUUID } from '../src/modules/scraper/utils.js';
 
 describe('scraper utils', () => {

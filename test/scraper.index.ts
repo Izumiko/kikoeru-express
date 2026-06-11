@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import * as scraper from '../src/modules/scraper/index.js';
 
 describe('scraper module entrypoint', () => {

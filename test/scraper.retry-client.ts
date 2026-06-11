@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createRetryGet, getRetryUrl } from '../src/modules/scraper/retry-client.js';
 
 describe('scraper retry client', () => {

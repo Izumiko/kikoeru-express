@@ -1,4 +1,3 @@
-// @ts-nocheck
 import http from 'http';
 const request = (app, options = {}) =>
   new Promise((resolve, reject) => {

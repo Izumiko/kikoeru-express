@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createHvdbScraper } from '../src/modules/scraper/hvdb-scraper.js';
 
 describe('createHvdbScraper', () => {

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createCoverDownloader } from '../src/modules/scanner/cover-downloader.js';
 
 const createDownloader = ({ responses, saveCoverImageToDisk = () => Promise.resolve() }) => {

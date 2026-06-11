@@ -1,9 +1,5 @@
-// @ts-nocheck
-process.env.FREEZE_CONFIG_FILE = true;
-process.env.NODE_ENV = 'test';
 
-import chai from 'chai';
-const expect = chai.expect;
+import { expect } from 'vitest';
 
 import { createApp } from '../src/app/factory.js';
 import { request } from './helpers/http.js';
@@ -26,7 +22,7 @@ const createWorkRecord = values => ({
 describe('API contract', function () {
   let app;
 
-  before(function () {
+  beforeAll(function () {
     app = createApp();
   });
 

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { ScanCounters } from '../src/modules/scanner/counters.js';
 import { createUpdateRunner } from '../src/modules/scanner/update-runner.js';
 

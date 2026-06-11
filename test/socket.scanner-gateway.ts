@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createScannerSocketGateway } from '../src/modules/socket/scanner-gateway.js';
 
 const createFakeSocket = () => {

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createMetadataIngestion } from '../src/modules/scanner/metadata-ingestion.js';
 
 describe('createMetadataIngestion', () => {

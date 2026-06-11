@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createDlsiteScraper } from '../src/modules/scraper/dlsite-scraper.js';
 
 const createStaticHtml = ({ language = 'zh-cn', tags = true, vas = true, title = '标题' } = {}) => {

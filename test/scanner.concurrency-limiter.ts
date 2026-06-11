@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createConcurrencyLimiter } from '../src/modules/scanner/concurrency-limiter.js';
 
 describe('createConcurrencyLimiter', () => {

@@ -1,6 +1,5 @@
-// @ts-nocheck
 import path from 'path';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createFolderCollector } from '../src/modules/scanner/folder-collector.js';
 
 async function* toAsyncIterable(items) {

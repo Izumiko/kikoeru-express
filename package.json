@@ -37,7 +37,8 @@
     "move-quasar": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-quasar/dist/spa ../kikoeru-express/dist",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:unit": "cross-env NODE_ENV=test tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test": "npm run lint && npm run typecheck && npm run test:unit"
   },
   "author": "Watanuki-Kimihiro",
@@ -81,21 +82,19 @@
     "@types/node": "^24.13.1",
     "@types/url-join": "^4.0.3",
     "@types/yargs": "^17.0.35",
-    "chai": "^4.5.0",
-    "chai-string": "^1.6.0",
-    "cross-env": "^10.1.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "drizzle-kit": "^1.0.0-beta.22",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.1.0",
     "globals": "^17.6.0",
-    "mocha": "^11.7.6",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.4",
     "serve-index": "^1.9.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.0"
+    "typescript-eslint": "^8.61.0",
+    "vitest": "^4.1.8"
   }
 }

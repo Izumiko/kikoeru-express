@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { buildHvdbWorkUrl, parseHvdbWorkMetadataHtml } from '../src/modules/scraper/hvdb-metadata.js';
 
 describe('hvdb metadata helpers', () => {

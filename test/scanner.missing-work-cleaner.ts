@@ -1,6 +1,5 @@
-// @ts-nocheck
 import path from 'path';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createMissingWorkCleaner } from '../src/modules/scanner/missing-work-cleaner.js';
 
 const existingWorkPath = path.join('/library', 'RJ000123');

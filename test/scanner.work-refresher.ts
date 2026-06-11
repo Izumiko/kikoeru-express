@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createWorkRefresher } from '../src/modules/scanner/work-refresher.js';
 
 describe('createWorkRefresher', () => {

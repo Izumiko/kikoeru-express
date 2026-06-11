@@ -1,9 +1,5 @@
-// @ts-nocheck
-process.env.FREEZE_CONFIG_FILE = true;
-process.env.NODE_ENV = 'test';
 
-import chai from 'chai';
-const expect = chai.expect;
+import { expect } from 'vitest';
 import jwt from 'jsonwebtoken';
 import authService from '../src/modules/auth/service.js';
 import { config } from '../config.js';

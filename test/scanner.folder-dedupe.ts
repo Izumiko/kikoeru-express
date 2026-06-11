@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { dedupeFoldersById } from '../src/modules/scanner/folder-dedupe.js';
 
 describe('dedupeFoldersById', () => {

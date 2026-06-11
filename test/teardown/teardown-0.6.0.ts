@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { libsql } from '../../src/database/client.js';
 
 const dropDatabase = async () => {

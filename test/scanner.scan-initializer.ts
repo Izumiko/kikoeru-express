@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createScanInitializer } from '../src/modules/scanner/scan-initializer.js';
 
 describe('createScanInitializer', () => {

@@ -1,6 +1,4 @@
-// @ts-nocheck
-import chai from 'chai';
-const expect = chai.expect;
+import { expect } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -20,8 +18,7 @@ describe('Config store', function () {
     oldIsDocker = process.env.IS_DOCKER;
     delete process.env.FREEZE_CONFIG_FILE;
     delete process.env.IS_DOCKER;
-    process.env.NODE_ENV = 'test';
-    tempRoots = [];
+        tempRoots = [];
   });
 
   afterEach(function () {

@@ -1,9 +1,8 @@
-// @ts-nocheck
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { Readable } from 'stream';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { config } from '../config.js';
 import { deleteCoverImageFromDisk, saveCoverImageToDisk } from '../src/modules/media/cover-storage.js';
 

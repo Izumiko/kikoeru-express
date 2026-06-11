@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { ScanCounters } from '../src/modules/scanner/counters.js';
 import { createFolderProcessorRunner } from '../src/modules/scanner/folder-processor-runner.js';
 

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { expect } from 'chai';
+import { expect } from 'vitest';
 import { createScannerProcessController } from '../src/modules/socket/scanner-process-controller.js';
 
 const createFakeProcess = () => {
