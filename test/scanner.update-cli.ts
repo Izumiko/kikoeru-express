@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { parseUpdateOptions, runUpdateCli } from '../src/modules/scanner/update-cli.js';
+import { parseUpdateOptions, runUpdateCli } from '../src/modules/scanner/cli/update-cli.js';
 
 describe('scanner update CLI', () => {
   it('parses refresh options with the legacy precedence', () => {

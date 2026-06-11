@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
-import type { RetryRequestConfig } from '../scraper/retry-config.js';
-import type { ScannerLog } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
+import type { RetryRequestConfig } from '../../scraper/retry-config.js';
+import type { ScannerLog } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
 
 type CoverDownloadResult = 'added' | 'failed';
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-import { runUpdateCli } from '../modules/scanner/update-cli.js';
+import { runUpdateCli } from '../modules/scanner/index.js';
 
 runUpdateCli();

@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createScanRunner } from '../src/modules/scanner/scan-runner.js';
+import { createScanRunner } from '../src/modules/scanner/core/scan-runner.js';
 
 describe('createScanRunner', () => {
   let calls;

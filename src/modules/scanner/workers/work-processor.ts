@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import type { ScannerLog, WorkFolder } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
-import type { ScanResult } from './counters.js';
+import type { ScannerLog, WorkFolder } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
+import type { ScanResult } from '../support/counters.js';
 
 type WorkProcessorOptions = {
   workExists: (id: number) => Promise<boolean>;

@@ -1,5 +1,5 @@
-import { formatRjCode } from '../media/rj-code.js';
-import type { ScanResult } from './counters.js';
+import { formatRjCode } from '../../media/rj-code.js';
+import type { ScanResult } from '../support/counters.js';
 import type { WorkMetadata } from './metadata-ingestion.js';
 
 type MetadataUpdateOptions = {

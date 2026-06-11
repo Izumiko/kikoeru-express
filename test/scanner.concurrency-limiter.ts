@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createConcurrencyLimiter } from '../src/modules/scanner/concurrency-limiter.js';
+import { createConcurrencyLimiter } from '../src/modules/scanner/support/concurrency-limiter.js';
 
 describe('createConcurrencyLimiter', () => {
   it('wraps functions with the configured concurrency controller', async () => {

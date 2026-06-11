@@ -1,9 +1,9 @@
 import { expect } from 'vitest';
-import { ScanCounters } from '../src/modules/scanner/counters.js';
+import { ScanCounters } from '../src/modules/scanner/support/counters.js';
 import {
   createVoiceActorRepairRunner,
   getUpdatedCount,
-} from '../src/modules/scanner/voice-actor-repair-runner.js';
+} from '../src/modules/scanner/workers/voice-actor-repair-runner.js';
 
 describe('createVoiceActorRepairRunner', () => {
   let calls;

@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import {
   createMetadataUpdater,
   shouldScrapeStaticMetadata,
-} from '../src/modules/scanner/metadata-updater.js';
+} from '../src/modules/scanner/workers/metadata-updater.js';
 
 describe('createMetadataUpdater', () => {
   let calls;

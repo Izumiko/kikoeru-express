@@ -1,4 +1,4 @@
-import type { ScanCounters } from './counters.js';
+import type { ScanCounters } from '../support/counters.js';
 
 type UpdateLikeResult = number | { updated?: number } | null | undefined;
 

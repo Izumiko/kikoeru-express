@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createScanInitializer } from '../src/modules/scanner/scan-initializer.js';
+import { createScanInitializer } from '../src/modules/scanner/support/scan-initializer.js';
 
 describe('createScanInitializer', () => {
   let calls;

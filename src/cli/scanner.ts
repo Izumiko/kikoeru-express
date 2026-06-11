@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-import { performScan } from '../modules/scanner/runtime.js';
+import { performScan } from '../modules/scanner/index.js';
 
 performScan();

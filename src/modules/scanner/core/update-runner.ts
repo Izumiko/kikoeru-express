@@ -1,6 +1,6 @@
-import type { ScanCounters} from './counters.js';
-import { createUpdateFinishedMessage } from './counters.js';
-import type { MetadataUpdateOptions } from './metadata-updater.js';
+import type { ScanCounters} from '../support/counters.js';
+import { createUpdateFinishedMessage } from '../support/counters.js';
+import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 
 type WorkIdRow = { id: number };
 type VoiceActorWorkIdRow = { work_id: number };

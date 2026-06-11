@@ -1,37 +1,37 @@
-import db from '../../database.js';
-import { closeDatabaseConnection } from '../../database/client.js';
-import { createSchema } from '../../database/schema.js';
-import { deleteCoverImageFromDisk, saveCoverImageToDisk } from '../media/cover-storage.js';
-import { getFolderList } from '../media/folder-scanner.js';
-import { hashLegacyPassword } from '../auth/service.js';
+import db from '../../../database.js';
+import { closeDatabaseConnection } from '../../../database/client.js';
+import { createSchema } from '../../../database/schema.js';
+import { deleteCoverImageFromDisk, saveCoverImageToDisk } from '../../media/cover-storage.js';
+import { getFolderList } from '../../media/folder-scanner.js';
+import { hashLegacyPassword } from '../../auth/service.js';
 import {
   httpClient,
   nameToUUID,
   scrapeDynamicWorkMetadataFromDLsite,
   scrapeWorkMetadataFromDLsite,
-} from '../scraper.js';
+} from '../../scraper.js';
 
-import { config } from '../../../config.js';
-import { updateLock } from '../../upgrade/lock.js';
-import { createCleanupRunner } from './cleanup-runner.js';
-import { createConcurrencyLimiter } from './concurrency-limiter.js';
-import { createCoverDownloader } from './cover-downloader.js';
-import { createFolderCollector } from './folder-collector.js';
-import { createFolderProcessorRunner } from './folder-processor-runner.js';
+import { config } from '../../../../config.js';
+import { updateLock } from '../../../upgrade/lock.js';
+import { createCleanupRunner } from '../workers/cleanup-runner.js';
+import { createConcurrencyLimiter } from '../support/concurrency-limiter.js';
+import { createCoverDownloader } from '../workers/cover-downloader.js';
+import { createFolderCollector } from '../folders/folder-collector.js';
+import { createFolderProcessorRunner } from '../folders/folder-processor-runner.js';
 import { ScannerLifecycle } from './lifecycle.js';
-import { ScannerLogger } from './logger.js';
-import { createMetadataIngestion } from './metadata-ingestion.js';
-import { createMetadataUpdater } from './metadata-updater.js';
-import { createMissingWorkCleaner } from './missing-work-cleaner.js';
-import { createScanInitializer } from './scan-initializer.js';
+import { ScannerLogger } from '../support/logger.js';
+import { createMetadataIngestion } from '../workers/metadata-ingestion.js';
+import { createMetadataUpdater } from '../workers/metadata-updater.js';
+import { createMissingWorkCleaner } from '../workers/missing-work-cleaner.js';
+import { createScanInitializer } from '../support/scan-initializer.js';
 import { createScanRunner } from './scan-runner.js';
-import { ScanSession } from './session.js';
+import { ScanSession } from '../support/session.js';
 import { createUpdateRunner } from './update-runner.js';
-import { createVoiceActorRepairRunner } from './voice-actor-repair-runner.js';
-import { createWorkProcessor } from './work-processor.js';
-import { createWorkRefresher } from './work-refresher.js';
-import { SOCKET_EVENTS } from '../socket/events.js';
-import type { MetadataUpdateOptions } from './metadata-updater.js';
+import { createVoiceActorRepairRunner } from '../workers/voice-actor-repair-runner.js';
+import { createWorkProcessor } from '../workers/work-processor.js';
+import { createWorkRefresher } from '../workers/work-refresher.js';
+import { SOCKET_EVENTS } from '../../socket/events.js';
+import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 
 type ScannerRuntimeMessage = {
   emit?: typeof SOCKET_EVENTS.SCAN_INIT_STATE;

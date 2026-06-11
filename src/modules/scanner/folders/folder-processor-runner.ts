@@ -1,7 +1,7 @@
-import type { WorkFolder } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
-import type { ScanCounters, ScanResult } from './counters.js';
-import type { ScannerLog, ScanTask } from './session.js';
+import type { WorkFolder } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
+import type { ScanCounters, ScanResult } from '../support/counters.js';
+import type { ScannerLog, ScanTask } from '../support/session.js';
 
 type FolderProcessResult = Extract<ScanResult, 'added' | 'failed' | 'skipped'>;
 

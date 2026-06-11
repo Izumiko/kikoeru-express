@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createMetadataIngestion } from '../src/modules/scanner/metadata-ingestion.js';
+import { createMetadataIngestion } from '../src/modules/scanner/workers/metadata-ingestion.js';
 
 describe('createMetadataIngestion', () => {
   let calls;

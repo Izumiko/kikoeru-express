@@ -1,6 +1,6 @@
 import path from 'path';
 import { expect } from 'vitest';
-import { createFolderCollector } from '../src/modules/scanner/folder-collector.js';
+import { createFolderCollector } from '../src/modules/scanner/folders/folder-collector.js';
 
 async function* toAsyncIterable(items) {
   for (const item of items) {

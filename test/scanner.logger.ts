@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
-import { ScannerLogger } from '../src/modules/scanner/logger.js';
-import { ScanSession } from '../src/modules/scanner/session.js';
+import { ScannerLogger } from '../src/modules/scanner/support/logger.js';
+import { ScanSession } from '../src/modules/scanner/support/session.js';
 
 describe('ScannerLogger', () => {
   let events;

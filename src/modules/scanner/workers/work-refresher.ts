@@ -1,7 +1,7 @@
-import { formatRjCode } from '../media/rj-code.js';
-import { ScanCounters } from './counters.js';
-import type { ScanResult } from './counters.js';
-import type { ScannerLog, ScanTask } from './session.js';
+import { formatRjCode } from '../../media/rj-code.js';
+import { ScanCounters } from '../support/counters.js';
+import type { ScanResult } from '../support/counters.js';
+import type { ScannerLog, ScanTask } from '../support/session.js';
 
 type WorkRefresherOptions = {
   tasks: ScanTask[];

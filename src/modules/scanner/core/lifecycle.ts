@@ -1,5 +1,5 @@
-import { SOCKET_EVENTS } from '../socket/events.js';
-import type { ScannerEventSender } from './session.js';
+import { SOCKET_EVENTS } from '../../socket/events.js';
+import type { ScannerEventSender } from '../support/session.js';
 
 type ScannerLifecycleOptions = {
   send: ScannerEventSender;

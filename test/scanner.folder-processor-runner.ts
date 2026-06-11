@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
-import { ScanCounters } from '../src/modules/scanner/counters.js';
-import { createFolderProcessorRunner } from '../src/modules/scanner/folder-processor-runner.js';
+import { ScanCounters } from '../src/modules/scanner/support/counters.js';
+import { createFolderProcessorRunner } from '../src/modules/scanner/folders/folder-processor-runner.js';
 
 describe('createFolderProcessorRunner', () => {
   let calls;

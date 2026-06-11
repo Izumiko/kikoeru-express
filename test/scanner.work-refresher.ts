@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createWorkRefresher } from '../src/modules/scanner/work-refresher.js';
+import { createWorkRefresher } from '../src/modules/scanner/workers/work-refresher.js';
 
 describe('createWorkRefresher', () => {
   let calls;

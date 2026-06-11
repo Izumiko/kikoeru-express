@@ -1,4 +1,4 @@
-import type { WorkFolder } from '../media/folder-scanner.js';
+import type { WorkFolder } from '../../media/folder-scanner.js';
 
 type DedupeFoldersResult<T extends { id: number | string }> = {
   uniqueArr: T[];

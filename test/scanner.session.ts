@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { ScanSession } from '../src/modules/scanner/session.js';
+import { ScanSession } from '../src/modules/scanner/support/session.js';
 
 describe('ScanSession', () => {
   let events;

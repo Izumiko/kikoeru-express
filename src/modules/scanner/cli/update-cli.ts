@@ -1,7 +1,7 @@
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
-import { performUpdate } from './runtime.js';
-import type { MetadataUpdateOptions } from './metadata-updater.js';
+import { performUpdate } from '../core/runtime.js';
+import type { MetadataUpdateOptions } from '../workers/metadata-updater.js';
 
 type UpdateArgv = {
   refreshAll?: boolean;

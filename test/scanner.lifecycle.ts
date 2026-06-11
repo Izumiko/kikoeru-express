@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { ScannerLifecycle } from '../src/modules/scanner/lifecycle.js';
+import { ScannerLifecycle } from '../src/modules/scanner/core/lifecycle.js';
 
 describe('ScannerLifecycle', () => {
   let events;

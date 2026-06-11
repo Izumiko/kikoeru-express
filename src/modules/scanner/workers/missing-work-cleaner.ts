@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import type { RootFolderConfig } from '../../config/types.js';
-import type { ScannerLog } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
+import type { RootFolderConfig } from '../../../config/types.js';
+import type { ScannerLog } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
 
 type WorkStorageLocation = {
   id: number;

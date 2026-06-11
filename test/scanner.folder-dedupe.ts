@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { dedupeFoldersById } from '../src/modules/scanner/folder-dedupe.js';
+import { dedupeFoldersById } from '../src/modules/scanner/folders/folder-dedupe.js';
 
 describe('dedupeFoldersById', () => {
   it('keeps unique folders unchanged', () => {

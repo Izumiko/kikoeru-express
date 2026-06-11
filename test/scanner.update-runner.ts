@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
-import { ScanCounters } from '../src/modules/scanner/counters.js';
-import { createUpdateRunner } from '../src/modules/scanner/update-runner.js';
+import { ScanCounters } from '../src/modules/scanner/support/counters.js';
+import { createUpdateRunner } from '../src/modules/scanner/core/update-runner.js';
 
 describe('createUpdateRunner', () => {
   let calls;

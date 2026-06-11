@@ -1,6 +1,6 @@
-import type { ScannerLog } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
-import type { ScanResult } from './counters.js';
+import type { ScannerLog } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
+import type { ScanResult } from '../support/counters.js';
 
 type WorkMetadata = Record<string, unknown> & {
   rootFolderName?: string;

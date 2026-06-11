@@ -1,5 +1,5 @@
-import { SOCKET_EVENTS } from '../socket/events.js';
-import type { SocketEventName } from '../socket/events.js';
+import { SOCKET_EVENTS } from '../../socket/events.js';
+import type { SocketEventName } from '../../socket/events.js';
 import type { ScanResult } from './counters.js';
 
 type ScannerLog = {

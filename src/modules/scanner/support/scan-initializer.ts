@@ -1,5 +1,5 @@
 import fs from 'fs';
-import type { ScannerLog } from '../media/folder-scanner.js';
+import type { ScannerLog } from '../../media/folder-scanner.js';
 
 type CreateUserInput = {
   name: string;

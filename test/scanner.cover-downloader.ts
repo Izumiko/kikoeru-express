@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createCoverDownloader } from '../src/modules/scanner/cover-downloader.js';
+import { createCoverDownloader } from '../src/modules/scanner/workers/cover-downloader.js';
 
 const createDownloader = ({ responses, saveCoverImageToDisk = () => Promise.resolve() }) => {
   const requests = [];

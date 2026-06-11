@@ -1,7 +1,7 @@
-import { ScanCounters, createScanFinishedMessage } from './counters.js';
-import type { ScannerLog } from '../media/folder-scanner.js';
-import type { WorkFolder } from '../media/folder-scanner.js';
-import type { ScanResult } from './counters.js';
+import { ScanCounters, createScanFinishedMessage } from '../support/counters.js';
+import type { ScannerLog } from '../../media/folder-scanner.js';
+import type { WorkFolder } from '../../media/folder-scanner.js';
+import type { ScanResult } from '../support/counters.js';
 
 type FatalResult = { fatal: boolean };
 

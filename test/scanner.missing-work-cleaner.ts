@@ -1,6 +1,6 @@
 import path from 'path';
 import { expect } from 'vitest';
-import { createMissingWorkCleaner } from '../src/modules/scanner/missing-work-cleaner.js';
+import { createMissingWorkCleaner } from '../src/modules/scanner/workers/missing-work-cleaner.js';
 
 const existingWorkPath = path.join('/library', 'RJ000123');
 

@@ -1,7 +1,7 @@
 import path from 'path';
-import type { RootFolderConfig } from '../../config/types.js';
-import type { ScannerLog, WorkFolder } from '../media/folder-scanner.js';
-import { formatRjCode } from '../media/rj-code.js';
+import type { RootFolderConfig } from '../../../config/types.js';
+import type { ScannerLog, WorkFolder } from '../../media/folder-scanner.js';
+import { formatRjCode } from '../../media/rj-code.js';
 import { dedupeFoldersById } from './folder-dedupe.js';
 
 type FolderCollectorOptions = {

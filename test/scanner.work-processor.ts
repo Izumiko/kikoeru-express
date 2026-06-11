@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { expect } from 'vitest';
-import { createWorkProcessor } from '../src/modules/scanner/work-processor.js';
+import { createWorkProcessor } from '../src/modules/scanner/workers/work-processor.js';
 
 const makeTempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kikoeru-work-processor-test-'));
 

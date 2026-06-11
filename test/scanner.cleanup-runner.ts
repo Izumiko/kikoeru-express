@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { createCleanupRunner } from '../src/modules/scanner/cleanup-runner.js';
+import { createCleanupRunner } from '../src/modules/scanner/workers/cleanup-runner.js';
 
 describe('createCleanupRunner', () => {
   let calls;

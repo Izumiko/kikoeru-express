@@ -3,7 +3,7 @@ import {
   ScanCounters,
   createScanFinishedMessage,
   createUpdateFinishedMessage,
-} from '../src/modules/scanner/counters.js';
+} from '../src/modules/scanner/support/counters.js';
 
 describe('ScanCounters', () => {
   it('tracks scan result counts with the legacy keys', () => {
