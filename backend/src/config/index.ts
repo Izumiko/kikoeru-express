@@ -5,7 +5,7 @@ import { getRuntimeBaseDir } from './paths.js';
 import type { AppConfig } from './types.js';
 import { version } from '../version.js';
 
-const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const store = createConfigStore({
   projectRoot,

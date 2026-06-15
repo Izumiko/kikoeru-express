@@ -17,7 +17,6 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.mocha,
       },
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -35,7 +34,7 @@ export default defineConfig([
   },
 
   {
-    files: ['test/**/*.ts'],
+    files: ['backend/test/**/*.ts'],
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
     },

@@ -3,15 +3,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
-const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const buildDir = path.join(rootDir, 'build');
 
-const pjson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as { version: string };
+const pjson = JSON.parse(fs.readFileSync(path.join(rootDir, 'backend/package.json'), 'utf8')) as { version: string };
 
 const entries = {
-  server: path.join(rootDir, 'src/cli/server.ts'),
-  scanner: path.join(rootDir, 'src/cli/scanner.ts'),
-  updater: path.join(rootDir, 'src/cli/updater.ts'),
+  server: path.join(rootDir, 'backend/src/cli/server.ts'),
+  scanner: path.join(rootDir, 'backend/src/cli/scanner.ts'),
+  updater: path.join(rootDir, 'backend/src/cli/updater.ts'),
 };
 
 const copyIfExists = (from: string, to: string): void => {
@@ -66,7 +66,7 @@ const __dirname = __dirnamePath(__filename);
 
   copyIfExists(path.join(rootDir, 'dist'), path.join(buildDir, 'dist'));
   copyIfExists(path.join(rootDir, 'static'), path.join(buildDir, 'static'));
-  copyIfExists(path.join(rootDir, 'src/database/schema/migrations'), path.join(buildDir, 'migrations'));
+  copyIfExists(path.join(rootDir, 'backend/src/database/schema/migrations'), path.join(buildDir, 'migrations'));
 }
 
 build().catch((error: unknown) => {

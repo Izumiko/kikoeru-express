@@ -4,8 +4,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['test/**/*.ts'],
-    exclude: ['test/setup.ts', 'test/types.d.ts', 'test/helpers/**', 'test/teardown/**', '**/node_modules/**'],
-    setupFiles: ['./test/setup.ts'],
+    include: ['backend/test/**/*.ts'],
+    exclude: [
+      'backend/test/setup.ts',
+      'backend/test/types.d.ts',
+      'backend/test/helpers/**',
+      'backend/test/teardown/**',
+      '**/node_modules/**',
+    ],
+    setupFiles: ['./backend/test/setup.ts'],
   },
 });

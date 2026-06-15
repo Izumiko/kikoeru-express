@@ -1,0 +1,53 @@
+{
+  "name": "@kikoeru/backend",
+  "version": "0.8.0",
+  "description": "A self-hosted media server for listening to your DLsite voice works.",
+  "type": "module",
+  "homepage": "https://github.com/Izumiko/kikoeru-express",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Izumiko/kikoeru-express.git"
+  },
+  "keywords": [
+    "kikoeru"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "bin": {
+    "kikoeru-express": "../build/server.js"
+  },
+  "scripts": {
+    "start": "tsx --env-file=../.env --trace-warnings src/cli/server.ts",
+    "start:bundle": "node --env-file=../.env --trace-warnings ../build/server.js",
+    "dev": "tsx watch --env-file=../.env --exclude \"../config/*\" --exclude \"../sqlite/*\" --trace-warnings src/cli/server.ts",
+    "scan": "tsx --env-file=../.env --trace-warnings src/cli/scanner.ts",
+    "update": "tsx --env-file=../.env --trace-warnings src/cli/updater.ts",
+    "build": "tsx scripts/build.ts"
+  },
+  "author": "Watanuki-Kimihiro",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@libsql/client": "^0.17.3",
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
+    "compare-versions": "^6.1.1",
+    "compression": "^1.8.1",
+    "drizzle-orm": "^1.0.0-beta.22",
+    "express": "^5.2.1",
+    "express-jwt": "^8.5.1",
+    "express-validator": "^7.3.2",
+    "jschardet": "^3.1.4",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.13.2",
+    "drizzle-kit": "^1.0.0-beta.22",
+    "serve-index": "^1.9.2",
+    "tsx": "^4.22.4"
+  }
+}

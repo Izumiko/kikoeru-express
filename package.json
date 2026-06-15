@@ -1,32 +1,20 @@
 {
-  "name": "kikoeru-express",
-  "version": "0.8.0",
+  "name": "kikoeru",
   "description": "A self-hosted media server for listening to your DLsite voice works.",
-  "type": "module",
-  "homepage": "https://github.com/XunJiJiang/kikoeru-express",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:XunJiJiang/kikoeru-express.git"
-  },
-  "keywords": [
-    "kikoeru"
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
   ],
-  "engines": {
-    "node": ">=24.0.0"
-  },
-  "bin": {
-    "kikoeru-express": "build/server.js"
-  },
   "scripts": {
-    "start": "tsx --env-file=.env --trace-warnings src/cli/server.ts",
-    "start:bundle": "node --env-file=.env --trace-warnings build/server.js",
-    "dev": "tsx watch --env-file=.env --exclude \"config/*\" --exclude \"sqlite/*\" --trace-warnings src/cli/server.ts",
-    "scan": "tsx --env-file=.env --trace-warnings src/cli/scanner.ts",
-    "update": "tsx --env-file=.env --trace-warnings src/cli/updater.ts",
-    "build": "tsx scripts/build.ts",
-    "build:all": "npm run build:frontend && npm run move-frontend && npm run build",
-    "build:frontend": "cd ../kikoeru-web && npm run build",
-    "move-frontend": "rm -rf ../kikoeru-express/dist && mv ../kikoeru-web/dist/spa ../kikoeru-express/dist",
+    "start:backend": "npm run -w backend start",
+    "start:bundle": "npm run -w backend start:bundle",
+    "dev": "npm run -w backend dev",
+    "scan": "npm run -w backend scan",
+    "update": "npm run -w backend update",
+    "build:backend": "npm run -w backend build",
+    "build:frontend": "npm run -w frontend build",
+    "build:all": "npm run build:frontend && npm run build:backend",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
@@ -36,38 +24,15 @@
     "test:coverage": "vitest run --coverage",
     "test": "npm run lint && npm run typecheck && npm run test:unit"
   },
-  "author": "Watanuki-Kimihiro",
-  "license": "GPL-3.0-or-later",
-  "dependencies": {
-    "@libsql/client": "^0.17.3",
-    "axios": "^1.17.0",
-    "cheerio": "^1.2.0",
-    "compare-versions": "^6.1.1",
-    "compression": "^1.8.1",
-    "drizzle-orm": "^1.0.0-beta.22",
-    "express": "^5.2.1",
-    "express-jwt": "^8.5.1",
-    "express-validator": "^7.3.2",
-    "jschardet": "^3.1.4",
-    "jsonwebtoken": "^9.0.3",
-    "socket.io": "^4.8.3",
-    "uuid": "^14.0.0"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/compression": "^1.8.1",
-    "@types/express": "^5.0.6",
-    "@types/node": "^24.13.2",
     "@vitest/coverage-v8": "^4.1.8",
-    "drizzle-kit": "^1.0.0-beta.22",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.1.0",
     "globals": "^17.6.0",
     "prettier": "^3.8.4",
-    "serve-index": "^1.9.2",
-    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.8"
