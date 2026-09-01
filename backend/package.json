@@ -28,26 +28,26 @@
   "author": "Watanuki-Kimihiro",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@libsql/client": "^0.17.3",
-    "axios": "^1.17.0",
+    "@libsql/client": "^0.17.4",
+    "axios": "^1.20.0",
     "cheerio": "^1.2.0",
     "compare-versions": "^6.1.1",
     "compression": "^1.8.1",
-    "drizzle-orm": "^1.0.0-beta.22",
+    "drizzle-orm": "^1.0.0-rc.5-169397b",
     "express": "^5.2.1",
     "express-jwt": "^8.5.1",
     "express-validator": "^7.3.2",
     "jschardet": "^3.1.4",
     "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.8.3",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",
-    "@types/node": "^24.13.2",
-    "drizzle-kit": "^1.0.0-beta.22",
+    "@types/node": "^24.13.3",
+    "drizzle-kit": "^1.0.0-rc.5-ab785fc",
     "serve-index": "^1.9.2",
-    "tsx": "^4.22.4"
+    "tsx": "^4.23.12"
   }
 }
